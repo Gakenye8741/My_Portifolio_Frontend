@@ -190,7 +190,7 @@ const ProjectCenter = () => {
         {filteredProjects.length > 0 && (
           <div className="mt-24 flex justify-center">
             <button 
-              onClick={() => navigate('/registry')}
+              onClick={() => navigate('/projects')}
               className="group relative px-12 py-6 overflow-hidden rounded-full border transition-all duration-500 hover:pr-16"
               style={{ borderColor: `${theme["base-content"]}20`, color: theme["base-content"] }}
             >
