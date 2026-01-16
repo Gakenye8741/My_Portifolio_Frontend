@@ -1,39 +1,29 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
+const baseUrl = 'https://portifoliobackend-ezefe7h3c6hnb4em.southafricanorth-01.azurewebsites.net/api';
+
 export const authApi = createApi({
   reducerPath: 'authApi',
-  baseQuery: fetchBaseQuery({ baseUrl: 'https://minuteapp-backend.onrender.com/api/auth/' }),
-  tagTypes: ['auth'],
+  baseQuery: fetchBaseQuery({ baseUrl }),
   endpoints: (builder) => ({
-    // 🔐 Login
-    loginUser: builder.mutation({
-      query: (credentials: { email: string; password: string }) => ({
-        url: 'login',
+    // ✅ Register Endpoint
+    register: builder.mutation({
+      query: (credentials) => ({
+        url: '/auth/register',
         method: 'POST',
         body: credentials,
       }),
     }),
-
-    // 🟢 Register
-    registerUser: builder.mutation({
-      query: (userData: {
-        username: string;
-        fullName: string;
-        email: string;
-        password: string;
-        role: "Secretary General" | "Chairman";
-      }) => ({
-        url: 'register',
+    
+    // ✅ Login Endpoint
+    login: builder.mutation({
+      query: (credentials) => ({
+        url: '/auth/login',
         method: 'POST',
-        body: userData,
+        body: credentials,
       }),
-      invalidatesTags: ['auth'],
     }),
   }),
 });
 
-// ✅ Export hooks
-export const {
-  useLoginUserMutation,
-  useRegisterUserMutation,
-} = authApi;
+export const { useRegisterMutation, useLoginMutation } = authApi;

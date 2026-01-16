@@ -1,60 +1,72 @@
-import { createBrowserRouter, RouterProvider, useParams } from "react-router-dom";
-import { Home } from "./Pages/Home";
-import AboutPage from "./Pages/About";
-import Login from "./Pages/Login";
-import Meetings from "./Pages/Meetings";
-import MeetingDetails from "./Pages/MeetingDetails";
-import ProtectedRoutes from "./Components/ProtectedRoutes";
-import { AdminLayout } from "./Dashboard/DashboardDesign/AdminLayout";
-import { AdminDashBoard } from "./Pages/Dashboard/AdminDashboard";
-import { ManageMeetings } from "./Dashboard/AdminDashboard/ManageMeetings";
-import ManageAttendees from "./Dashboard/AdminDashboard/ManageAttendees";
-import ManageTopics from "./Dashboard/AdminDashboard/ManageTopics";
-import ManageSignatures from "./Dashboard/AdminDashboard/ManageSignatures";
-import ManageOfficials from "./Dashboard/AdminDashboard/ManageOfficials";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { ThemeProvider } from "./ThemeContext";
-import ThemeToggle from "./ThemeToggle";
-import MeetingDetailsPage from "./Pages/MeetingDetails";
+import Home from "./Pages/Home";
+import ProjectsRegistry from "./Pages/ProjectPage";
+import ProjectDetailsPage from "./Components/Home components/ProjectModal";
+import Login from "./Pages/Login";
+import ProtectedRoutes from "./Components/ProtectedRoutes";
+import { AdminDashBoard } from "./Pages/AdminDashBoard";
+import ProjectManager from "./DashBoard/AdminDashBoard/ProjectManager";
+import MediaManager from "./DashBoard/AdminDashBoard/MediaManager";
+import ProjectLinksManager from "./DashBoard/AdminDashBoard/ProjectLinks";
+import ProjectSectionManager from "./DashBoard/AdminDashBoard/ProjectSection";
+import SkillsManager from "./DashBoard/AdminDashBoard/SkillsManager";
+import ProjectTechManager from "./DashBoard/AdminDashBoard/ProjectTechManager";
+import TimelineManager from "./DashBoard/AdminDashBoard/TimeLineManager";
 
-// Wrapper to extract meetingId from route params
-const ManageAttendeesWrapper = () => {
-  const { meetingId } = useParams<{ meetingId: string }>();
-  if (!meetingId) return <div>Meeting ID is required</div>;
-  return <ManageAttendees meetingId={meetingId} />;
-}
 
 const App = () => {
   const router = createBrowserRouter([
-    { path: "/", element: <Home /> },
-    { path: "/about", element: <AboutPage /> },
-    { path: "/login", element: <Login /> },
-    { path: "/meetings", element: <Meetings /> },
-    { path: "/meetings/:id", element: <MeetingDetailsPage/> },
     {
-      path: "/Admindashboard",
+      // 1. MAIN LANDING PAGE
+      path: "/",
+      element: <Home />,
+    },
+    {
+      // 2. DEDICATED PROJECTS REGISTRY (The "See More" Page)
+      path: "/projects",
+      element: <ProjectsRegistry />,
+    },
+    {
+      // 3. INDIVIDUAL PROJECT DEEP DIVE
+      // The ':id' acts as a placeholder for the project's UUID
+      path: "/project/:id",
+      element: <ProjectDetailsPage />,
+    },
+    {
+      // 3. INDIVIDUAL PROJECT DEEP DIVE
+      // The ':id' acts as a placeholder for the project's UUID
+      path: "/Auth",
+      element: <Login />,
+    },
+    
+    {
+      // 4. FALLBACK / 404
+      path: "*",
+      element: <Home />,
+    },
+     {
+      path: '/admin-dashboard',
       element: (
         <ProtectedRoutes>
-          <AdminLayout />
+          <AdminDashBoard />
         </ProtectedRoutes>
       ),
       children: [
-        { index: true, element: <AdminDashBoard /> },
-        { path: "AllOfficials", element: <ManageOfficials /> },
-        { path: "AllMeetings", element: <ManageMeetings /> },
-        { path: "AllAttendees", element: <ManageAttendees meetingId={""} /> },
-        { path: "AllAttendees/:meetingId", element: <ManageAttendeesWrapper /> },
-        { path: "AllTopics", element: <ManageTopics /> },
-        { path: "AllSignatures", element: <ManageSignatures /> },
-      ]
+        { path: "manage-projects", element:  <ProjectManager /> },
+        { path: "media-manager", element:  <MediaManager /> },
+        { path: "manage-links", element:  <ProjectLinksManager /> },
+        { path: "skills-manager", element:  <SkillsManager /> },
+        { path: "ProjectTech-manager", element:  <ProjectTechManager /> },
+        { path:  "Section-manager" , element: <ProjectSectionManager/> },
+        { path:  "Project-timeline" , element: <TimelineManager/> },
+      ],
     },
-    { path: "*", element: <Home /> },
   ]);
 
   return (
     <ThemeProvider>
-      <div className="app">
-        {/* Place toggle anywhere, for example top-right corner */}
-       
+      <div className="app min-h-screen transition-colors duration-500">
         <RouterProvider router={router} />
       </div>
     </ThemeProvider>

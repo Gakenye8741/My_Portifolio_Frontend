@@ -1,36 +1,7 @@
-// ThemeContext.tsx
+import { darkTheme, lightTheme } from "../theme";
 import React, { createContext, useState, useContext, ReactNode, useEffect } from "react";
 
-export const lightTheme = {
-  primary: "#4f46e5",
-  secondary: "#10b981",
-  accent: "#f59e0b",
-  neutral: "#6b7280",
-  "base-100": "#ffffff",
-  "base-200": "#f3f4f6",
-  "base-300": "#e5e7eb",
-  "base-content": "#111827",
-  info: "#3b82f6",
-  success: "#16a34a",
-  warning: "#facc15",
-  error: "#dc2626",
-};
-
-export const darkTheme = {
-  primary: "#6272a4",
-  secondary: "#ff79c6", // replace if you want no pink
-  accent: "#8be9fd",
-  neutral: "#44475a",
-  "base-100": "#282a36",
-  "base-200": "#44475a",
-  "base-300": "#6272a4",
-  "base-content": "#f8f8f2",
-  info: "#8be9fd",
-  success: "#50fa7b",
-  warning: "#f1fa8c",
-  error: "#ff5555",
-};
-
+// 1. DEFINE THE TYPES (Tell TypeScript what the theme looks like)
 type Theme = typeof lightTheme;
 
 interface ThemeContextProps {
@@ -39,25 +10,44 @@ interface ThemeContextProps {
   isDark: boolean;
 }
 
+// 2. CREATE THE CONTEXT (This was the missing piece!)
 const ThemeContext = createContext<ThemeContextProps | undefined>(undefined);
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
-  const [isDark, setIsDark] = useState(false);
-  const [theme, setTheme] = useState(lightTheme);
+  const [isDark, setIsDark] = useState(() => {
+    return localStorage.getItem("theme") === "dark";
+  });
+  const [theme, setTheme] = useState(isDark ? darkTheme : lightTheme);
 
   const toggleTheme = () => setIsDark(prev => !prev);
 
   useEffect(() => {
-    setTheme(isDark ? darkTheme : lightTheme);
+    const root = window.document.documentElement;
+    
+    if (isDark) {
+      root.classList.add("dark");
+      root.setAttribute("data-theme", "dark");
+      setTheme(darkTheme);
+      localStorage.setItem("theme", "dark");
+    } else {
+      root.classList.remove("dark");
+      root.setAttribute("data-theme", "light");
+      setTheme(lightTheme);
+      localStorage.setItem("theme", "light");
+    }
   }, [isDark]);
 
   return (
+    // This now works because ThemeContext is defined above!
     <ThemeContext.Provider value={{ theme, toggleTheme, isDark }}>
-      {children}
+      <div className="min-h-screen bg-base-100 text-base-content transition-colors duration-500">
+        {children}
+      </div>
     </ThemeContext.Provider>
   );
 };
 
+// 3. EXPORT THE HOOK (So you can use it in your Navbar)
 export const useTheme = () => {
   const context = useContext(ThemeContext);
   if (!context) throw new Error("useTheme must be used within ThemeProvider");

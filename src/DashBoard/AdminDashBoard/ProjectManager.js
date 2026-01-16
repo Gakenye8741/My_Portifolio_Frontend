@@ -1,0 +1,95 @@
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { useState } from 'react';
+import { useGetProjectsQuery, useDeleteProjectMutation, useUpdateProjectMutation, useCreateProjectMutation } from "../../Features/Apis/Projects.Api";
+import { useGetMediaAssetsQuery } from "../../Features/Apis/Media.Api";
+import { useTheme } from '../../ThemeContext';
+import { Plus, Trash2, Edit3, Search, RefreshCw, X, Layers, Terminal, Zap, CheckCircle2, Loader2, LayoutGrid, Activity, ExternalLink } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+const ProjectManager = () => {
+    const { theme } = useTheme();
+    // --- API HOOKS ---
+    const { data: projects, isLoading: projectsLoading } = useGetProjectsQuery();
+    const { data: mediaAssets } = useGetMediaAssetsQuery();
+    const [deleteProject] = useDeleteProjectMutation();
+    const [updateProject, { isLoading: isUpdating }] = useUpdateProjectMutation();
+    const [createProject, { isLoading: isCreating }] = useCreateProjectMutation();
+    // --- UI STATE ---
+    const [searchTerm, setSearchTerm] = useState("");
+    const [isPanelOpen, setIsPanelOpen] = useState(false);
+    const [editingId, setEditingId] = useState(null);
+    // --- FORM STATE ---
+    const [formData, setFormData] = useState({
+        title: "",
+        slug: "",
+        mainDescription: "",
+        status: "published",
+        isFeatured: false,
+        mainThumbnailId: ""
+    });
+    // --- HANDLERS ---
+    const handleOpenPanel = (project) => {
+        if (project) {
+            setEditingId(project.id);
+            setFormData({
+                title: project.title,
+                slug: project.slug,
+                mainDescription: project.mainDescription,
+                status: project.status,
+                isFeatured: project.isFeatured,
+                mainThumbnailId: project.mainThumbnailId || ""
+            });
+        }
+        else {
+            setEditingId(null);
+            setFormData({
+                title: "", slug: "", mainDescription: "",
+                status: "published", isFeatured: false, mainThumbnailId: ""
+            });
+        }
+        setIsPanelOpen(true);
+    };
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!formData.mainThumbnailId)
+            return toast.error("Please select a thumbnail asset");
+        const promise = editingId
+            ? updateProject({ id: editingId, updates: formData }).unwrap()
+            : createProject(formData).unwrap();
+        toast.promise(promise, {
+            loading: 'Syncing with Registry...',
+            success: editingId ? 'Node Updated' : 'Deployment Initialized',
+            error: 'Transaction Failed',
+        });
+        try {
+            await promise;
+            setIsPanelOpen(false);
+        }
+        catch (err) { }
+    };
+    const handleDelete = async (id) => {
+        if (window.confirm("Permanent Archive Removal? This action cannot be undone.")) {
+            try {
+                await deleteProject(id).unwrap();
+                toast.success("Deployment Purged");
+            }
+            catch (err) {
+                toast.error("Purge Failed");
+            }
+        }
+    };
+    if (projectsLoading)
+        return (_jsxs("div", { className: "h-[60vh] flex flex-col items-center justify-center gap-4", children: [_jsx(RefreshCw, { className: "animate-spin opacity-20", size: 40, style: { color: theme.primary } }), _jsx("span", { className: "text-[10px] font-mono tracking-[0.5em] opacity-40 uppercase", children: "Initialising_Registry" })] }));
+    return (_jsxs("div", { className: "min-h-screen p-4 lg:p-8 selection:bg-indigo-500/30 transition-all duration-500", style: { backgroundColor: theme["base-100"], color: theme["base-content"] }, children: [_jsxs("div", { className: "max-w-7xl mx-auto mb-10", children: [_jsxs("div", { className: "flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b pb-8", style: { borderColor: `${theme.primary}10` }, children: [_jsxs("div", { className: "space-y-2", children: [_jsxs("div", { className: "flex items-center gap-2", children: [_jsx("span", { className: "h-1.5 w-1.5 rounded-full animate-pulse", style: { backgroundColor: theme.primary } }), _jsx("p", { className: "text-[10px] font-black uppercase tracking-[0.4em]", style: { color: theme.primary }, children: "Protocol_Control / Registry" })] }), _jsxs("h1", { className: "text-4xl md:text-5xl font-black italic tracking-tighter uppercase leading-none", style: { color: theme["base-content"] }, children: ["Project", _jsx("span", { className: "font-light not-italic", style: { color: theme.primary }, children: "Archive" })] }), _jsxs("p", { className: "text-xs max-w-2xl leading-relaxed mt-4 opacity-40", children: ["Welcome to the central deployment hub. This interface provides ", _jsx("span", { className: "font-bold opacity-100 italic", children: "administrative oversight" }), " for the project portfolio. Audit metadata, manage URI paths, and ", _jsx("span", { style: { color: theme.primary }, children: "verify featured status" }), " across the public layer."] })] }), _jsxs("button", { onClick: () => handleOpenPanel(), className: "group px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-3 shadow-2xl active:scale-95", style: { backgroundColor: theme.primary, color: theme["base-100"] }, children: [_jsx(Plus, { size: 18, strokeWidth: 3, className: "group-hover:rotate-90 transition-transform duration-300" }), " Register Deployment"] })] }), _jsx("div", { className: "grid grid-cols-1 md:grid-cols-3 gap-6 mt-10", children: [
+                            { icon: _jsx(Activity, { size: 18 }), title: "Audit Control", desc: "Metadata & technical manifests.", color: theme.primary },
+                            { icon: _jsx(LayoutGrid, { size: 18 }), title: "Asset Bind", desc: "Link media assets to registry.", color: "#10b981" },
+                            { icon: _jsx(Terminal, { size: 18 }), title: "Visibility Sync", desc: "Toggle public & priority status.", color: "#ec4899" }
+                        ].map((card, idx) => (_jsxs("div", { className: "p-6 rounded-3xl border border-transparent hover:border-opacity-20 transition-all hover:translate-y-[-2px]", style: { backgroundColor: `${theme["base-content"]}05`, borderColor: theme.primary }, children: [_jsx("div", { className: "mb-4", style: { color: card.color }, children: card.icon }), _jsx("h3", { className: "text-[10px] font-black uppercase tracking-widest mb-1", children: card.title }), _jsx("p", { className: "text-[10px] opacity-40", children: card.desc })] }, idx))) }), _jsxs("div", { className: "mt-12 relative max-w-xl", children: [_jsx(Search, { className: "absolute left-5 top-1/2 -translate-y-1/2 opacity-20", size: 14 }), _jsx("input", { type: "text", placeholder: "Search registry by title...", className: "w-full border-none rounded-2xl py-4 pl-14 pr-4 text-[11px] font-bold uppercase tracking-widest outline-none transition-all focus:ring-1", style: {
+                                    backgroundColor: `${theme["base-content"]}08`,
+                                    color: theme["base-content"],
+                                    boxShadow: `inset 0 2px 4px 0 rgba(0, 0, 0, 0.05)`
+                                }, value: searchTerm, onChange: (e) => setSearchTerm(e.target.value) })] })] }), _jsx("div", { className: "max-w-7xl mx-auto overflow-hidden", children: _jsx("div", { className: "overflow-x-auto", children: _jsxs("table", { className: "w-full text-left border-separate border-spacing-y-3", children: [_jsx("thead", { children: _jsxs("tr", { className: "text-opacity-40", style: { color: theme["base-content"] }, children: [_jsx("th", { className: "px-8 py-2 text-[9px] font-black uppercase tracking-[0.3em] opacity-30", children: "Deployment Identity" }), _jsx("th", { className: "px-8 py-2 text-[9px] font-black uppercase tracking-[0.3em] opacity-30 text-center", children: "Core Status" }), _jsx("th", { className: "px-8 py-2 text-[9px] font-black uppercase tracking-[0.3em] opacity-30 text-right", children: "System Actions" })] }) }), _jsx("tbody", { children: projects?.filter(p => p.title.toLowerCase().includes(searchTerm.toLowerCase())).map((project) => (_jsxs("tr", { className: "group transition-all duration-300", children: [_jsx("td", { className: "px-8 py-6 rounded-l-3xl border-y border-l transition-all group-hover:pl-10", style: { backgroundColor: `${theme["base-content"]}03`, borderColor: `${theme["base-content"]}05` }, children: _jsxs("div", { className: "flex items-center gap-4", children: [_jsx("div", { className: "w-11 h-11 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110", style: { backgroundColor: `${theme.primary}10` }, children: _jsx(Layers, { size: 20, style: { color: theme.primary } }) }), _jsxs("div", { children: [_jsx("p", { className: "text-sm font-black italic uppercase tracking-tight", children: project.title }), _jsxs("p", { className: "text-[9px] font-mono opacity-30 uppercase flex items-center gap-1.5 mt-1", children: [_jsx(ExternalLink, { size: 10, style: { color: theme.primary } }), " ", project.slug] })] })] }) }), _jsx("td", { className: "px-8 py-6 border-y text-center", style: { backgroundColor: `${theme["base-content"]}03`, borderColor: `${theme["base-content"]}05` }, children: _jsxs("div", { className: "flex flex-col items-center gap-1.5", children: [_jsx("span", { className: "px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-[0.2em] transition-all group-hover:bg-opacity-20", style: { backgroundColor: `${theme["base-content"]}08`, color: theme["base-content"] }, children: project.status }), project.isFeatured && (_jsx("span", { className: "text-[8px] font-black uppercase tracking-widest animate-pulse", style: { color: theme.primary }, children: "\u2605 Featured" }))] }) }), _jsx("td", { className: "px-8 py-6 rounded-r-3xl border-y border-r text-right", style: { backgroundColor: `${theme["base-content"]}03`, borderColor: `${theme["base-content"]}05` }, children: _jsxs("div", { className: "flex justify-end gap-3", children: [_jsx("button", { onClick: () => handleOpenPanel(project), className: "p-3 rounded-2xl transition-all hover:scale-110 active:scale-95", style: { backgroundColor: `${theme["base-content"]}05`, color: theme["base-content"] }, children: _jsx(Edit3, { size: 16 }) }), _jsx("button", { onClick: () => handleDelete(project.id), className: "p-3 rounded-2xl transition-all hover:scale-110 active:scale-95 bg-rose-500 bg-opacity-10 text-rose-500 hover:bg-rose-500 hover:text-white", children: _jsx(Trash2, { size: 16 }) })] }) })] }, project.id))) })] }) }) }), isPanelOpen && (_jsxs("div", { className: "fixed inset-0 z-[1000] flex justify-end", children: [_jsx("div", { className: "absolute inset-0 bg-black/80 backdrop-blur-md", onClick: () => setIsPanelOpen(false) }), _jsxs("div", { className: "relative w-full max-w-xl h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-500 border-l", style: { backgroundColor: theme["base-100"], borderColor: `${theme.primary}10` }, children: [_jsxs("div", { className: "p-10 border-b relative overflow-hidden", style: { borderColor: `${theme["base-content"]}05` }, children: [_jsx(Layers, { size: 150, className: "absolute -right-10 -bottom-10 opacity-[0.03] -rotate-12 pointer-events-none", style: { color: theme.primary } }), _jsxs("div", { className: "flex items-center justify-between relative z-10", children: [_jsxs("div", { children: [_jsxs("div", { className: "flex items-center gap-2 mb-2", children: [_jsx("span", { className: "p-1 rounded-md", style: { color: theme.primary, backgroundColor: `${theme.primary}15` }, children: _jsx(Zap, { size: 14 }) }), _jsx("span", { className: "text-[9px] font-black uppercase tracking-[0.4em]", style: { color: theme.primary }, children: "Registry_Sync" })] }), _jsx("h2", { className: "text-4xl font-black italic uppercase tracking-tighter leading-none", children: editingId ? 'Edit_Node' : 'New_Node' })] }), _jsx("button", { onClick: () => setIsPanelOpen(false), className: "p-4 rounded-3xl transition-all hover:bg-rose-500/20 hover:text-rose-500", style: { backgroundColor: `${theme["base-content"]}05`, color: theme["base-content"] }, children: _jsx(X, { size: 24 }) })] })] }), _jsxs("form", { id: "side-form", onSubmit: handleSubmit, className: "p-10 flex-1 overflow-y-auto space-y-10 no-scrollbar", children: [_jsxs("div", { className: "space-y-6", children: [_jsxs("div", { className: "flex items-center gap-3", children: [_jsx("div", { className: "h-[2px] w-8", style: { backgroundColor: theme.primary } }), _jsx("h3", { className: "text-[10px] font-black uppercase tracking-[0.3em]", children: "Core Identity" })] }), _jsxs("div", { className: "grid grid-cols-1 gap-6", children: [_jsxs("div", { className: "space-y-2", children: [_jsx("label", { className: "text-[9px] font-black uppercase opacity-30 tracking-widest ml-1", children: "Title" }), _jsx("input", { required: true, value: formData.title, onChange: (e) => setFormData({ ...formData, title: e.target.value }), className: "w-full border-none rounded-2xl py-4 px-6 text-xs outline-none focus:ring-1", style: { backgroundColor: `${theme["base-content"]}05`, color: theme["base-content"], boxShadow: `inset 0 0 0 1px ${theme.primary}` } })] }), _jsxs("div", { className: "grid grid-cols-2 gap-6", children: [_jsxs("div", { className: "space-y-2", children: [_jsx("label", { className: "text-[9px] font-black uppercase opacity-30 tracking-widest ml-1", children: "Slug" }), _jsx("input", { required: true, value: formData.slug, onChange: (e) => setFormData({ ...formData, slug: e.target.value }), className: "w-full border-none rounded-2xl py-4 px-6 text-xs font-mono outline-none", style: { backgroundColor: `${theme["base-content"]}05`, color: theme["base-content"] } })] }), _jsxs("div", { className: "space-y-2", children: [_jsx("label", { className: "text-[9px] font-black uppercase opacity-30 tracking-widest ml-1", children: "Status" }), _jsxs("select", { value: formData.status, onChange: (e) => setFormData({ ...formData, status: e.target.value }), className: "w-full border-none rounded-2xl py-4 px-6 text-xs outline-none cursor-pointer", style: { backgroundColor: `${theme["base-content"]}05`, color: theme["base-content"] }, children: [_jsx("option", { value: "published", children: "Published" }), _jsx("option", { value: "draft", children: "Draft" }), _jsx("option", { value: "archived", children: "Archived" })] })] })] })] })] }), _jsxs("div", { className: "space-y-6", children: [_jsxs("div", { className: "flex items-center gap-3", children: [_jsx("div", { className: "h-[2px] w-8", style: { backgroundColor: "#10b981" } }), _jsx("h3", { className: "text-[10px] font-black uppercase tracking-[0.3em]", children: "Media_Bind" })] }), _jsx("div", { className: "grid grid-cols-3 gap-4", children: mediaAssets?.map((asset) => (_jsx("div", { onClick: () => setFormData({ ...formData, mainThumbnailId: asset.id }), className: `relative aspect-square rounded-2xl overflow-hidden cursor-pointer border-2 transition-all ${formData.mainThumbnailId === asset.id ? 'scale-95 shadow-2xl' : 'opacity-20 grayscale border-transparent hover:opacity-100 hover:grayscale-0'}`, style: { borderColor: formData.mainThumbnailId === asset.id ? theme.primary : 'transparent' }, children: _jsx("img", { src: asset.fileUrl, className: "w-full h-full object-cover", alt: "asset" }) }, asset.id))) })] }), _jsxs("div", { className: "space-y-6", children: [_jsxs("div", { className: "flex items-center gap-3", children: [_jsx("div", { className: "h-[2px] w-8", style: { backgroundColor: "#ec4899" } }), _jsx("h3", { className: "text-[10px] font-black uppercase tracking-[0.3em]", children: "Technical_Manifest" })] }), _jsx("textarea", { rows: 5, value: formData.mainDescription, onChange: (e) => setFormData({ ...formData, mainDescription: e.target.value }), className: "w-full border-none rounded-3xl py-5 px-6 text-xs outline-none resize-none", style: { backgroundColor: `${theme["base-content"]}05`, color: theme["base-content"] } })] })] }), _jsxs("div", { className: "p-10 border-t flex flex-col gap-5", style: { backgroundColor: `${theme["base-content"]}02`, borderColor: `${theme["base-content"]}05` }, children: [_jsx("button", { type: "button", onClick: () => setFormData({ ...formData, isFeatured: !formData.isFeatured }), className: `w-full py-4 rounded-2xl border font-black text-[10px] uppercase tracking-[0.3em] transition-all ${formData.isFeatured ? 'opacity-100' : 'opacity-30'}`, style: {
+                                            borderColor: formData.isFeatured ? theme.primary : `${theme["base-content"]}10`,
+                                            color: formData.isFeatured ? theme.primary : theme["base-content"]
+                                        }, children: formData.isFeatured ? '★ Featured_Active' : '☆ Featured_Null' }), _jsxs("button", { form: "side-form", type: "submit", disabled: isCreating || isUpdating, className: "w-full py-5 rounded-3xl text-[11px] font-black uppercase tracking-[0.4em] shadow-2xl transition-all flex items-center justify-center gap-3 active:scale-[0.98]", style: { backgroundColor: theme.primary, color: theme["base-100"] }, children: [isCreating || isUpdating ? _jsx(Loader2, { className: "animate-spin", size: 18 }) : _jsx(CheckCircle2, { size: 18 }), editingId ? 'Execute_Update' : 'Execute_Deploy'] })] })] })] }))] }));
+};
+export default ProjectManager;

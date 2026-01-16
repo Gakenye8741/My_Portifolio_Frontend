@@ -1,6 +1,6 @@
-// ThemeContext.tsx
 import React, { createContext, useState, useContext, ReactNode, useEffect } from "react";
-import { lightTheme, darkTheme } from "./theme";
+// Assuming themes are in a separate file or defined here
+import { lightTheme, darkTheme } from "./theme"; 
 
 type Theme = typeof lightTheme;
 
@@ -13,18 +13,33 @@ interface ThemeContextProps {
 const ThemeContext = createContext<ThemeContextProps | undefined>(undefined);
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
-  const [isDark, setIsDark] = useState(false);
-  const [theme, setTheme] = useState(lightTheme);
+  const [isDark, setIsDark] = useState(() => {
+    // Optional: Check local storage or system preference
+    return localStorage.getItem("theme") === "dark";
+  });
+  const [theme, setTheme] = useState(isDark ? darkTheme : lightTheme);
 
   const toggleTheme = () => setIsDark(prev => !prev);
 
   useEffect(() => {
-    setTheme(isDark ? darkTheme : lightTheme);
+    const root = window.document.documentElement;
+    
+    if (isDark) {
+      root.classList.add("dark"); // This triggers Tailwind's dark: classes
+      setTheme(darkTheme);
+      localStorage.setItem("theme", "dark");
+    } else {
+      root.classList.remove("dark"); // This triggers Tailwind's default (light) classes
+      setTheme(lightTheme);
+      localStorage.setItem("theme", "light");
+    }
   }, [isDark]);
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme, isDark }}>
-      {children}
+      <div className="min-h-screen transition-colors duration-500 bg-[#fafaf9] dark:bg-[#020617] text-[#0f172a] dark:text-[#f1f5f9]">
+        {children}
+      </div>
     </ThemeContext.Provider>
   );
 };

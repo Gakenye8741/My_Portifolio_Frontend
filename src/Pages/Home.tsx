@@ -1,46 +1,45 @@
-import React from "react";
-import { Navbar } from "../Components/Navbar";
-import Footer from "../Components/Footer";
-import HeroSection from "../Page Contents/Home/Hero";
-import LandingPage from "../Page Contents/Home/LandingPage";
-import { motion } from "framer-motion";
+import React from 'react';
+import { Navbar } from '../Components/Navbar';
+import Footer from '../Components/Footer';
+import { useTheme } from '../ThemeContext';
+import { Terminal, Code2, Cpu, Globe, ArrowRight, Sparkles } from 'lucide-react';
+import Hero from '../Components/Home components/ContentManager';
+import About from '../Components/Home components/About';
+import Skills from '../Components/Home components/Skills';
+import ProjectCenter from '../Components/Home components/ProjectCenter';
 
-export const Home = () => {
+const Home = () => {
+  const { theme } = useTheme();
+
+  // Static Data for the Portfolio
+  const stats = [
+    { label: "Experience", value: "2+ Years" },
+    { label: "Projects", value: "15+ Completed" },
+    { label: "Availability", value: "Freelance / Full-time" },
+  ];
+
+  const coreStack = [
+    { name: "Frontend", tech: "React, Next.js, Tailwind", icon: <Globe size={20} /> },
+    { name: "Backend", tech: "Node.js, Express, PostgreSQL", icon: <Cpu size={20} /> },
+    { name: "Tools", tech: "Docker, Git, AWS", icon: <Terminal size={20} /> },
+  ];
+
   return (
-    <>
+    <div 
+      className="min-h-screen transition-colors duration-500 flex flex-col"
+      style={{ backgroundColor: theme["base-100"], color: theme["base-content"] }}
+    >
       <Navbar />
-      <div className="pt-[0rem] lg:pt-[0rem] pb-[0rem] lg:pb-0">
-        
-        {/* Hero Section with animation */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-        >
-          <HeroSection />
-        </motion.div>
 
-        {/* Landing Page Section with staggered fade-in */}
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={{
-            hidden: { opacity: 0, y: 20 },
-            visible: { opacity: 1, y: 0, transition: { staggerChildren: 0.2, duration: 0.8 } },
-          }}
-        >
-          <LandingPage />
-        </motion.div>
-      </div>
+      {/* Hero Section */}
+   <Hero />
+   <About />
+   <Skills />
+   <ProjectCenter />
 
-      {/* Footer with subtle fade-in */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5, duration: 0.8 }}
-      >
-        <Footer />
-      </motion.div>
-    </>
+      <Footer />
+    </div>
   );
 };
+
+export default Home;

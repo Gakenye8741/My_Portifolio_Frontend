@@ -1,4 +1,3 @@
-// ThemeToggle.tsx
 import React from "react";
 import { Sun, Moon } from "lucide-react";
 import { useTheme } from "./ThemeContext";
@@ -9,9 +8,19 @@ const ThemeToggle = () => {
   return (
     <button
       onClick={toggleTheme}
-      className="p-2 rounded-full bg-gray-200 dark:bg-gray-700"
+      className="relative p-2 rounded-full transition-transform active:scale-90 hover:bg-gray-500/10 focus:outline-none group"
+      aria-label="Toggle Theme"
     >
-      {isDark ? <Sun className="text-yellow-400" /> : <Moon className="text-gray-800" />}
+      <div className="relative w-6 h-6 overflow-hidden">
+        {isDark ? (
+          <Sun className="w-6 h-6 text-cyan-400 transition-all duration-500 animate-in spin-in-90 scale-100" />
+        ) : (
+          <Moon className="w-6 h-6 text-indigo-600 transition-all duration-500 animate-in spin-in-90 scale-100" />
+        )}
+      </div>
+      
+      {/* Subtle hover glow */}
+      <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-10 dark:bg-cyan-400 bg-indigo-600 transition-opacity" />
     </button>
   );
 };
