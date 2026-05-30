@@ -5,7 +5,8 @@ import { Navbar } from '../Components/Navbar';
 import { 
   Github, Linkedin, Instagram, Mail, MapPin, 
   Send, MessageSquare, MailCheck as MailCheckIcon, 
-  Phone, Clock, CheckCircle2 
+  Phone, Clock, CheckCircle2, 
+  PhoneCall
 } from 'lucide-react';
 import { RiWhatsappFill } from 'react-icons/ri';
 
@@ -14,8 +15,8 @@ import logoMain from "../../public/LOGO.png";
 const ContactPage = () => {
   const { theme } = useTheme();
 
-  const phoneNumber = "+254 743 658 849";
-  const phoneLink = "tel:+254743658849";
+  const phoneNumber = "+254 789 757 457";
+  const phoneLink = "tel:+254789757457";
 
   const socials = [
     { icon: <Github size={18} />, link: "https://github.com/Gakenye8741", label: "GitHub" },
@@ -23,6 +24,7 @@ const ContactPage = () => {
     { icon: <RiWhatsappFill size={18} />, link: "https://wa.link/f3ajog", label: "Whatsapp" },
     { icon: <Instagram size={18} />, link: "https://www.instagram.com/_code.d_by_gakenye_/", label: "Instagram" },
     { icon: <MailCheckIcon size={18} />, link: "mailto:codewithgakenye@gmail.com", label: "Email" },
+    { icon: <PhoneCall size={18} />, link: phoneLink, label: "Phone Number" },
   ];
 
   const container = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } };
@@ -59,7 +61,7 @@ const ContactPage = () => {
                 <div className="p-3 rounded-2xl bg-primary/10" style={{ color: theme.primary }}><MapPin size={20} /></div>
                 <div>
                   <p className="text-[9px] font-black uppercase opacity-40">Based In</p>
-                  <p className="text-sm font-bold">Nyeri, Kenya</p>
+                  <p className="text-sm font-bold">Nyahururu, Laikipia</p>
                 </div>
               </div>
             </div>
