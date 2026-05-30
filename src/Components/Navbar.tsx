@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { 
-  LogOut, Menu, X, Globe, ChevronRight, LayoutDashboard, 
+  LogOut, Menu, X, ChevronRight, LayoutDashboard, 
   ChevronDown, Shield, Home, Code2, Cpu, Mail 
 } from "lucide-react";
 import logo from "../../public/LOGO.png";
@@ -51,7 +51,6 @@ export const Navbar: React.FC = () => {
     navigate('/');
   };
 
-  // Added icons to menuItems
   const menuItems = [
     { name: "Home", path: "/", id: "01", icon: <Home size={14} /> },
     { name: "Projects", path: "/projects", id: "02", icon: <Code2 size={14} /> },
@@ -71,7 +70,7 @@ export const Navbar: React.FC = () => {
       >
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           
-          {/* Branding */}
+          {/* Logo Section */}
           <Link to="/" onClick={() => setMobileMenuOpen(false)} className="relative z-[130] flex items-center gap-3 group">
             <img src={logo} alt="Logo" className="w-9 h-9 md:w-10 md:h-10 object-contain transition-transform group-hover:rotate-12 duration-500" />
             <span className="text-lg md:text-xl font-black uppercase italic tracking-tighter">
@@ -79,7 +78,7 @@ export const Navbar: React.FC = () => {
             </span>
           </Link>
 
-          {/* DESKTOP MENU */}
+          {/* Desktop Menu */}
           <div className="hidden lg:flex items-center gap-2 relative z-[130]">
             {menuItems.map((item) => (
               <Link 
@@ -105,7 +104,7 @@ export const Navbar: React.FC = () => {
             <div className="h-6 w-px bg-white/10 mx-4" />
             <ThemeToggle />
 
-            {/* --- USER PROFILE SECTION --- */}
+            {/* User Profile */}
             {isAuthenticated && (
               <div className="relative ml-2" ref={dropdownRef}>
                 <button 
@@ -124,14 +123,14 @@ export const Navbar: React.FC = () => {
                   <ChevronDown size={14} className={`transition-transform duration-300 ${userMenuOpen ? 'rotate-180' : ''}`} />
                 </button>
 
-                {/* DROPDOWN MENU */}
+                {/* Profile Dropdown */}
                 <div 
                   className={`absolute right-0 mt-4 w-64 rounded-2xl border border-white/10 bg-black/80 backdrop-blur-2xl p-2 shadow-2xl transition-all duration-300 origin-top-right ${
                     userMenuOpen ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
                   }`}
                 >
                   <div className="px-4 py-3 border-b border-white/5 mb-2">
-                    <p className="text-[10px] font-black uppercase tracking-tighter opacity-40">Access_Level: Admin</p>
+                    <p className="text-[10px] font-black uppercase tracking-tighter opacity-40">Role: Admin</p>
                     <p className="text-xs font-bold truncate opacity-80">{user?.email}</p>
                   </div>
                   
@@ -140,7 +139,7 @@ export const Navbar: React.FC = () => {
                     <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20" style={{ backgroundColor: `${theme.primary}15` }}>
                         <LayoutDashboard size={16} style={{ color: theme.primary }} />
                     </div>
-                    <span className="text-[10px] font-black uppercase tracking-widest">Admin Dashboard</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest">Dashboard</span>
                   </Link>
 
                   <button onClick={handleLogout}
@@ -148,14 +147,14 @@ export const Navbar: React.FC = () => {
                     <div className="p-2 rounded-lg bg-red-500/10 group-hover:bg-red-500/20">
                         <LogOut size={16} />
                     </div>
-                    <span className="text-[10px] font-black uppercase tracking-widest">Terminate Session</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest">Logout</span>
                   </button>
                 </div>
               </div>
             )}
           </div>
 
-          {/* MOBILE TOGGLE */}
+          {/* Mobile Menu Button */}
           <div className="lg:hidden flex items-center gap-4 relative z-[150]">
             <ThemeToggle />
             <button 
@@ -169,134 +168,133 @@ export const Navbar: React.FC = () => {
         </div>
       </nav>
 
-      {/* --- MOBILE OVERLAY --- */}
-     {/* --- MOBILE OVERLAY --- */}
-<div 
-  className={`fixed inset-0 z-[110] transition-all duration-700 ease-[cubic-bezier(0.85,0,0.15,1)] ${
-    mobileMenuOpen ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0"
-  }`}
-  style={{ backgroundColor: theme["base-100"] }}
->
-  <div className="h-full flex flex-col p-8 pt-32 max-w-lg mx-auto">
-    
-    {/* SYSTEM USER NODE CARD */}
-    {isAuthenticated && (
+      {/* Mobile Menu Overlay */}
       <div 
-        className="flex items-center gap-5 p-6 rounded-[2rem] border transition-all duration-500 mb-10"
-        style={{ 
-          backgroundColor: `${theme["base-content"]}05`, 
-          borderColor: `${theme["base-content"]}10` 
-        }}
+        className={`fixed inset-0 z-[110] transition-all duration-700 ease-[cubic-bezier(0.85,0,0.15,1)] ${
+          mobileMenuOpen ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0"
+        }`}
+        style={{ backgroundColor: theme["base-100"] }}
       >
-        <div 
-          className="w-16 h-16 rounded-full flex items-center justify-center text-lg font-black border-2 shadow-lg"
-          style={{ 
-            backgroundColor: `${theme.primary}15`, 
-            borderColor: theme.primary, 
-            color: theme.primary,
-            boxShadow: `0 0 20px ${theme.primary}20`
-          }}
-        >
-          {getInitials(user?.fullName)}
-        </div>
-        <div className="flex flex-col gap-1">
-          <span className="text-[8px] font-black uppercase tracking-[0.2em] opacity-40">Active_Operator</span>
-          <span className="text-lg font-black uppercase italic tracking-tighter leading-none">
-            {user?.fullName?.split(" ")[0]} <span style={{ color: theme.primary }}>{user?.fullName?.split(" ")[1] || "NODE"}</span>
-          </span>
-          <span className="text-[9px] font-mono opacity-30 uppercase tracking-[0.3em]">
-            Access_Level: {user?.role || 'Root'}
-          </span>
-        </div>
-      </div>
-    )}
-
-    {/* NAVIGATION MODULES */}
-    <div className="flex flex-col gap-1">
-      {menuItems.map((item) => (
-        <Link 
-          key={item.name} 
-          to={item.path} 
-          onClick={() => setMobileMenuOpen(false)}
-          className="group flex items-center justify-between py-6 border-b border-opacity-5 transition-all"
-          style={{ borderColor: theme["base-content"] }}
-        >
-          <div className="flex items-center gap-6">
-            <span 
-              className="transition-transform duration-500 group-hover:scale-110"
-              style={{ color: location.pathname === item.path ? theme.primary : 'inherit', opacity: location.pathname === item.path ? 1 : 0.3 }}
-            >
-              {item.icon}
-            </span>
-            <span 
-              className="text-3xl font-black uppercase italic tracking-tighter transition-all"
+        <div className="h-full flex flex-col p-8 pt-32 max-w-lg mx-auto">
+          
+          {/* User Info */}
+          {isAuthenticated && (
+            <div 
+              className="flex items-center gap-5 p-6 rounded-[2rem] border transition-all duration-500 mb-10"
               style={{ 
-                color: location.pathname === item.path ? theme.primary : theme["base-content"],
-                opacity: location.pathname === item.path ? 1 : 0.8
+                backgroundColor: `${theme["base-content"]}05`, 
+                borderColor: `${theme["base-content"]}10` 
               }}
             >
-              {item.name}
-            </span>
-          </div>
-          <ChevronRight 
-            size={20} 
-            style={{ color: theme.primary }} 
-            className={`transition-transform duration-500 ${location.pathname === item.path ? 'translate-x-0 opacity-100' : '-translate-x-4 opacity-0'}`} 
-          />
-        </Link>
-      ))}
-      
-      {/* ADMIN CONSOLE LINK */}
-      {isAuthenticated && (
-        <Link 
-          to="/admin-dashboard" 
-          onClick={() => setMobileMenuOpen(false)}
-          className="flex items-center gap-6 py-8 mt-2 transition-all group" 
-          style={{ color: theme.primary }}
-        >
-          <div className="p-3 rounded-2xl" style={{ backgroundColor: `${theme.primary}10` }}>
-            <Shield size={24} />
-          </div>
-          <span className="text-3xl font-black uppercase italic tracking-tighter">Admin_Console</span>
-        </Link>
-      )}
-    </div>
+              <div 
+                className="w-16 h-16 rounded-full flex items-center justify-center text-lg font-black border-2 shadow-lg"
+                style={{ 
+                  backgroundColor: `${theme.primary}15`, 
+                  borderColor: theme.primary, 
+                  color: theme.primary,
+                  boxShadow: `0 0 20px ${theme.primary}20`
+                }}
+              >
+                {getInitials(user?.fullName)}
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-[8px] font-black uppercase tracking-[0.2em] opacity-40">User Profile</span>
+                <span className="text-lg font-black uppercase italic tracking-tighter leading-none">
+                  {user?.fullName?.split(" ")[0]} <span style={{ color: theme.primary }}>{user?.fullName?.split(" ")[1] || "User"}</span>
+                </span>
+                <span className="text-[9px] font-mono opacity-30 uppercase tracking-[0.3em]">
+                  Role: {user?.role || 'Admin'}
+                </span>
+              </div>
+            </div>
+          )}
 
-    {/* SYSTEM DIAGNOSTICS FOOTER */}
-    <div className="mt-auto space-y-8 pb-6">
-      <div className="flex items-end justify-between border-t border-dashed border-opacity-10 pt-8" style={{ borderColor: theme["base-content"] }}>
-        <div className="flex flex-col gap-1">
-          <span className="text-[8px] font-bold opacity-30 uppercase tracking-[0.3em]">System_Clock</span>
-          <span className="text-xl font-mono font-bold tracking-widest tabular-nums">
-            {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}
-          </span>
-        </div>
-        <div className="flex flex-col items-end gap-1">
-          <span className="text-[8px] font-bold opacity-30 uppercase tracking-[0.3em]">Core_Uptime</span>
-          <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: theme.primary }} />
-            <span className="text-xs font-black uppercase">99.9% Stable</span>
+          {/* Navigation Links */}
+          <div className="flex flex-col gap-1">
+            {menuItems.map((item) => (
+              <Link 
+                key={item.name} 
+                to={item.path} 
+                onClick={() => setMobileMenuOpen(false)}
+                className="group flex items-center justify-between py-6 border-b border-opacity-5 transition-all"
+                style={{ borderColor: theme["base-content"] }}
+              >
+                <div className="flex items-center gap-6">
+                  <span 
+                    className="transition-transform duration-500 group-hover:scale-110"
+                    style={{ color: location.pathname === item.path ? theme.primary : 'inherit', opacity: location.pathname === item.path ? 1 : 0.3 }}
+                  >
+                    {item.icon}
+                  </span>
+                  <span 
+                    className="text-3xl font-black uppercase italic tracking-tighter transition-all"
+                    style={{ 
+                      color: location.pathname === item.path ? theme.primary : theme["base-content"],
+                      opacity: location.pathname === item.path ? 1 : 0.8
+                    }}
+                  >
+                    {item.name}
+                  </span>
+                </div>
+                <ChevronRight 
+                  size={20} 
+                  style={{ color: theme.primary }} 
+                  className={`transition-transform duration-500 ${location.pathname === item.path ? 'translate-x-0 opacity-100' : '-translate-x-4 opacity-0'}`} 
+                />
+              </Link>
+            ))}
+            
+            {/* Admin Link */}
+            {isAuthenticated && (
+              <Link 
+                to="/admin-dashboard" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-6 py-8 mt-2 transition-all group" 
+                style={{ color: theme.primary }}
+              >
+                <div className="p-3 rounded-2xl" style={{ backgroundColor: `${theme.primary}10` }}>
+                  <Shield size={24} />
+                </div>
+                <span className="text-3xl font-black uppercase italic tracking-tighter">Dashboard</span>
+              </Link>
+            )}
+          </div>
+
+          {/* Footer Info */}
+          <div className="mt-auto space-y-8 pb-6">
+            <div className="flex items-end justify-between border-t border-dashed border-opacity-10 pt-8" style={{ borderColor: theme["base-content"] }}>
+              <div className="flex flex-col gap-1">
+                <span className="text-[8px] font-bold opacity-30 uppercase tracking-[0.3em]">Current Time</span>
+                <span className="text-xl font-mono font-bold tracking-widest tabular-nums">
+                  {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}
+                </span>
+              </div>
+              <div className="flex flex-col items-end gap-1">
+                <span className="text-[8px] font-bold opacity-30 uppercase tracking-[0.3em]">Status</span>
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: theme.primary }} />
+                  <span className="text-xs font-black uppercase">Online</span>
+                </div>
+              </div>
+            </div>
+
+            {isAuthenticated && (
+              <button 
+                onClick={handleLogout}
+                className="w-full py-5 rounded-2xl font-black uppercase text-[10px] tracking-[0.4em] border transition-all active:scale-95 flex items-center justify-center gap-3"
+                style={{ 
+                  borderColor: `${theme.error}40`, 
+                  color: theme.error, 
+                  backgroundColor: `${theme.error}05` 
+                }}
+              >
+                <LogOut size={16} />
+                Logout
+              </button>
+            )}
           </div>
         </div>
       </div>
-
-      {isAuthenticated && (
-        <button 
-          onClick={handleLogout}
-          className="w-full py-5 rounded-2xl font-black uppercase text-[10px] tracking-[0.4em] border transition-all active:scale-95 flex items-center justify-center gap-3"
-          style={{ 
-            borderColor: `${theme.error}40`, 
-            color: theme.error, 
-            backgroundColor: `${theme.error}05` 
-          }}
-        >
-          <LogOut size={16} />
-          Terminate_Session
-        </button>
-      )}
-    </div>
-  </div>
-</div>
     </>
   );
 };

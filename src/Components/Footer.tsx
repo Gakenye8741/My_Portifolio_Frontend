@@ -1,15 +1,10 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { 
-  Home, 
-  Code2, 
-  Briefcase, 
   Mail, 
   Github, 
   Linkedin, 
   Globe, 
-  Terminal,
-  Cpu,
   ChevronUp
 } from "lucide-react";
 import { useTheme } from "../ThemeContext";
@@ -36,7 +31,7 @@ const Footer: React.FC = () => {
         borderTop: `1px solid ${theme["base-300"]}44` 
       }}
     >
-      {/* Cinematic Background Glow */}
+      {/* Background Glow Effect */}
       <div 
         className="absolute top-0 right-[-10%] w-[500px] h-[500px] blur-[150px] opacity-[0.03] pointer-events-none"
         style={{ backgroundColor: theme.primary, borderRadius: '100%' }}
@@ -45,7 +40,7 @@ const Footer: React.FC = () => {
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
           
-          {/* Brand Identity */}
+          {/* Brand and Description */}
           <div className="lg:col-span-2 space-y-6">
             <Link to="/" className="flex items-center gap-3 group">
               <div className="w-2 h-8" style={{ backgroundColor: theme.primary }} />
@@ -54,22 +49,22 @@ const Footer: React.FC = () => {
               </span>
             </Link>
             <p className="text-sm font-medium leading-relaxed max-w-sm opacity-50" style={{ color: theme["base-content"] }}>
-              Full-stack developer specializing in building high-performance digital engines and immersive user experiences. Let's build the future of the web.
+              Full-stack developer building fast, beautiful, and easy-to-use websites. Let's work together to make something great.
             </p>
             <div className="flex items-center gap-4 pt-2">
                 <div className="flex flex-col">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-30">Current Status</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-30">Availability</span>
                     <div className="flex items-center gap-2">
                         <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: theme.success }} />
-                        <span className="text-xs font-mono font-bold uppercase">Open for collaborations</span>
+                        <span className="text-xs font-bold uppercase">Available for work</span>
                     </div>
                 </div>
             </div>
           </div>
 
-          {/* Sitemaps / Quick Links */}
+          {/* Links Directory */}
           <div className="space-y-6">
-            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] opacity-30">Directory</h3>
+            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] opacity-30">Links</h3>
             <div className="grid grid-cols-1 gap-4">
               {menuItems.map((item) => (
                 <Link
@@ -87,15 +82,15 @@ const Footer: React.FC = () => {
             </div>
           </div>
 
-          {/* Social / Connect */}
+          {/* Social Links */}
           <div className="space-y-6">
-            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] opacity-30">Connect Hub</h3>
+            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] opacity-30">Find Me Online</h3>
             <div className="flex flex-col gap-4">
               <a href="mailto:your-email@example.com" className="flex items-center gap-3 group">
                 <div className="p-2 rounded-lg transition-colors" style={{ backgroundColor: `${theme.primary}11` }}>
                     <Mail size={16} style={{ color: theme.primary }} />
                 </div>
-                <span className="text-sm font-mono font-bold opacity-70 group-hover:opacity-100 transition-opacity">Contact@Gakenye</span>
+                <span className="text-sm font-bold opacity-70 group-hover:opacity-100 transition-opacity">Send an Email</span>
               </a>
               <div className="flex gap-3">
                 {[
@@ -121,19 +116,17 @@ const Footer: React.FC = () => {
           </div>
         </div>
 
-        {/* Bottom Utility Bar */}
+        {/* Bottom Bar */}
         <div 
           className="pt-10 flex flex-col md:flex-row justify-between items-center gap-6 border-t"
           style={{ borderColor: `${theme["base-300"]}22` }}
         >
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
-                <Terminal size={14} className="opacity-20" />
-                <span className="text-[9px] font-mono opacity-30 uppercase tracking-[0.1em]">Build: Stable_v2.0.4</span>
+                <span className="text-[9px] font-bold opacity-30 uppercase tracking-[0.1em]">Version 2.0</span>
             </div>
             <div className="flex items-center gap-2">
-                <Cpu size={14} className="opacity-20" />
-                <span className="text-[9px] font-mono opacity-30 uppercase tracking-[0.1em]">Stack: React // Tailwind</span>
+                <span className="text-[9px] font-bold opacity-30 uppercase tracking-[0.1em]">Made with React and Tailwind</span>
             </div>
           </div>
 
