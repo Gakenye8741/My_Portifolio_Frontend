@@ -1,12 +1,9 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { 
-  Mail, 
-  Github, 
-  Linkedin, 
-  Globe, 
-  ChevronUp
+  Mail, Github, Linkedin, ChevronUp, ExternalLink, Instagram, MessageCircle 
 } from "lucide-react";
+import { RiWhatsappFill } from "react-icons/ri";
 import { useTheme } from "../ThemeContext";
 
 const menuItems = [
@@ -25,56 +22,48 @@ const Footer: React.FC = () => {
 
   return (
     <footer 
-      className="relative overflow-hidden transition-all duration-500 pt-20 pb-10"
-      style={{ 
-        backgroundColor: theme["base-100"], 
-        borderTop: `1px solid ${theme["base-300"]}44` 
-      }}
+      className="relative overflow-hidden pt-24 pb-12"
+      style={{ backgroundColor: theme["base-100"] }}
     >
-      {/* Background Glow Effect */}
-      <div 
-        className="absolute top-0 right-[-10%] w-[500px] h-[500px] blur-[150px] opacity-[0.03] pointer-events-none"
-        style={{ backgroundColor: theme.primary, borderRadius: '100%' }}
-      />
+      <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
       <div className="max-w-7xl mx-auto px-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-20">
           
-          {/* Brand and Description */}
-          <div className="lg:col-span-2 space-y-6">
-            <Link to="/" className="flex items-center gap-3 group">
-              <div className="w-2 h-8" style={{ backgroundColor: theme.primary }} />
-              <span className="text-2xl font-black uppercase italic tracking-tighter">
+          {/* Brand Identity */}
+          <div className="lg:col-span-2 space-y-8">
+            <Link to="/" className="inline-block group">
+              <span className="text-3xl font-black uppercase italic tracking-tighter">
                 GAKENYE <span style={{ color: theme.primary }}>NDIRITU</span>
               </span>
+              <div className="h-1 w-20 mt-2 rounded-full transition-all duration-500 group-hover:w-40" style={{ backgroundColor: theme.primary }} />
             </Link>
-            <p className="text-sm font-medium leading-relaxed max-w-sm opacity-50" style={{ color: theme["base-content"] }}>
-              Full-stack developer building fast, beautiful, and easy-to-use websites. Let's work together to make something great.
+            <p className="text-sm leading-relaxed max-w-sm opacity-60">
+              Full-stack developer focused on building scalable, aesthetic, and user-centric digital experiences. Always crafting, always learning.
             </p>
-            <div className="flex items-center gap-4 pt-2">
-                <div className="flex flex-col">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-30">Availability</span>
-                    <div className="flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: theme.success }} />
-                        <span className="text-xs font-bold uppercase">Available for work</span>
-                    </div>
-                </div>
+            
+            <div className="flex items-center gap-4 py-4 px-6 rounded-2xl border border-white/5 bg-white/[0.02] w-fit">
+              <div className="relative w-2 h-2">
+                <div className="absolute inset-0 rounded-full animate-ping" style={{ backgroundColor: theme.success }} />
+                <div className="absolute inset-0 rounded-full" style={{ backgroundColor: theme.success }} />
+              </div>
+              <span className="text-[10px] font-black uppercase tracking-widest opacity-80">Available for hire</span>
             </div>
           </div>
 
-          {/* Links Directory */}
+          {/* Navigation */}
           <div className="space-y-6">
-            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] opacity-30">Links</h3>
-            <div className="grid grid-cols-1 gap-4">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">Navigation</h3>
+            <div className="flex flex-col gap-4">
               {menuItems.map((item) => (
                 <Link
                   key={item.name}
                   to={item.path}
-                  className="group flex items-center gap-3 text-sm transition-all hover:translate-x-1"
+                  className="group flex items-center gap-4 text-sm"
                   style={{ color: theme["base-content"] }}
                 >
-                  <span className="text-[10px] font-mono opacity-20 group-hover:opacity-100" style={{ color: theme.primary }}>{item.id}</span>
-                  <span className="font-bold opacity-60 group-hover:opacity-100 uppercase tracking-widest text-[11px]">
+                  <span className="text-[9px] font-mono opacity-30" style={{ color: theme.primary }}>{item.id}</span>
+                  <span className="font-bold opacity-60 group-hover:opacity-100 transition-opacity uppercase tracking-widest text-[11px]">
                     {item.name}
                   </span>
                 </Link>
@@ -82,66 +71,54 @@ const Footer: React.FC = () => {
             </div>
           </div>
 
-          {/* Social Links */}
+          {/* Contact & Expanded Socials */}
           <div className="space-y-6">
-            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] opacity-30">Find Me Online</h3>
-            <div className="flex flex-col gap-4">
-              <a href="mailto:your-email@example.com" className="flex items-center gap-3 group">
-                <div className="p-2 rounded-lg transition-colors" style={{ backgroundColor: `${theme.primary}11` }}>
-                    <Mail size={16} style={{ color: theme.primary }} />
-                </div>
-                <span className="text-sm font-bold opacity-70 group-hover:opacity-100 transition-opacity">Send an Email</span>
-              </a>
-              <div className="flex gap-3">
-                {[
-                    { icon: <Github size={18} />, url: "#" },
-                    { icon: <Linkedin size={18} />, url: "#" },
-                    { icon: <Globe size={18} />, url: "#" }
-                ].map((social, i) => (
-                    <a 
-                        key={i} 
-                        href={social.url} 
-                        className="p-3 rounded-xl border transition-all hover:-translate-y-1 active:scale-90"
-                        style={{ 
-                            borderColor: `${theme["base-300"]}44`, 
-                            backgroundColor: `${theme["base-300"]}08`,
-                            color: theme["base-content"]
-                        }}
-                    >
-                        {social.icon}
-                    </a>
-                ))}
-              </div>
+            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">Social Networks</h3>
+            
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { icon: <Github size={18} />, url: "https://github.com/Gakenye8741", label: "GitHub" },
+                { icon: <Linkedin size={18} />, url: "https://www.linkedin.com/in/gakenye-ndiritu-9757923a8/", label: "LinkedIn" },
+                { icon: <Instagram size={18} />, url: "https://www.instagram.com/_code.d_by_gakenye_/", label: "Instagram" },
+                { icon: <RiWhatsappFill size={18} />, url: "https://wa.link/f3ajog", label: "WhatsApp" },
+              ].map((social, i) => (
+                <a 
+                  key={i} 
+                  href={social.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-4 rounded-2xl border border-white/5 hover:border-primary/30 transition-all hover:-translate-y-1 flex flex-col items-center gap-2"
+                  style={{ color: theme["base-content"] }}
+                >
+                  {social.icon}
+                  <span className="text-[8px] font-bold uppercase tracking-widest opacity-50">{social.label}</span>
+                </a>
+              ))}
             </div>
+            
+            <a 
+              href="mailto:codewithgakenye@gmail.com" 
+              className="flex items-center gap-3 p-4 rounded-xl border border-white/5 hover:border-primary/30 transition-all"
+            >
+              <Mail size={16} style={{ color: theme.primary }} />
+              <span className="text-xs font-bold opacity-70 group-hover:opacity-100">Send an Email</span>
+            </a>
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div 
-          className="pt-10 flex flex-col md:flex-row justify-between items-center gap-6 border-t"
-          style={{ borderColor: `${theme["base-300"]}22` }}
-        >
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-                <span className="text-[9px] font-bold opacity-30 uppercase tracking-[0.1em]">Version 2.0</span>
-            </div>
-            <div className="flex items-center gap-2">
-                <span className="text-[9px] font-bold opacity-30 uppercase tracking-[0.1em]">Made with React and Tailwind</span>
-            </div>
-          </div>
+        {/* Footer Meta */}
+        <div className="pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-8">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-30">
+            &copy; {new Date().getFullYear()} Gakenye Ndiritu. Built with passion.
+          </p>
 
           <button 
             onClick={scrollToTop}
-            className="group flex items-center gap-3 px-4 py-2 rounded-full border transition-all hover:brightness-125"
-            style={{ borderColor: `${theme["base-300"]}44`, backgroundColor: `${theme["base-300"]}05` }}
+            className="flex items-center gap-3 px-6 py-3 rounded-full border border-white/5 hover:border-primary/30 transition-all group"
           >
-            <span className="text-[10px] font-black uppercase tracking-widest opacity-50 group-hover:opacity-100 transition-opacity">Back to Top</span>
-            <ChevronUp size={16} style={{ color: theme.primary }} className="group-hover:-translate-y-1 transition-transform" />
+            <span className="text-[10px] font-black uppercase tracking-widest opacity-50 group-hover:opacity-100">Back to Top</span>
+            <ChevronUp size={16} style={{ color: theme.primary }} />
           </button>
-          
-          <div className="text-[10px] font-bold opacity-30 uppercase tracking-[0.2em] order-last md:order-none">
-            &copy; {new Date().getFullYear()} Gakenye Ndiritu.
-          </div>
         </div>
       </div>
     </footer>
