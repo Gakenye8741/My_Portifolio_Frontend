@@ -143,8 +143,8 @@ const ProjectCenter = () => {
                   <div className="pt-6 border-t border-opacity-5 flex items-center justify-between" style={{ borderColor: theme["base-content"] }}>
                     <div className="flex gap-6">
                       <div className="flex flex-col gap-1">
-                        <span className="text-[7px] font-black opacity-20 uppercase tracking-widest">Views</span>
-                        <span className="text-[10px] font-black flex items-center gap-1.5"><Eye size={12} style={{ color: theme.primary }} /> {project.viewCount}</span>
+                        <span className="text-[7px] font-black opacity-20 uppercase tracking-widest">Project Id</span>
+                        <span className="text-[10px] font-black flex items-center gap-1.5"><Eye size={12} style={{ color: theme.primary }} /> {project.id}</span>
                       </div>
                       <div className="flex flex-col gap-1">
                         <span className="text-[7px] font-black opacity-20 uppercase tracking-widest">Year</span>
