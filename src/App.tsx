@@ -13,6 +13,8 @@ import ProjectSectionManager from "./DashBoard/AdminDashBoard/ProjectSection";
 import SkillsManager from "./DashBoard/AdminDashBoard/SkillsManager";
 import ProjectTechManager from "./DashBoard/AdminDashBoard/ProjectTechManager";
 import TimelineManager from "./DashBoard/AdminDashBoard/TimeLineManager";
+import StackPage from "./Pages/StackPAge";
+import ContactPage from "./Pages/Contatc";
 
 
 const App = () => {
@@ -39,13 +41,20 @@ const App = () => {
       path: "/Auth",
       element: <Login />,
     },
-    
+    {
+      path: "/tech",
+      element: < StackPage />
+    },
+    {
+      path: "/contact",
+      element: <ContactPage />
+    },
     {
       // 4. FALLBACK / 404
       path: "*",
       element: <Home />,
     },
-     {
+    {
       path: '/admin-dashboard',
       element: (
         <ProtectedRoutes>
@@ -53,13 +62,13 @@ const App = () => {
         </ProtectedRoutes>
       ),
       children: [
-        { path: "manage-projects", element:  <ProjectManager /> },
-        { path: "media-manager", element:  <MediaManager /> },
-        { path: "manage-links", element:  <ProjectLinksManager /> },
-        { path: "skills-manager", element:  <SkillsManager /> },
-        { path: "ProjectTech-manager", element:  <ProjectTechManager /> },
-        { path:  "Section-manager" , element: <ProjectSectionManager/> },
-        { path:  "Project-timeline" , element: <TimelineManager/> },
+        { path: "manage-projects", element: <ProjectManager /> },
+        { path: "media-manager", element: <MediaManager /> },
+        { path: "manage-links", element: <ProjectLinksManager /> },
+        { path: "skills-manager", element: <SkillsManager /> },
+        { path: "ProjectTech-manager", element: <ProjectTechManager /> },
+        { path: "Section-manager", element: <ProjectSectionManager /> },
+        { path: "Project-timeline", element: <TimelineManager /> },
       ],
     },
   ]);

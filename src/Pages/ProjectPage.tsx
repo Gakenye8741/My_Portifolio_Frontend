@@ -5,21 +5,20 @@ import { useGetProjectsQuery } from '../Features/Apis/Projects.Api';
 import { Navbar } from '../Components/Navbar';
 import { 
   Search, Eye, Clock, ArrowRight, 
-  LayoutGrid, List, Terminal, X, AlertCircle, Hash, 
-  Cpu, Filter, ChevronRight, Activity, Globe
+  LayoutGrid, List, Terminal, X, AlertCircle, 
+  ChevronRight, Activity, Globe
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const ProjectsRegistry = () => {
   const { theme } = useTheme();
   const navigate = useNavigate();
   const { data: projects, isLoading } = useGetProjectsQuery();
   
-  // States
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [activeStatus, setActiveStatus] = useState<'all' | 'published' | 'archived'>('all');
 
-  // --- ENHANCED FILTER LOGIC ---
   const filteredProjects = useMemo(() => {
     if (!projects) return [];
     return projects.filter(p => {
@@ -34,7 +33,6 @@ const ProjectsRegistry = () => {
     });
   }, [searchTerm, activeStatus, projects]);
 
-  // --- BRANDED LOADING STATE ---
   if (isLoading) return (
     <div className="h-screen flex flex-col items-center justify-center gap-8" style={{ backgroundColor: theme["base-100"] }}>
       <div className="relative">
@@ -44,47 +42,48 @@ const ProjectsRegistry = () => {
       </div>
       <div className="text-center space-y-2">
         <h2 className="text-xl font-black uppercase tracking-[0.6em] animate-pulse">Gakenye</h2>
-        <p className="text-[9px] font-bold opacity-30 uppercase tracking-[0.4em]">Initialising_Data_Stream...</p>
+        <p className="text-[9px] font-bold opacity-30 uppercase tracking-[0.4em]">Loading Projects...</p>
       </div>
     </div>
   );
 
   return (
-    <main className="min-h-screen pt-[64px] transition-all duration-700" 
-          style={{ backgroundColor: theme["base-100"], color: theme["base-content"] }}>
+    <motion.main 
+      initial={{ opacity: 0 }} 
+      animate={{ opacity: 1 }} 
+      transition={{ duration: 0.5 }}
+      className="min-h-screen pt-[64px] transition-all duration-700" 
+      style={{ backgroundColor: theme["base-100"], color: theme["base-content"] }}
+    >
       <Navbar />
 
-      {/* --- ADVANCED HEADER --- */}
       <header className="px-6 lg:px-16 py-16 border-b border-white/5 relative overflow-hidden">
-        {/* Background Decorative Text */}
         <div className="absolute top-10 right-[-5%] text-[15vh] font-black opacity-[0.02] italic pointer-events-none select-none">
-          REGISTRY_01
+          REGISTRY
         </div>
 
         <div className="max-w-7xl mx-auto space-y-12">
-          {/* Breadcrumb Navigation */}
           <nav className="flex items-center gap-4 text-[9px] font-black uppercase tracking-widest opacity-40">
-            <span className="hover:text-primary cursor-pointer transition-colors" onClick={() => navigate('/')}>Root</span>
+            <span className="hover:text-primary cursor-pointer transition-colors" onClick={() => navigate('/')}>Home</span>
             <ChevronRight size={10} />
-            <span style={{ color: theme.primary }}>Archive_Nodes</span>
+            <span style={{ color: theme.primary }}>Project Archive</span>
           </nav>
           
           <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-12">
             <div className="space-y-4">
               <h1 className="text-7xl md:text-9xl font-black uppercase italic tracking-tighter leading-[0.8]">
-                ARCHIVE <br /> <span className="text-outline" style={{ WebkitTextStroke: `1px ${theme["base-content"]}40`, color: 'transparent' }}>CORE.</span>
+                PROJECTS <br /> <span className="text-outline" style={{ WebkitTextStroke: `1px ${theme["base-content"]}40`, color: 'transparent' }}>ARCHIVE</span>
               </h1>
               <div className="flex items-center gap-6">
                 <div className="flex items-center gap-2">
                     <Activity size={14} style={{ color: theme.primary }} />
-                    <span className="text-[10px] font-bold uppercase tracking-widest">{projects?.length} Total_Nodes</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest">{projects?.length} Total Projects</span>
                 </div>
                 <div className="w-px h-4 bg-white/10" />
-                <span className="text-[10px] font-bold uppercase tracking-widest opacity-40">{filteredProjects.length} Result_Matches</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest opacity-40">{filteredProjects.length} Found</span>
               </div>
             </div>
             
-            {/* SEARCH & FILTER CONSOLE */}
             <div className="w-full xl:max-w-2xl space-y-6">
               <div className="relative group">
                 <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-transparent rounded-2xl blur opacity-0 group-focus-within:opacity-100 transition duration-500" 
@@ -93,7 +92,7 @@ const ProjectsRegistry = () => {
                     <Search className="ml-4 opacity-20" size={20} />
                     <input 
                       type="text" 
-                      placeholder="SEARCH_NODE_IDENTIFIER..." 
+                      placeholder="Search projects by name, tech, or description..." 
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="flex-grow bg-transparent py-4 px-4 text-xs font-black uppercase tracking-widest focus:outline-none"
@@ -106,7 +105,6 @@ const ProjectsRegistry = () => {
                 </div>
               </div>
 
-              {/* FILTER BUTTONS */}
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div className="flex gap-2">
                     {['all', 'published', 'archived'].map((status) => (
@@ -135,116 +133,112 @@ const ProjectsRegistry = () => {
         </div>
       </header>
 
-      {/* --- CONTENT SECTION --- */}
       <section className="px-6 lg:px-16 py-20">
         <div className="max-w-7xl mx-auto">
-          {filteredProjects.length > 0 ? (
-            <div className={viewMode === 'grid' 
-              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10" 
-              : "flex flex-col gap-6"
-            }>
-              {filteredProjects.map((project) => (
-                <div 
-                  key={project.id}
-                  onClick={() => navigate(`/project/${project.id}`)}
-                  className={`group relative overflow-hidden cursor-pointer transition-all duration-700 
-                    ${viewMode === 'grid' 
-                      ? 'rounded-[3rem] border border-white/5 bg-black/5 p-8 hover:bg-black/20 hover:-translate-y-4' 
-                      : 'flex flex-col md:flex-row items-center gap-10 p-8 rounded-[2rem] border border-white/5 bg-black/5 hover:bg-black/20'
-                    }`}
-                >
-                  {/* Thumbnail Container */}
-                  <div className={`${viewMode === 'grid' ? 'aspect-[4/3] mb-8' : 'w-full md:w-64 aspect-video md:aspect-square'} rounded-[2rem] overflow-hidden shrink-0 bg-neutral-900 relative`}>
-                    <img 
-                      src={project.thumbnail?.fileUrl || '/api/placeholder/400/400'} 
-                      className="w-full h-full object-cover grayscale-[100%] group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-110 opacity-40 group-hover:opacity-100"
-                      alt={project.title} 
-                    />
-                    <div className="absolute top-4 right-4 p-2 rounded-full bg-black/60 backdrop-blur-md border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Globe size={14} style={{ color: theme.primary }} />
-                    </div>
-                  </div>
-
-                  {/* Metadata Content */}
-                  <div className="flex-grow space-y-6">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-3">
-                         <span className="px-2 py-0.5 rounded bg-white/5 text-[7px] font-black uppercase tracking-widest opacity-40 border border-white/5">
-                            ID_{project.id.slice(0, 4)}
-                         </span>
-                         <div className="h-px flex-grow bg-white/5" />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-3xl font-black uppercase italic tracking-tighter group-hover:text-primary transition-colors leading-none">
-                          {project.title}
-                        </h3>
-                        <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 -translate-x-10 group-hover:translate-x-0 transition-all duration-500">
-                             <ArrowRight size={20} style={{ color: theme.primary }} />
-                        </div>
-                      </div>
-                    </div>
-
-                    <p className="text-[11px] opacity-40 uppercase font-bold line-clamp-2 italic leading-relaxed tracking-tight">
-                      {project.mainDescription}
-                    </p>
-
-                    {/* --- TECH STACK (4 NODES) --- */}
-                    <div className="flex flex-wrap gap-2 pt-2">
-                      {project.techs?.slice(0, 4).map((tech: any, index: number) => (
-                        <div key={index} className="px-3 py-1.5 text-[8px] font-black uppercase tracking-[0.2em] border border-white/5 rounded-lg bg-white/5 group-hover:border-primary/20 transition-colors"
-                             style={{ color: theme.primary }}>
-                          {tech.technology?.name}
-                        </div>
-                      ))}
-                      {project.techs?.length > 4 && (
-                        <div className="px-3 py-1.5 text-[8px] font-black uppercase opacity-20 tracking-widest">
-                            +{project.techs.length - 4} More_Nodes
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex gap-8 pt-6 border-t border-white/5 text-[10px] font-black uppercase tracking-[0.3em]">
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[7px] opacity-20">Traffic</span>
-                        <span className="flex items-center gap-2"><Eye size={12} style={{ color: theme.primary }} /> {project.viewCount}</span>
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[7px] opacity-20">Deployment</span>
-                        <span className="flex items-center gap-2"><Clock size={12} /> {new Date(project.createdAt || "").getFullYear()}</span>
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[7px] opacity-20">Status</span>
-                        <span className="flex items-center gap-2"><Terminal size={12} className="opacity-40" /> {project.status}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            /* --- NO RESULTS FOUND --- */
-            <div className="py-40 flex flex-col items-center justify-center text-center space-y-8 rounded-[4rem] border-2 border-dashed border-white/5">
-              <div className="relative">
-                 <AlertCircle size={80} className="opacity-10" />
-                 <Search size={30} className="absolute inset-0 m-auto opacity-40 animate-pulse" />
-              </div>
-              <div className="space-y-3">
-                <h3 className="text-3xl font-black uppercase italic tracking-tighter">Null_Registry_Result</h3>
-                <p className="text-xs opacity-40 uppercase tracking-[0.4em] max-w-sm mx-auto leading-relaxed">
-                  The search query <span style={{ color: theme.primary }}>"{searchTerm}"</span> did not return any valid project nodes.
-                </p>
-              </div>
-              <button 
-                onClick={() => {setSearchTerm(''); setActiveStatus('all');}} 
-                className="px-8 py-4 rounded-full border border-white/10 text-[10px] font-black uppercase tracking-[0.4em] hover:bg-white hover:text-black transition-all"
+          <AnimatePresence mode="popLayout">
+            {filteredProjects.length > 0 ? (
+              <motion.div 
+                layout
+                className={viewMode === 'grid' 
+                  ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10" 
+                  : "flex flex-col gap-6"
+                }
               >
-                Clear_Registry_Filters
-              </button>
-            </div>
-          )}
+                {filteredProjects.map((project) => (
+                  <motion.div 
+                    layout
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    key={project.id}
+                    onClick={() => navigate(`/project/${project.id}`)}
+                    className={`group relative overflow-hidden cursor-pointer transition-all duration-700 
+                      ${viewMode === 'grid' 
+                        ? 'rounded-[3rem] border border-white/5 bg-black/5 p-8 hover:bg-black/20 hover:-translate-y-4' 
+                        : 'flex flex-col md:flex-row items-center gap-10 p-8 rounded-[2rem] border border-white/5 bg-black/5 hover:bg-black/20'
+                      }`}
+                  >
+                    <div className={`${viewMode === 'grid' ? 'aspect-[4/3] mb-8' : 'w-full md:w-64 aspect-video md:aspect-square'} rounded-[2rem] overflow-hidden shrink-0 bg-neutral-900 relative`}>
+                      <img 
+                        src={project.thumbnail?.fileUrl || '/api/placeholder/400/400'} 
+                        className="w-full h-full object-cover grayscale-[100%] group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-110 opacity-40 group-hover:opacity-100"
+                        alt={project.title} 
+                      />
+                      <div className="absolute top-4 right-4 p-2 rounded-full bg-black/60 backdrop-blur-md border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Globe size={14} style={{ color: theme.primary }} />
+                      </div>
+                    </div>
+
+                    <div className="flex-grow space-y-6">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-3">
+                           <span className="px-2 py-0.5 rounded bg-white/5 text-[7px] font-black uppercase tracking-widest opacity-40 border border-white/5">
+                              {project.status}
+                           </span>
+                           <div className="h-px flex-grow bg-white/5" />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-3xl font-black uppercase italic tracking-tighter group-hover:text-primary transition-colors leading-none">
+                            {project.title}
+                          </h3>
+                          <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 -translate-x-10 group-hover:translate-x-0 transition-all duration-500">
+                               <ArrowRight size={20} style={{ color: theme.primary }} />
+                          </div>
+                        </div>
+                      </div>
+
+                      <p className="text-[11px] opacity-40 uppercase font-bold line-clamp-2 italic leading-relaxed tracking-tight">
+                        {project.mainDescription}
+                      </p>
+
+                      <div className="flex flex-wrap gap-2 pt-2">
+                        {project.techs?.slice(0, 4).map((tech: any, index: number) => (
+                          <div key={index} className="px-3 py-1.5 text-[8px] font-black uppercase tracking-[0.2em] border border-white/5 rounded-lg bg-white/5 group-hover:border-primary/20 transition-colors"
+                               style={{ color: theme.primary }}>
+                            {tech.technology?.name}
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="flex gap-8 pt-6 border-t border-white/5 text-[10px] font-black uppercase tracking-[0.3em]">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[7px] opacity-20">Views</span>
+                          <span className="flex items-center gap-2"><Eye size={12} style={{ color: theme.primary }} /> {project.title}</span>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[7px] opacity-20">Year</span>
+                          <span className="flex items-center gap-2"><Clock size={12} /> {new Date(project.createdAt || "").getFullYear()}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            ) : (
+              <motion.div 
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
+                className="py-40 flex flex-col items-center justify-center text-center space-y-8 rounded-[4rem] border-2 border-dashed border-white/5"
+              >
+                <div className="relative">
+                   <AlertCircle size={80} className="opacity-10" />
+                   <Search size={30} className="absolute inset-0 m-auto opacity-40 animate-pulse" />
+                </div>
+                <div className="space-y-3">
+                  <h3 className="text-3xl font-black uppercase italic tracking-tighter">No Projects Found</h3>
+                  <button 
+                    onClick={() => {setSearchTerm(''); setActiveStatus('all');}} 
+                    className="px-8 py-4 mt-4 rounded-full border border-white/10 text-[10px] font-black uppercase tracking-[0.4em] hover:bg-white hover:text-black transition-all"
+                  >
+                    Clear Filters
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </section>
-    </main>
+    </motion.main>
   );
 };
 

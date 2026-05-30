@@ -39,7 +39,7 @@ const ProjectCenter = () => {
       </div>
       <div className="text-center space-y-2">
         <h2 className="text-xl font-black uppercase tracking-[0.5em] animate-pulse">Gakenye</h2>
-        <p className="text-[10px] font-bold opacity-40 uppercase tracking-[0.3em]">Syncing_Project_Nodes...</p>
+        <p className="text-[10px] font-bold opacity-40 uppercase tracking-[0.3em]">Loading Projects...</p>
       </div>
     </div>
   );
@@ -51,11 +51,6 @@ const ProjectCenter = () => {
         {/* --- HEADER --- */}
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-12 mb-24">
           <div className="space-y-6">
-            <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full border border-opacity-10 text-[10px] font-black uppercase tracking-widest"
-                 style={{ borderColor: theme.primary, color: theme.primary }}>
-              <Terminal size={14} className="animate-pulse" /> 
-              Featured_Nodes_v2.0
-            </div>
             <h2 className="text-6xl md:text-8xl font-black uppercase italic tracking-tighter leading-[0.8]">
               SELECTED <br /> <span style={{ color: theme.primary }}>WORKS.</span>
             </h2>
@@ -64,7 +59,7 @@ const ProjectCenter = () => {
           {/* Search Interface with Result Counter */}
           <div className="relative w-full lg:max-w-md group">
             <div className="flex justify-between items-center mb-2 px-1">
-              <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Search_Registry</span>
+              <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Search Project</span>
               {searchTerm && (
                 <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: theme.primary }}>
                   {filteredProjects.length} {filteredProjects.length === 1 ? 'Project' : 'Projects'} Found
@@ -75,7 +70,7 @@ const ProjectCenter = () => {
               <Search size={20} className="absolute left-0 top-1/2 -translate-y-1/2 opacity-20" />
               <input 
                 type="text"
-                placeholder="FILTER_BY_NAME_OR_TECH..."
+                placeholder="FILTER BY PROJECT NAME OR TECHNOLOGY..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full bg-transparent border-b-2 py-5 pl-10 pr-10 text-xs font-bold uppercase tracking-[0.2em] focus:outline-none focus:border-opacity-100 transition-all"
@@ -126,7 +121,7 @@ const ProjectCenter = () => {
                     {project.mainDescription}
                   </p>
 
-                  {/* TECH TAGS - UPDATED TO SHOW ONLY FOUR */}
+                  {/* TECH TAGS */}
                   <div className="flex flex-wrap gap-2 pt-2">
                     {project.techs?.slice(0, 4).map((tech: any, index: number) => (
                       <div 
@@ -139,7 +134,7 @@ const ProjectCenter = () => {
                     ))}
                     {project.techs?.length > 4 && (
                       <span className="text-[7px] font-black opacity-30 mt-1 uppercase tracking-widest">
-                        +{project.techs.length - 4} More_Nodes
+                        +{project.techs.length - 4} More
                       </span>
                     )}
                   </div>
@@ -152,7 +147,7 @@ const ProjectCenter = () => {
                         <span className="text-[10px] font-black flex items-center gap-1.5"><Eye size={12} style={{ color: theme.primary }} /> {project.viewCount}</span>
                       </div>
                       <div className="flex flex-col gap-1">
-                        <span className="text-[7px] font-black opacity-20 uppercase tracking-widest">Rel</span>
+                        <span className="text-[7px] font-black opacity-20 uppercase tracking-widest">Year</span>
                         <span className="text-[10px] font-black flex items-center gap-1.5"><Clock size={12} /> {new Date(project.createdAt).getFullYear()}</span>
                       </div>
                     </div>
@@ -165,15 +160,16 @@ const ProjectCenter = () => {
             ))}
           </div>
         ) : (
-          /* --- EMPTY STATE / NO RESULTS FOUND --- */
+          /* --- NO RESULTS FOUND --- */
           <div className="py-24 flex flex-col items-center justify-center text-center space-y-6 rounded-[3rem] border-2 border-dashed border-opacity-5" style={{ borderColor: theme["base-content"] }}>
             <div className="p-6 rounded-full bg-opacity-5" style={{ backgroundColor: theme.primary }}>
               <AlertCircle size={48} style={{ color: theme.primary }} className="opacity-40" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-2xl font-black uppercase tracking-tighter">Null_Pointer_Exception</h3>
+              <h3 className="text-2xl font-black uppercase tracking-tighter">No Results Found</h3>
               <p className="text-xs opacity-40 uppercase tracking-widest max-w-xs mx-auto">
-                No project nodes matching <span style={{ color: theme.primary }}>"{searchTerm}"</span> were found in the current sector.
+                I couldn't find any projects matching <span style={{ color: theme.primary }}>"{searchTerm}"</span>. 
+                Please try a different search term.
               </p>
             </div>
             <button 
@@ -181,7 +177,7 @@ const ProjectCenter = () => {
               className="text-[10px] font-black uppercase tracking-[0.2em] border-b-2 pb-1 transition-all hover:opacity-100 opacity-60"
               style={{ borderColor: theme.primary }}
             >
-              Clear_Filter
+              Clear Search
             </button>
           </div>
         )}

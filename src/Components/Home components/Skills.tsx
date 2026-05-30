@@ -43,11 +43,11 @@ const Skills = () => {
         {/* --- HEADER --- */}
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-16">
           <div className="space-y-4">
-            <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full border text-[10px] font-bold uppercase tracking-widest"
+            {/* <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full border text-[10px] font-bold uppercase tracking-widest"
                  style={{ borderColor: `${theme.primary}33`, backgroundColor: `${theme.primary}08`, color: theme.primary }}>
               <Terminal size={12} />
               Skill List // {techSkills?.length || 0} Total items
-            </div>
+            </div> */}
             <h2 className="text-5xl md:text-7xl font-black uppercase italic tracking-tighter">
               MY <span style={{ color: theme.primary }}>SKILLS.</span>
             </h2>
