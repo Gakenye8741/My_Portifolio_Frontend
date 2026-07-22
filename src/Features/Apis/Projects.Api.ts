@@ -60,7 +60,7 @@ export interface Project {
 export const projectsApi = createApi({
   reducerPath: 'projectsApi',
   baseQuery: fetchBaseQuery({ 
-    baseUrl: 'https://portifoliobackend-ezefe7h3c6hnb4em.southafricanorth-01.azurewebsites.net/api' 
+    baseUrl: 'https://my-portifolio-backend-fb0a.onrender.com/api' 
   }),
   tagTypes: ['Project'],
   endpoints: (builder) => ({

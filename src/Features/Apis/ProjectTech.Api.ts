@@ -20,7 +20,7 @@ export interface SyncTechRequest {
 export const ProjectTechApi = createApi({
   reducerPath: 'ProjectTechApi',
   baseQuery: fetchBaseQuery({ 
-    baseUrl: 'https://portifoliobackend-ezefe7h3c6hnb4em.southafricanorth-01.azurewebsites.net/api' 
+    baseUrl: 'https://my-portifolio-backend-fb0a.onrender.com/api' 
   }),
   tagTypes: ['ProjectTech'],
   endpoints: (builder) => ({

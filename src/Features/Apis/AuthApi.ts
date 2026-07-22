@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-const baseUrl = 'https://portifoliobackend-ezefe7h3c6hnb4em.southafricanorth-01.azurewebsites.net/api';
+const baseUrl = 'https://my-portifolio-backend-fb0a.onrender.com/api';
 
 export const authApi = createApi({
   reducerPath: 'authApi',

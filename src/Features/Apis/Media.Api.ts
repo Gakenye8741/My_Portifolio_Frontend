@@ -12,7 +12,7 @@ export interface MediaAsset {
 export const mediaApi = createApi({
   reducerPath: 'mediaApi',
   baseQuery: fetchBaseQuery({ 
-    baseUrl: 'https://portifoliobackend-ezefe7h3c6hnb4em.southafricanorth-01.azurewebsites.net/api',
+    baseUrl: 'https://my-portifolio-backend-fb0a.onrender.com/api',
     prepareHeaders: (headers, { getState }) => {
       const token = (getState() as RootState).auth.token; 
       if (token) headers.set('authorization', `Bearer ${token}`);

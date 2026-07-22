@@ -4,7 +4,7 @@ export const contentApi = createApi({
   reducerPath: 'contentApi',
   // Updated to your Azure Production Link
   baseQuery: fetchBaseQuery({ 
-    baseUrl: 'https://portifoliobackend-ezefe7h3c6hnb4em.southafricanorth-01.azurewebsites.net/api/' 
+    baseUrl: 'https://my-portifolio-backend-fb0a.onrender.com/api/' 
   }),
   tagTypes: ['Content'],
   endpoints: (builder) => ({

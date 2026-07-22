@@ -30,7 +30,7 @@ export interface UpdateTimelineDTO {
 export const projectTimelineApi = createApi({
   reducerPath: 'projectTimelineApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: 'http://localhost:5000/api',
+    baseUrl: 'https://my-portifolio-backend-fb0a.onrender.com/api',
     prepareHeaders: (headers, { getState }) => {
       // Injects the JWT token if you have authentication set up
       const token = (getState() as RootState).auth.token;

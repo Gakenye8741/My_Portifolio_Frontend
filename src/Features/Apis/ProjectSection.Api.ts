@@ -30,7 +30,7 @@ export interface ReorderRequest {
 
 export const ProjectSectionsApi = createApi({
   reducerPath: 'ProjectSectionsApi',
-  baseQuery: fetchBaseQuery({ baseUrl: 'https://portifoliobackend-ezefe7h3c6hnb4em.southafricanorth-01.azurewebsites.net/api' }),
+  baseQuery: fetchBaseQuery({ baseUrl: 'https://my-portifolio-backend-fb0a.onrender.com/api' }),
   tagTypes: ['ProjectSections'],
   endpoints: (builder) => ({
     

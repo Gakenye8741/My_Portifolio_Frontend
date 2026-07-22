@@ -19,7 +19,7 @@ export interface SyncLinkRequest {
 export const ProjectLinksApi = createApi({
   reducerPath: 'ProjectLinksApi',
   baseQuery: fetchBaseQuery({ 
-    baseUrl: 'https://portifoliobackend-ezefe7h3c6hnb4em.southafricanorth-01.azurewebsites.net/api',
+    baseUrl: 'https://my-portifolio-backend-fb0a.onrender.com/api',
     prepareHeaders: (headers) => {
       // You can pull the token from your AuthSlice here if needed
       const token = localStorage.getItem('token');
