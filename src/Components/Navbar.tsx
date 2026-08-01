@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { 
   LogOut, LayoutDashboard, ChevronDown, 
-  Home, Code2, Cpu, Mail 
+  Home, Code2, Cpu, Mail, Briefcase 
 } from "lucide-react";
 import logo from "../../public/LOGO.png";
 import { useSelector, useDispatch } from "react-redux";
@@ -53,6 +53,7 @@ export const Navbar: React.FC = () => {
     { name: "Home", path: "/", icon: <Home size={22} /> },
     { name: "Projects", path: "/projects", icon: <Code2 size={22} /> },
     { name: "Stack", path: "/tech", icon: <Cpu size={22} /> },
+    { name: "Services", path: "/services", icon: <Briefcase size={22} /> },
     { name: "Contact", path: "/contact", icon: <Mail size={22} /> },
   ];
 
@@ -177,7 +178,7 @@ export const Navbar: React.FC = () => {
           borderColor: `${theme["base-content"]}10`
         }}
       >
-        <div className="grid grid-cols-4 h-full max-w-md mx-auto items-center px-2">
+        <div className="grid grid-cols-5 h-full max-w-lg mx-auto items-center px-1">
           {menuItems.map((item) => {
             const isActive = location.pathname === item.path;
             return (
@@ -188,7 +189,7 @@ export const Navbar: React.FC = () => {
               >
                 {/* Telegram-style Capsule Backdrop Shape */}
                 <div 
-                  className={`flex items-center justify-center py-1 px-5 rounded-full transition-all duration-200 ${
+                  className={`flex items-center justify-center py-1 px-3 rounded-full transition-all duration-200 ${
                     isActive ? 'scale-105' : 'scale-100'
                   }`}
                   style={{
@@ -208,7 +209,7 @@ export const Navbar: React.FC = () => {
                 
                 {/* Clean Navigation Label */}
                 <span 
-                  className="text-[9px] font-bold uppercase tracking-wider mt-0.5 transition-colors duration-200"
+                  className="text-[8px] font-bold uppercase tracking-wider mt-0.5 transition-colors duration-200 truncate max-w-full px-1"
                   style={{ 
                     color: isActive ? theme.primary : theme["base-content"],
                     opacity: isActive ? 1 : 0.4

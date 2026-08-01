@@ -15,6 +15,7 @@ import ProjectTechManager from "./DashBoard/AdminDashBoard/ProjectTechManager";
 import TimelineManager from "./DashBoard/AdminDashBoard/TimeLineManager";
 import StackPage from "./Pages/StackPAge";
 import ContactPage from "./Pages/Contatc";
+import ServicesPage from "./Pages/Services";
 
 
 const App = () => {
@@ -44,6 +45,10 @@ const App = () => {
     {
       path: "/tech",
       element: < StackPage />
+    },
+     {
+      path: "/services",
+      element: < ServicesPage />
     },
     {
       path: "/contact",
