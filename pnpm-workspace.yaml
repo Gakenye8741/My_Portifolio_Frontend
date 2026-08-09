@@ -3,3 +3,9 @@ allowBuilds:
   '@tailwindcss/oxide': true
   core-js: true
   esbuild: true
+
+ignoredBuiltDependencies:
+  - '@parcel/watcher'
+  - '@tailwindcss/oxide'
+  - core-js
+  - esbuild

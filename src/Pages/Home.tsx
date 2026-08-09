@@ -8,8 +8,10 @@ import About from '../Components/Home components/About';
 import Skills from '../Components/Home components/Skills';
 import ProjectCenter from '../Components/Home components/ProjectCenter';
 
-// Import the logo
+// Import the logo and components
 import logoMain from "../../public/LOGO.png";
+import PageTitle from '../Components/PageTitle';
+import SEO from '../Components/SEO'; // 1. Import SEO Component
 
 const Home = () => {
   const { theme } = useTheme();
@@ -33,6 +35,16 @@ const Home = () => {
       className="min-h-screen transition-colors duration-500 flex flex-col relative"
       style={{ backgroundColor: theme["base-100"], color: theme["base-content"] }}
     >
+      {/* 2. Integrate SEO Component */}
+      <SEO 
+        title="Gakenye Ndiritu | Full-Stack Software Engineer Portfolio" 
+        description="Official portfolio of Gakenye Ndiritu. Computer Science student at Laikipia University and Full-Stack Software Engineer specializing in the PERN stack, React Native, and Blockchain applications."
+        path="/"
+      />
+
+      {/* Dynamic page title for the main home page */}
+      <PageTitle title="Home" />
+
       {/* Background Logo Decoration */}
       <div className="fixed inset-0 flex items-center justify-center pointer-events-none overflow-hidden z-0">
         <img 

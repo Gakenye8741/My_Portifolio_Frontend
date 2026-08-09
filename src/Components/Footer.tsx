@@ -9,8 +9,9 @@ import { useTheme } from "../ThemeContext";
 const menuItems = [
   { name: "Home", path: "/", id: "01" },
   { name: "Projects", path: "/projects", id: "02" },
-  { name: "Stack", path: "/tech", id: "03" },
-  { name: "Contact", path: "/contact", id: "04" },
+  { name: "Services", path: "/services", id: "03" },
+  { name: "Stack", path: "/tech", id: "04" },
+  { name: "Contact", path: "/contact", id: "05" },
 ];
 
 const Footer: React.FC = () => {

@@ -5,13 +5,16 @@ import { useGetProjectsQuery } from '../Features/Apis/Projects.Api';
 import { Navbar } from '../Components/Navbar';
 import { 
   Search, Eye, Clock, ArrowRight, 
-  LayoutGrid, List, Terminal, X, AlertCircle, 
+  LayoutGrid, List, X, AlertCircle, 
   ChevronRight, Activity, Globe
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Import the logo
+// Import the logo and components
 import logoMain from "../../public/LOGO.png";
+import Footer from '../Components/Footer';
+import PageTitle from '../Components/PageTitle';
+import SEO from '../Components/SEO'; // 1. Import SEO Component
 
 const ProjectsRegistry = () => {
   const { theme } = useTheme();
@@ -58,6 +61,15 @@ const ProjectsRegistry = () => {
       className="min-h-screen pt-[64px] transition-all duration-700 relative" 
       style={{ backgroundColor: theme["base-100"], color: theme["base-content"] }}
     >
+      {/* 2. Integrate SEO Component */}
+      <SEO 
+        title="Gakenye Ndiritu | Projects Archive & Portfolio" 
+        description="Explore production-ready full-stack applications, e-voting blockchain systems, and web solutions built by Gakenye Ndiritu using React,React Native,Node.js, and TypeScript."
+        path="/projects"
+      />
+
+      <PageTitle title="Projects" />
+      
       {/* Background Logo Decoration */}
       <div className="fixed inset-0 flex items-center justify-center pointer-events-none overflow-hidden z-0">
         <img 
@@ -118,14 +130,14 @@ const ProjectsRegistry = () => {
                   <div className="flex gap-2">
                       {['all', 'published', 'archived'].map((status) => (
                           <button 
-                              key={status}
-                              onClick={() => setActiveStatus(status as any)}
-                              className="px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest border border-white/5 transition-all"
-                              style={{ 
-                                  backgroundColor: activeStatus === status ? theme.primary : 'transparent',
-                                  color: activeStatus === status ? theme["base-100"] : 'inherit',
-                                  opacity: activeStatus === status ? 1 : 0.4
-                              }}
+                            key={status}
+                            onClick={() => setActiveStatus(status as any)}
+                            className="px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest border border-white/5 transition-all"
+                            style={{ 
+                                backgroundColor: activeStatus === status ? theme.primary : 'transparent',
+                                color: activeStatus === status ? theme["base-100"] : 'inherit',
+                                opacity: activeStatus === status ? 1 : 0.4
+                            }}
                           >
                               {status}
                           </button>
@@ -191,7 +203,7 @@ const ProjectsRegistry = () => {
                               {project.title}
                             </h3>
                             <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 -translate-x-10 group-hover:translate-x-0 transition-all duration-500">
-                                 <ArrowRight size={20} style={{ color: theme.primary }} />
+                               <ArrowRight size={20} style={{ color: theme.primary }} />
                             </div>
                           </div>
                         </div>
@@ -248,6 +260,7 @@ const ProjectsRegistry = () => {
           </div>
         </section>
       </div>
+      <Footer/>
     </motion.main>
   );
 };

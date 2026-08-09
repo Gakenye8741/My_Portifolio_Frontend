@@ -53,6 +53,7 @@ const Login = () => {
   return (
     <main className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden" 
           style={{ backgroundColor: theme["base-100"], color: theme["base-content"] }}>
+            
       
       {/* Visual background glows */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">

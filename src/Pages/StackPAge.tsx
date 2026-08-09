@@ -6,6 +6,9 @@ import { motion } from 'framer-motion';
 
 // Import the logo
 import logoMain from "../../public/LOGO.png";
+import Footer from '../Components/Footer';
+import PageTitle from '../Components/PageTitle';
+import SEO from '../Components/SEO'; // 1. Import SEO Component
 
 const StackPage = () => {
   const { theme } = useTheme();
@@ -38,6 +41,12 @@ const StackPage = () => {
 
   return (
     <main className="min-h-screen pt-32 pb-20 px-6 relative" style={{ backgroundColor: theme["base-100"], color: theme["base-content"] }}>
+      {/* 2. Integrate SEO Component */}
+      <SEO 
+        title="Gakenye Ndiritu | Tech Stack & Skills" 
+        description="Discover the full-stack technologies used by Gakenye Ndiritu, including React, TypeScript, Node.js, PostgreSQL, Drizzle ORM, React Native, and blockchain development."
+        path="/tech"
+      />
       
       {/* Background Logo Decoration */}
       <div className="fixed inset-0 flex items-center justify-center pointer-events-none overflow-hidden z-0">
@@ -49,6 +58,7 @@ const StackPage = () => {
       </div>
 
       <div className="relative z-10">
+        <PageTitle title="Tech Stack & Skills" />
         <Navbar />
         
         <motion.div 
@@ -130,6 +140,7 @@ const StackPage = () => {
           </motion.section>
         </motion.div>
       </div>
+      <Footer/>
     </main>
   );
 };

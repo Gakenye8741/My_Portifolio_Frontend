@@ -8,6 +8,8 @@ import logo from "../../public/LOGO.png";
 import Footer from "../Components/Footer";
 import { Navbar } from "../Components/Navbar";
 import { useTheme } from "../ThemeContext";
+import PageTitle from "../Components/PageTitle"; 
+import SEO from "../Components/SEO"; // 1. Import SEO Component
 
 // Personal engineering, technical consultancy, and infrastructure services data
 const techServices = [
@@ -63,6 +65,14 @@ const ServicesPage: React.FC = () => {
 
   return (
     <>
+      {/* 2. Integrate SEO Component */}
+      <SEO 
+        title="Gakenye Ndiritu | Services & Technical Consultancy" 
+        description="Explore professional full-stack engineering, React Native mobile apps, blockchain solutions, API architecture, and network infrastructure services offered by Gakenye Ndiritu."
+        path="/services"
+      />
+
+      <PageTitle title="Services & Technical Consultancy" />
       <Navbar />
       <div
         className="relative font-sans pt-[4.5rem] lg:pt-[5rem] pb-[4.5rem] lg:pb-0 min-h-screen flex flex-col justify-between overflow-hidden"

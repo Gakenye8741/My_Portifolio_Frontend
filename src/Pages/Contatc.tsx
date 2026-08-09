@@ -11,6 +11,9 @@ import {
 import { RiWhatsappFill } from 'react-icons/ri';
 
 import logoMain from "../../public/LOGO.png";
+import Footer from '../Components/Footer';
+import PageTitle from '../Components/PageTitle';
+import SEO from '../Components/SEO'; // 1. Import SEO Component
 
 const ContactPage = () => {
   const { theme } = useTheme();
@@ -32,6 +35,14 @@ const ContactPage = () => {
 
   return (
     <main className="min-h-screen pt-32 pb-20 px-6 relative overflow-hidden" style={{ backgroundColor: theme["base-100"], color: theme["base-content"] }}>
+      {/* 2. Integrate SEO Component */}
+      <SEO 
+        title="Gakenye Ndiritu | Contact & Inquiries" 
+        description="Get in touch with Gakenye Ndiritu, Full-Stack Software Engineer based in Nyahururu, Kenya. Available for freelance projects, technical consulting, and collaborations."
+        path="/contact"
+      />
+
+      <PageTitle title="Contacts" />
       <Navbar />
 
       <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-0">
@@ -106,6 +117,7 @@ const ContactPage = () => {
             </a>
           </motion.div>
         </div>
+        <Footer/>
       </motion.div>
     </main>
   );
