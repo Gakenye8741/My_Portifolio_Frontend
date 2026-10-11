@@ -1,204 +1,420 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../ThemeContext';
 import { useGetProjectsQuery } from '../../Features/Apis/Projects.Api';
-import { 
-  Eye, ArrowUpRight, Clock, Search, Terminal, 
-  Zap, Layers, ChevronRight, Hash, Cpu, AlertCircle 
+import {
+  ArrowUpRight, ArrowRight, Clock, Search, Layers,
+  AlertCircle, X, Sparkles
 } from 'lucide-react';
 
-const ProjectCenter = () => {
-  const { theme } = useTheme();
-  const navigate = useNavigate();
-  const { data: projects, isLoading } = useGetProjectsQuery();
-  const [searchTerm, setSearchTerm] = useState('');
+/* ---------- Types (taken from your API, so they always match) ---------- */
+type Project = NonNullable<ReturnType<typeof useGetProjectsQuery>['data']>[number];
 
-  // 1. Filtering Logic
-  const filteredProjects = useMemo(() => {
-    if (!projects) return [];
-    return projects.filter(project => 
-      project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.slug.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.techs?.some(t => t.technology?.name.toLowerCase().includes(searchTerm.toLowerCase()))
+/* ---------- Helper: plays an animation when scrolled into view ---------- */
+type RevealProps = {
+  children: React.ReactNode;
+  from?: 'up' | 'left' | 'right' | 'zoom';
+  delay?: number;
+  className?: string;
+};
+
+const Reveal = ({ children, from = 'up', delay = 0, className = '' }: RevealProps) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setShow(true);
+          io.disconnect();
+        }
+      },
+      { threshold: 0.1 }
     );
-  }, [searchTerm, projects]);
-
-  // Limit to 3 for the "Featured" display
-  const displayProjects = filteredProjects.slice(0, 3);
-
-  // --- BRANDED LOADING STATE ---
-  if (isLoading) return (
-    <div className="h-screen flex flex-col items-center justify-center gap-8" style={{ backgroundColor: theme["base-100"] }}>
-      <div className="relative">
-        {/* Outer Spinner */}
-        <div className="w-24 h-24 border-2 border-dashed rounded-full animate-[spin_4s_linear_infinite] opacity-20" style={{ borderColor: theme.primary }} />
-        {/* Inner Spinner */}
-        <div className="absolute inset-2 border-t-2 rounded-full animate-spin" style={{ borderColor: theme.primary }} />
-        {/* Center Pulsing Dot */}
-        <div className="absolute inset-0 m-auto w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: theme.primary }} />
-      </div>
-      <div className="text-center space-y-2">
-        <h2 className="text-xl font-black uppercase tracking-[0.5em] animate-pulse">Gakenye</h2>
-        <p className="text-[10px] font-bold opacity-40 uppercase tracking-[0.3em]">Loading Projects...</p>
-      </div>
-    </div>
-  );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
 
   return (
-    <section className="py-16 md:py-32 transition-all duration-500" style={{ backgroundColor: theme["base-100"], color: theme["base-content"] }}>
-      <div className="max-w-[1440px] mx-auto px-6 lg:px-16">
-        
-        {/* --- HEADER --- */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-12 mb-24">
-          <div className="space-y-6">
-            <h2 className="text-6xl md:text-8xl font-black uppercase italic tracking-tighter leading-[0.8]">
-              SELECTED <br /> <span style={{ color: theme.primary }}>WORKS.</span>
-            </h2>
-          </div>
+    <div
+      ref={ref}
+      className={`pc-reveal pc-${from} ${show ? 'pc-show' : ''} ${className}`}
+      style={{ transitionDelay: `${delay}ms` }}
+    >
+      {children}
+    </div>
+  );
+};
 
-          {/* Search Interface with Result Counter */}
-          <div className="relative w-full lg:max-w-md group">
-            <div className="flex justify-between items-center mb-2 px-1">
-              <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Search Project</span>
-              {searchTerm && (
-                <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: theme.primary }}>
-                  {filteredProjects.length} {filteredProjects.length === 1 ? 'Project' : 'Projects'} Found
-                </span>
-              )}
-            </div>
-            <div className="relative">
-              <Search size={20} className="absolute left-0 top-1/2 -translate-y-1/2 opacity-20" />
-              <input 
-                type="text"
-                placeholder="FILTER BY PROJECT NAME OR TECHNOLOGY..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-transparent border-b-2 py-5 pl-10 pr-10 text-xs font-bold uppercase tracking-[0.2em] focus:outline-none focus:border-opacity-100 transition-all"
-                style={{ borderColor: `${theme["base-content"]}15` }}
-              />
-            </div>
-          </div>
-        </div>
+/* ---------- One project card ---------- */
+type CardProps = {
+  project: Project;
+  featured?: boolean;
+  onOpen: () => void;
+  primary: string;
+};
 
-        {/* --- DYNAMIC CONTENT AREA --- */}
-        {filteredProjects.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 lg:gap-14">
-            {displayProjects.map((project) => (
-              <div 
-                key={project.id}
-                onClick={() => navigate(`/project/${project.id}`)}
-                className="group relative flex flex-col rounded-[3rem] overflow-hidden border border-opacity-5 cursor-pointer transition-all duration-700 hover:-translate-y-3 shadow-2xl"
-                style={{ backgroundColor: `${theme["base-content"]}02`, borderColor: `${theme["base-content"]}10` }}
-              >
-                {/* IMAGE SECTION */}
-                <div className="relative aspect-[16/11] overflow-hidden bg-black">
-                  <img 
-                    src={project.thumbnail?.fileUrl || '/api/placeholder/800/500'} 
-                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 grayscale-[30%] group-hover:grayscale-0 opacity-80 group-hover:opacity-100"
-                    alt={project.title}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-90" />
-                  
-                  <div className="absolute top-6 left-6">
-                    <div className="px-3 py-1 rounded-md bg-black/60 backdrop-blur-md border border-white/10 flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: theme.primary }} />
-                      <span className="text-[8px] font-black uppercase tracking-widest text-white">{project.status}</span>
-                    </div>
-                  </div>
-                </div>
+const ProjectCard = ({ project, featured = false, onOpen, primary }: CardProps) => {
+  const techs: any[] = project.techs || [];
+  const year = new Date(project.createdAt).getFullYear();
 
-                <div className="p-10 space-y-6">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 opacity-30 text-[8px] font-black uppercase tracking-[0.2em]">
-                      <Hash size={10} /> {project.id.slice(0, 8)}
-                    </div>
-                    <h3 className="text-3xl font-black uppercase italic tracking-tighter group-hover:text-primary transition-colors leading-none">
-                      {project.title}
-                    </h3>
-                  </div>
-
-                  <p className="text-xs opacity-40 italic line-clamp-2 uppercase tracking-tighter leading-relaxed">
-                    {project.mainDescription}
-                  </p>
-
-                  {/* TECH TAGS */}
-                  <div className="flex flex-wrap gap-2 pt-2">
-                    {project.techs?.slice(0, 4).map((tech: any, index: number) => (
-                      <div 
-                        key={index} 
-                        className="px-2 py-1 text-[7px] font-black uppercase tracking-widest border rounded-md"
-                        style={{ color: theme.primary, borderColor: `${theme.primary}30` }}
-                      >
-                        {tech.technology?.name}
-                      </div>
-                    ))}
-                    {project.techs?.length > 4 && (
-                      <span className="text-[7px] font-black opacity-30 mt-1 uppercase tracking-widest">
-                        +{project.techs.length - 4} More
-                      </span>
-                    )}
-                  </div>
-
-                  {/* FOOTER */}
-                  <div className="pt-6 border-t border-opacity-5 flex items-center justify-between" style={{ borderColor: theme["base-content"] }}>
-                    <div className="flex gap-6">
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[7px] font-black opacity-20 uppercase tracking-widest">Project Id</span>
-                        <span className="text-[10px] font-black flex items-center gap-1.5"><Eye size={12} style={{ color: theme.primary }} /> {project.id}</span>
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[7px] font-black opacity-20 uppercase tracking-widest">Year</span>
-                        <span className="text-[10px] font-black flex items-center gap-1.5"><Clock size={12} /> {new Date(project.createdAt).getFullYear()}</span>
-                      </div>
-                    </div>
-                    <div className="p-3 rounded-2xl border border-opacity-10 group-hover:rotate-45 transition-all duration-500" style={{ borderColor: theme["base-content"] }}>
-                      <ArrowUpRight size={18} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+  return (
+    <div
+      role="link"
+      tabIndex={0}
+      onClick={onOpen}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onOpen();
+        }
+      }}
+      className={`pc-card group relative h-full cursor-pointer overflow-hidden rounded-[2rem] border transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl focus:outline-none ${
+        featured ? 'lg:grid lg:grid-cols-12' : 'flex flex-col'
+      }`}
+    >
+      {/* Picture */}
+      <div
+        className={`relative overflow-hidden bg-black/20 ${
+          featured ? 'aspect-[16/10] lg:col-span-7 lg:aspect-auto lg:min-h-[380px]' : 'aspect-[16/10]'
+        }`}
+      >
+        {project.thumbnail?.fileUrl ? (
+          <img
+            src={project.thumbnail.fileUrl}
+            alt={project.title}
+            className="pc-img h-full w-full object-cover"
+          />
         ) : (
-          /* --- NO RESULTS FOUND --- */
-          <div className="py-24 flex flex-col items-center justify-center text-center space-y-6 rounded-[3rem] border-2 border-dashed border-opacity-5" style={{ borderColor: theme["base-content"] }}>
-            <div className="p-6 rounded-full bg-opacity-5" style={{ backgroundColor: theme.primary }}>
-              <AlertCircle size={48} style={{ color: theme.primary }} className="opacity-40" />
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-2xl font-black uppercase tracking-tighter">No Results Found</h3>
-              <p className="text-xs opacity-40 uppercase tracking-widest max-w-xs mx-auto">
-                I couldn't find any projects matching <span style={{ color: theme.primary }}>"{searchTerm}"</span>. 
-                Please try a different search term.
-              </p>
-            </div>
-            <button 
-              onClick={() => setSearchTerm('')}
-              className="text-[10px] font-black uppercase tracking-[0.2em] border-b-2 pb-1 transition-all hover:opacity-100 opacity-60"
-              style={{ borderColor: theme.primary }}
-            >
-              Clear Search
-            </button>
+          <div className="grid h-full w-full place-items-center" style={{ backgroundColor: 'var(--accent-soft)' }}>
+            <Layers size={48} style={{ color: primary }} className="opacity-40" />
           </div>
         )}
 
-        {/* --- FOOTER CTA --- */}
-        {filteredProjects.length > 0 && (
-          <div className="mt-24 flex justify-center">
-            <button 
-              onClick={() => navigate('/projects')}
-              className="group relative px-12 py-6 overflow-hidden rounded-full border transition-all duration-500 hover:pr-16"
-              style={{ borderColor: `${theme["base-content"]}20`, color: theme["base-content"] }}
-            >
-              <span className="relative flex items-center gap-4 text-[11px] font-black uppercase tracking-[0.5em]">
-                View Full Registry
-                <div className="p-2 rounded-full" style={{ backgroundColor: theme.primary, color: theme["base-100"] }}>
-                  <Layers size={16} />
-                </div>
-              </span>
-              <ChevronRight size={20} className="absolute right-6 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-500" style={{ color: theme.primary }} />
-            </button>
+        {/* Soft shade so the badge is easy to read */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+
+        {/* Status badge */}
+        <div className="absolute left-5 top-5 flex items-center gap-2 rounded-full border border-white/15 bg-black/55 px-3.5 py-1.5 backdrop-blur-md">
+          <span className="h-2 w-2 animate-pulse rounded-full" style={{ backgroundColor: primary }} />
+          <span className="text-xs font-semibold capitalize text-white">{project.status}</span>
+        </div>
+
+        {featured && (
+          <div
+            className="absolute bottom-5 left-5 inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold"
+            style={{ backgroundColor: primary, color: 'var(--on-accent)' }}
+          >
+            <Sparkles size={13} /> Latest work
           </div>
+        )}
+      </div>
+
+      {/* Text */}
+      <div className={`flex flex-col p-7 md:p-8 ${featured ? 'lg:col-span-5 lg:justify-center lg:p-10' : 'flex-1'}`}>
+        <div className="mb-3 flex items-center gap-2 text-sm opacity-55">
+          <Clock size={14} /> {year}
+        </div>
+
+        <h3 className={`font-extrabold leading-tight tracking-tight transition-colors duration-300 ${featured ? 'text-3xl md:text-4xl' : 'text-2xl'}`}>
+          <span className="pc-title">{project.title}</span>
+        </h3>
+
+        <p className={`mt-4 leading-relaxed opacity-65 ${featured ? 'line-clamp-4 text-base' : 'line-clamp-3 text-sm'}`}>
+          {project.mainDescription}
+        </p>
+
+        {/* Tech tags */}
+        <div className="mt-5 flex flex-wrap gap-2">
+          {techs.slice(0, 4).map((tech, index) => (
+            <span
+              key={index}
+              className="rounded-full border px-3 py-1 text-xs font-semibold"
+              style={{ color: primary, borderColor: 'var(--accent-line)' }}
+            >
+              {tech.technology?.name}
+            </span>
+          ))}
+          {techs.length > 4 && (
+            <span className="self-center text-xs font-medium opacity-50">+{techs.length - 4} more</span>
+          )}
+        </div>
+
+        {/* Open link */}
+        <div className="mt-auto flex items-center justify-between pt-7">
+          <span className="pc-more text-sm font-bold" style={{ color: primary }}>
+            View project
+          </span>
+          <span
+            className="pc-arrow grid h-11 w-11 place-items-center rounded-full border"
+            style={{ borderColor: 'var(--accent-line)' }}
+          >
+            <ArrowUpRight size={18} />
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ---------- Main section ---------- */
+const ProjectCenter = () => {
+  const { theme } = useTheme();
+  const navigate = useNavigate();
+  const { data: projects, isLoading, isError } = useGetProjectsQuery();
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const rootStyle = {
+    backgroundColor: theme['base-100'],
+    color: theme['base-content'],
+    '--accent': theme.primary,
+    '--accent-soft': `${theme.primary}1f`,
+    '--accent-line': `${theme.primary}40`,
+    '--on-accent': theme['base-100'],
+    '--text-soft': `${theme['base-content']}06`,
+    '--text-line': `${theme['base-content']}1a`,
+  } as React.CSSProperties;
+
+  /* Search by name, link name or technology */
+  const filteredProjects = useMemo(() => {
+    if (!projects) return [];
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return projects;
+    return projects.filter(
+      (project) =>
+        project.title?.toLowerCase().includes(term) ||
+        project.slug?.toLowerCase().includes(term) ||
+        project.techs?.some((t: any) => t.technology?.name?.toLowerCase().includes(term))
+    );
+  }, [searchTerm, projects]);
+
+  // Show the best 3 projects on this page
+  const displayProjects = filteredProjects.slice(0, 3);
+
+  const sharedStyles = `
+    /* Scroll reveal */
+    .pc-reveal { opacity: 0; transition: opacity .9s cubic-bezier(.2,.7,.2,1), transform .9s cubic-bezier(.2,.7,.2,1); will-change: transform, opacity; }
+    .pc-up    { transform: translateY(44px); }
+    .pc-left  { transform: translateX(-56px); }
+    .pc-right { transform: translateX(56px); }
+    .pc-zoom  { transform: scale(.93) translateY(24px); }
+    .pc-show  { opacity: 1; transform: none; }
+
+    /* Headline words rise on load */
+    @keyframes pcWord { from { opacity: 0; transform: translateY(70%) rotate(3deg); } to { opacity: 1; transform: none; } }
+    .pc-mask { display: inline-block; overflow: hidden; vertical-align: bottom; padding-bottom: .08em; }
+    .pc-word { display: inline-block; opacity: 0; animation: pcWord .9s cubic-bezier(.2,.7,.2,1) forwards; }
+
+    /* Project cards */
+    .pc-card { border-color: var(--text-line); background-color: var(--text-soft); }
+    .pc-card:hover, .pc-card:focus-visible { border-color: var(--accent); }
+    .pc-card:focus-visible { box-shadow: 0 0 0 3px var(--accent-line); }
+    .pc-img { transition: transform 1.2s cubic-bezier(.2,.7,.2,1), filter .6s; filter: saturate(.85); }
+    .pc-card:hover .pc-img { transform: scale(1.08); filter: saturate(1.1); }
+    .pc-title { background-image: linear-gradient(var(--accent), var(--accent)); background-size: 0% 3px; background-position: 0 100%; background-repeat: no-repeat; transition: background-size .6s ease; }
+    .pc-card:hover .pc-title { background-size: 100% 3px; }
+    .pc-more { transition: transform .4s ease; }
+    .pc-card:hover .pc-more { transform: translateX(6px); }
+    .pc-arrow { transition: transform .5s cubic-bezier(.3,1.5,.5,1), background-color .3s, color .3s, border-color .3s; }
+    .pc-card:hover .pc-arrow { transform: rotate(45deg) scale(1.1); background-color: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+
+    /* Search box */
+    .pc-search { transition: border-color .3s, box-shadow .3s; border-color: var(--text-line); }
+    .pc-search:focus-within { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+
+    /* Background */
+    @keyframes pcOrbit { to { transform: rotate(360deg); } }
+    .pc-orbit { animation: pcOrbit 45s linear infinite; }
+    @keyframes pcDrift { 0%,100% { transform: translate(0,0); } 50% { transform: translate(30px,-30px); } }
+    .pc-drift { animation: pcDrift 12s ease-in-out infinite; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .pc-reveal { opacity: 1; transform: none; transition: none; }
+      .pc-word { opacity: 1; animation: none; }
+      .pc-orbit, .pc-drift { animation: none; }
+      .pc-img, .pc-card:hover .pc-img { transition: none; transform: none; }
+    }
+  `;
+
+  /* ---------- Loading ---------- */
+  if (isLoading) {
+    return (
+      <div
+        className="flex h-screen flex-col items-center justify-center gap-8"
+        style={{ backgroundColor: theme['base-100'], color: theme['base-content'] }}
+      >
+        <style>{`@keyframes pcSpin { to { transform: rotate(360deg); } }`}</style>
+        <div className="relative h-24 w-24">
+          <div
+            className="absolute inset-0 rounded-full border-2 border-dashed opacity-25"
+            style={{ borderColor: theme.primary, animation: 'pcSpin 4s linear infinite' }}
+          />
+          <div
+            className="absolute inset-2 rounded-full border-2 border-t-transparent"
+            style={{ borderColor: theme.primary, borderTopColor: 'transparent', animation: 'pcSpin 1s linear infinite' }}
+          />
+          <div className="absolute inset-0 m-auto h-2.5 w-2.5 animate-pulse rounded-full" style={{ backgroundColor: theme.primary }} />
+        </div>
+        <p className="animate-pulse text-sm opacity-55">Loading projects...</p>
+      </div>
+    );
+  }
+
+  /* ---------- Error ---------- */
+  if (isError) {
+    return (
+      <div
+        className="py-40 text-center"
+        style={{ backgroundColor: theme['base-100'], color: theme['base-content'] }}
+      >
+        <p className="text-lg font-semibold">Sorry, the projects could not load.</p>
+        <p className="mt-2 text-sm opacity-60">Please refresh the page and try again.</p>
+      </div>
+    );
+  }
+
+  const [featured, ...others] = displayProjects;
+
+  return (
+    <section
+      className="relative overflow-hidden py-24 transition-colors duration-500 md:py-32"
+      style={rootStyle}
+    >
+      <style>{sharedStyles}</style>
+
+      {/* Background shapes */}
+      <div
+        className="pc-orbit pointer-events-none absolute -right-48 -top-24 h-[36rem] w-[36rem] rounded-full border-2 border-dashed opacity-[0.1]"
+        style={{ borderColor: theme.primary }}
+      />
+      <div
+        className="pc-drift pointer-events-none absolute -left-32 bottom-20 h-80 w-80 rounded-full opacity-10 blur-[120px]"
+        style={{ backgroundColor: theme.primary }}
+      />
+
+      <div className="relative z-10 mx-auto max-w-[1300px] px-6 lg:px-16">
+        {/* ---------- HEADER ---------- */}
+        <div className="mb-14 flex flex-col justify-between gap-10 lg:flex-row lg:items-end">
+          <div className="text-center lg:text-left">
+            <h2 className="text-4xl font-extrabold leading-[1.08] tracking-tight md:text-6xl xl:text-7xl">
+              {['Things', 'I', 'have'].map((w, i) => (
+                <span key={w} className="pc-mask mr-[0.25em]">
+                  <span className="pc-word" style={{ animationDelay: `${0.1 + i * 0.12}s` }}>{w}</span>
+                </span>
+              ))}
+              <br />
+              <span className="pc-mask">
+                <span className="pc-word" style={{ animationDelay: '0.5s', color: theme.primary }}>built.</span>
+              </span>
+            </h2>
+            <Reveal delay={500}>
+              <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed opacity-65 lg:mx-0">
+                Here are some of my best projects. Click any one to see more about it.
+              </p>
+            </Reveal>
+          </div>
+
+          {/* Search box */}
+          <Reveal from="right" delay={300} className="w-full lg:max-w-md">
+            <div className="mb-2 flex h-5 items-center justify-between px-1 text-sm">
+              <label htmlFor="project-search" className="opacity-55">Search projects</label>
+              {searchTerm && (
+                <span className="font-semibold" style={{ color: theme.primary }}>
+                  {filteredProjects.length} found
+                </span>
+              )}
+            </div>
+            <div className="pc-search flex items-center gap-3 rounded-full border-2 px-5">
+              <Search size={18} className="shrink-0 opacity-40" />
+              <input
+                id="project-search"
+                type="text"
+                placeholder="Type a name or technology..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-transparent py-4 text-sm focus:outline-none"
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  aria-label="Clear search"
+                  className="grid h-7 w-7 shrink-0 place-items-center rounded-full transition-transform hover:rotate-90"
+                  style={{ backgroundColor: 'var(--accent-soft)', color: theme.primary }}
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+          </Reveal>
+        </div>
+
+        {/* ---------- PROJECTS ---------- */}
+        {filteredProjects.length > 0 ? (
+          <div key={searchTerm} className="grid gap-8 md:grid-cols-2">
+            {featured && (
+              <Reveal from="zoom" className="md:col-span-2">
+                <ProjectCard
+                  project={featured}
+                  featured
+                  primary={theme.primary}
+                  onOpen={() => navigate(`/project/${featured.id}`)}
+                />
+              </Reveal>
+            )}
+            {others.map((project, i) => (
+              <Reveal key={project.id} from="zoom" delay={i * 150}>
+                <ProjectCard
+                  project={project}
+                  primary={theme.primary}
+                  onOpen={() => navigate(`/project/${project.id}`)}
+                />
+              </Reveal>
+            ))}
+          </div>
+        ) : (
+          /* ---------- Nothing found ---------- */
+          <Reveal from="zoom">
+            <div
+              className="flex flex-col items-center justify-center gap-5 rounded-[2rem] border-2 border-dashed px-6 py-20 text-center"
+              style={{ borderColor: 'var(--accent-line)' }}
+            >
+              <div className="grid h-20 w-20 place-items-center rounded-full" style={{ backgroundColor: 'var(--accent-soft)' }}>
+                <AlertCircle size={40} style={{ color: theme.primary }} />
+              </div>
+              <h3 className="text-2xl font-bold">No projects found</h3>
+              <p className="max-w-sm text-sm leading-relaxed opacity-60">
+                I could not find a project for{' '}
+                <span className="font-semibold" style={{ color: theme.primary }}>"{searchTerm}"</span>.
+                Try a different word.
+              </p>
+              <button
+                onClick={() => setSearchTerm('')}
+                className="rounded-full border px-6 py-2.5 text-sm font-semibold transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg active:scale-95"
+                style={{ borderColor: theme.primary, color: theme.primary }}
+              >
+                Clear search
+              </button>
+            </div>
+          </Reveal>
+        )}
+
+        {/* ---------- SEE ALL ---------- */}
+        {filteredProjects.length > 0 && (
+          <Reveal delay={100}>
+            <div className="mt-16 flex justify-center">
+              <button
+                onClick={() => navigate('/projects')}
+                className="group inline-flex items-center gap-3 rounded-full px-9 py-4 font-bold shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl active:scale-95"
+                style={{ backgroundColor: theme.primary, color: theme['base-100'] }}
+              >
+                See all projects
+                <ArrowRight size={18} className="transition-transform duration-300 group-hover:translate-x-1.5" />
+              </button>
+            </div>
+          </Reveal>
         )}
       </div>
     </section>

@@ -1,263 +1,983 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown } from "lucide-react";
+import {
+  motion,
+  AnimatePresence,
+  useScroll,
+  useSpring,
+  useMotionValue,
+  useTransform,
+  useReducedMotion,
+  type Variants,
+} from "framer-motion";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Globe,
+  Smartphone,
+  Boxes,
+  Lightbulb,
+  Network,
+  Server,
+  MessageCircle,
+  PenTool,
+  Hammer,
+  Rocket,
+  ArrowRight,
+  Sparkles,
+  GraduationCap,
+} from "lucide-react";
 
 import heroImage from "../assets/computer-laptop-macbook-coding.jpg";
 import logo from "../../public/LOGO.png";
 import Footer from "../Components/Footer";
 import { Navbar } from "../Components/Navbar";
 import { useTheme } from "../ThemeContext";
-import PageTitle from "../Components/PageTitle"; 
-import SEO from "../Components/SEO"; // 1. Import SEO Component
+import PageTitle from "../Components/PageTitle";
+import SEO from "../Components/SEO";
 
-// Personal engineering, technical consultancy, and infrastructure services data
+/* ---------- Page information (simple English) ---------- */
+
+// Free photos from Unsplash. Change the photo id to use a different picture.
+const photo = (id: string) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=1000&q=70`;
+
 const techServices = [
   {
     title: "Full-Stack Web Development",
-    desc: "Building robust, scalable web applications using the PERN stack (PostgreSQL, Express, React, Node.js) paired with TypeScript and Drizzle ORM.",
+    desc: "I build websites and web apps from start to finish. They are fast, safe and ready to grow with you.",
+    tags: ["PostgreSQL", "Express", "React", "Node.js", "TypeScript"],
+    icon: Globe,
+    image: photo("photo-1555952494-efd681c7e3f9"), // code on a screen
+    alt: "Colourful web code on a computer screen",
   },
   {
     title: "Mobile App Development",
-    desc: "Crafting cross-platform mobile applications with smooth user experiences using React Native and Expo frameworks.",
+    desc: "I make phone apps for iPhone and Android from one codebase. They feel smooth and are easy to use.",
+    tags: ["React Native", "Expo", "iOS", "Android"],
+    icon: Smartphone,
+    image: photo("photo-1515879218367-8466d910aaa4"), // code on a screen
+    alt: "App code on a computer screen",
   },
   {
     title: "Blockchain & Smart Contracts",
-    desc: "Designing and deploying decentralized solutions, including Solidity smart contracts integrated on networks like Ethereum Sepolia.",
+    desc: "I write smart contracts. These are small programs on a blockchain that run by themselves. I test them on the Ethereum Sepolia network.",
+    tags: ["Solidity", "Smart contracts", "Ethereum Sepolia"],
+    icon: Boxes,
+    image: photo("photo-1641352109623-f7b1eff605fd"), // gold bitcoin
+    alt: "A gold bitcoin shining on dark stones",
   },
   {
-    title: "Technical Consultancy & Architecture",
-    desc: "Providing expert guidance on software design, database optimization, technology stack selection, and digital transformation for projects and organizations.",
+    title: "Technical Consultancy",
+    desc: "I help you pick the right tools, plan your system and make your database faster, so your project starts on the right foot.",
+    tags: ["Software design", "Database tuning", "Tech choices"],
+    icon: Lightbulb,
+    image: photo("photo-1681164315014-06bf36b2597a"), // man at two monitors
+    alt: "A man working in front of two computer monitors",
   },
   {
-    title: "Network Infrastructure & ADSS Deployment",
-    desc: "Performing physical network engineering tasks including ADSS aerial cable deployment, fiber preparation, maintenance reporting, and signal loss troubleshooting.",
+    title: "Network Infrastructure",
+    desc: "I do hands-on network work: hanging ADSS aerial cable, preparing fibre, writing maintenance reports and finding where the signal is lost.",
+    tags: ["ADSS cable", "Fibre", "Troubleshooting"],
+    icon: Network,
+    image: photo("photo-1744868562210-fffb7fa882d9"), // fibre optic cables
+    alt: "Yellow and green fibre optic cables neatly connected",
   },
   {
-    title: "API Design & Backend Systems",
-    desc: "Developing secure, high-performance RESTful APIs, authentication workflows, and scalable server-side business logic.",
+    title: "API & Backend Systems",
+    desc: "I build safe and quick APIs, login systems and server code that your app can depend on every day.",
+    tags: ["REST APIs", "Login security", "Server logic"],
+    icon: Server,
+    image: photo("photo-1504164996022-09080787b6b3"), // code on a computer
+    alt: "Server code on a computer screen",
+  },
+  {
+    title: "Programming Tutoring",
+    desc: "I teach programming in small, easy steps. You learn a language by building real things, at your own speed, with help from me when you get stuck.",
+    tags: ["JavaScript", "TypeScript", "React", "Solidity"],
+    icon: GraduationCap,
+    image: photo("photo-1461749280684-dccba630e2f6"), // programming on a monitor
+    alt: "A monitor showing programming code",
   },
 ];
 
-// FAQ data
-const faqs = [
+// Pictures shown in the hero carousel
+const AUTO_MS = 4500;
+const heroSlides = [
   {
-    question: "What is your typical project turnaround time?",
-    answer: "Project timelines depend on scope and complexity. Standard full-stack web or mobile applications typically take between 2 to 4 weeks from conception to deployment, while smaller consultancy tasks or specific feature integrations can be completed much faster.",
+    title: "Software Engineering",
+    note: "Websites, apps and smart systems",
+    image: heroImage,
+    alt: "Laptop with code",
+    icon: Sparkles,
   },
   {
-    question: "Do you offer post-launch maintenance and support?",
-    answer: "Yes! I provide ongoing post-launch maintenance, performance monitoring, bug fixing, and feature expansions to ensure your digital products remain secure, fast, and fully functional.",
+    title: "Web Development",
+    note: "Fast, safe web apps that grow with you",
+    image: techServices[0].image,
+    alt: techServices[0].alt,
+    icon: Globe,
   },
   {
-    question: "How do we get started on a custom web or mobile development project?",
-    answer: "Getting started is simple. Head over to the contact page, fill out the project inquiry form with your ideas or requirements, and we will schedule a discussion to map out your technical stack and development roadmap.",
+    title: "Blockchain",
+    note: "Smart contracts that run by themselves",
+    image: techServices[2].image,
+    alt: techServices[2].alt,
+    icon: Boxes,
+  },
+  {
+    title: "Network Engineering",
+    note: "Fibre, ADSS cable and signal checks",
+    image: techServices[4].image,
+    alt: techServices[4].alt,
+    icon: Network,
+  },
+  {
+    title: "Programming Tutoring",
+    note: "Learn to code by building real things",
+    image: techServices[6].image,
+    alt: techServices[6].alt,
+    icon: GraduationCap,
   },
 ];
+
+const steps = [
+  { title: "We talk", desc: "You tell me your idea and your goals.", icon: MessageCircle },
+  { title: "I plan", desc: "I choose the tools and make a clear roadmap.", icon: PenTool },
+  { title: "I build", desc: "I make it step by step and show you progress.", icon: Hammer },
+  { title: "We launch", desc: "I put it online and stay to support you.", icon: Rocket },
+];
+
+const faqs = [
+  {
+    question: "How long does a project take?",
+    answer:
+      "It depends on the size of the work. A normal web or mobile app takes about 2 to 4 weeks from the first idea to going live. Small tasks, like adding one feature, can be done much faster.",
+  },
+  {
+    question: "Do you help after the project is live?",
+    answer:
+      "Yes. I stay with you after launch. I watch how the app performs, fix bugs and add new features, so your product stays safe, fast and working well.",
+  },
+  {
+    question: "Can you teach me to code?",
+    answer:
+      "Yes. I tutor beginners and people who already code. We start from where you are, pick a language together, and learn by building small real projects. You can set the speed.",
+  },
+  {
+    question: "How do I start a project with you?",
+    answer:
+      "It is easy. Go to the contact page and fill in the form with your idea or needs. Then we will talk, and I will plan the tools and the steps with you.",
+  },
+];
+
+/* ---------- Small helper parts ---------- */
+
+// Makes the light on a card follow the mouse.
+const followMouse = (e: React.MouseEvent<HTMLElement>) => {
+  const box = e.currentTarget.getBoundingClientRect();
+  e.currentTarget.style.setProperty("--mx", `${e.clientX - box.left}px`);
+  e.currentTarget.style.setProperty("--my", `${e.clientY - box.top}px`);
+};
+
+const container: Variants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.12 } },
+};
+
+const rise: Variants = {
+  hidden: { opacity: 0, y: 40, scale: 0.97 },
+  show: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.7, ease: [0.2, 0.7, 0.2, 1] },
+  },
+};
+
+// Section title that slides up word by word.
+const WordTitle = ({
+  text,
+  className = "",
+  color,
+}: {
+  text: string;
+  className?: string;
+  color?: string;
+}) => (
+  <motion.h2
+    className={className}
+    style={{ color }}
+    initial="hidden"
+    whileInView="show"
+    viewport={{ once: true, amount: 0.6 }}
+    variants={{ hidden: {}, show: { transition: { staggerChildren: 0.08 } } }}
+    aria-label={text}
+  >
+    {text.split(" ").map((word, i) => (
+      <span key={i} className="inline-block overflow-hidden align-bottom pb-[0.1em] mr-[0.25em]">
+        <motion.span
+          className="inline-block"
+          variants={{
+            hidden: { y: "110%" },
+            show: { y: 0, transition: { duration: 0.7, ease: [0.2, 0.7, 0.2, 1] } },
+          }}
+        >
+          {word}
+        </motion.span>
+      </span>
+    ))}
+  </motion.h2>
+);
+
+/* ---------- Hero picture carousel ---------- */
+
+const HeroCarousel = ({
+  primary,
+  base,
+  text,
+  reduce,
+}: {
+  primary: string;
+  base: string;
+  text: string;
+  reduce: boolean | null;
+}) => {
+  const n = heroSlides.length;
+  const half = Math.floor(n / 2);
+  const [active, setActive] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  // Whole stage tilts with the mouse
+  const mx = useMotionValue(0);
+  const my = useMotionValue(0);
+  const sx = useSpring(mx, { stiffness: 80, damping: 14 });
+  const sy = useSpring(my, { stiffness: 80, damping: 14 });
+  const rotateY = useTransform(sx, [-0.5, 0.5], [-12, 12]);
+  const rotateX = useTransform(sy, [-0.5, 0.5], [10, -10]);
+
+  const go = (direction: number) => setActive((a) => (a + direction + n) % n);
+
+  // Moves to the next picture by itself
+  useEffect(() => {
+    if (paused || reduce) return;
+    const id = setInterval(() => setActive((a) => (a + 1) % n), AUTO_MS);
+    return () => clearInterval(id);
+  }, [paused, reduce, n]);
+
+  const onMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (reduce) return;
+    const box = e.currentTarget.getBoundingClientRect();
+    mx.set((e.clientX - box.left) / box.width - 0.5);
+    my.set((e.clientY - box.top) / box.height - 0.5);
+  };
+  const onLeave = () => {
+    mx.set(0);
+    my.set(0);
+    setPaused(false);
+  };
+
+  const current = heroSlides[active];
+
+  return (
+    <div
+      className="flex-1 w-full max-w-xl lg:max-w-none"
+      role="region"
+      aria-roledescription="carousel"
+      aria-label="Pictures of my work"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={onLeave}
+      onMouseMove={onMove}
+    >
+      <div className="relative">
+        {/* Glow that breathes behind the pictures */}
+        <motion.div
+          className="absolute inset-x-10 inset-y-6 rounded-full blur-[90px] pointer-events-none"
+          style={{ backgroundColor: primary }}
+          animate={reduce ? { opacity: 0.25 } : { opacity: [0.18, 0.4, 0.18], scale: [0.9, 1.15, 0.9] }}
+          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+        />
+
+        {/* Two rings that spin in opposite ways */}
+        <div
+          className="sv-spin absolute inset-2 sm:inset-0 rounded-full border-2 border-dashed opacity-25 pointer-events-none"
+          style={{ borderColor: primary }}
+        />
+        <div
+          className="sv-spin-rev absolute inset-10 rounded-full border opacity-20 pointer-events-none"
+          style={{ borderColor: text }}
+        />
+
+        {/* Stage */}
+        <motion.div
+          className="relative h-[22rem] sm:h-[29rem] select-none"
+          style={{ perspective: 1400, touchAction: "pan-y" }}
+          onPanEnd={(_, info) => {
+            if (info.offset.x < -50) go(1);
+            else if (info.offset.x > 50) go(-1);
+          }}
+        >
+          <motion.div
+            className="absolute inset-0"
+            style={{ rotateX: reduce ? 0 : rotateX, rotateY: reduce ? 0 : rotateY, transformStyle: "preserve-3d" }}
+          >
+            {heroSlides.map((slide, i) => {
+              const offset = ((i - active + n + half) % n) - half;
+              const abs = Math.abs(offset);
+              const isActive = offset === 0;
+              const Icon = slide.icon;
+              return (
+                <motion.div
+                  key={slide.title}
+                  className="absolute inset-0 m-auto w-[64%] h-[86%] rounded-3xl overflow-hidden shadow-2xl"
+                  style={{
+                    zIndex: n - abs,
+                    transformStyle: "preserve-3d",
+                    border: `1px solid ${text}30`,
+                    cursor: isActive ? "grab" : "pointer",
+                    pointerEvents: abs > 1 ? "none" : "auto",
+                    backgroundColor: `${primary}22`,
+                  }}
+                  initial={false}
+                  animate={{
+                    x: `${offset * 62}%`,
+                    scale: 1 - abs * 0.2,
+                    rotateY: reduce ? 0 : -offset * 38,
+                    z: -abs * 160,
+                    opacity: abs > 1 ? 0 : abs === 1 ? 0.8 : 1,
+                    filter: `blur(${abs * 1.5}px) brightness(${1 - abs * 0.25})`,
+                  }}
+                  transition={{ type: "spring", stiffness: 110, damping: 15, mass: 0.9 }}
+                  onClick={() => !isActive && setActive(i)}
+                  aria-hidden={!isActive}
+                >
+                  {/* Picture slowly zooms while it is on show */}
+                  <motion.img
+                    src={slide.image}
+                    alt={slide.alt}
+                    draggable={false}
+                    loading={i === 0 ? "eager" : "lazy"}
+                    onError={(e) => (e.currentTarget.style.opacity = "0")}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    animate={isActive && !reduce ? { scale: [1, 1.18], x: ["0%", "-3%"] } : { scale: 1, x: "0%" }}
+                    transition={isActive ? { duration: 7, ease: "easeOut" } : { duration: 0.6 }}
+                  />
+                  <div
+                    className="absolute inset-0"
+                    style={{ background: `linear-gradient(to top, ${base}f0 0%, ${base}55 35%, transparent 65%)` }}
+                  />
+
+                  {/* Shine that sweeps across when the picture arrives */}
+                  <motion.div
+                    className="absolute inset-y-0 w-1/3 pointer-events-none"
+                    style={{
+                      background: "linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent)",
+                      skewX: -20,
+                    }}
+                    initial={false}
+                    animate={isActive && !reduce ? { x: ["-150%", "420%"] } : { x: "-150%" }}
+                    transition={{ duration: 1.1, delay: 0.25, ease: "easeInOut" }}
+                  />
+
+                  {/* Words on the picture */}
+                  <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6 flex items-end gap-3">
+                    <motion.span
+                      className="grid place-items-center shrink-0 w-11 h-11 rounded-2xl shadow-lg"
+                      style={{ backgroundColor: primary, color: base }}
+                      initial={false}
+                      animate={isActive ? { scale: 1, rotate: 0, opacity: 1 } : { scale: 0, rotate: -90, opacity: 0 }}
+                      transition={{ type: "spring", stiffness: 220, damping: 14, delay: isActive ? 0.3 : 0 }}
+                    >
+                      <Icon size={20} />
+                    </motion.span>
+                    <motion.div
+                      className="min-w-0"
+                      initial={false}
+                      animate={isActive ? { y: 0, opacity: 1 } : { y: 24, opacity: 0 }}
+                      transition={{ duration: 0.5, delay: isActive ? 0.4 : 0 }}
+                    >
+                      <p className="font-bold text-lg sm:text-xl leading-tight text-white drop-shadow">{slide.title}</p>
+                      <p className="text-xs sm:text-sm text-white/80 leading-snug">{slide.note}</p>
+                    </motion.div>
+                  </div>
+
+                  {/* Time bar that fills before the next picture */}
+                  {isActive && (
+                    <motion.span
+                      key={`${active}-${paused}`}
+                      className="absolute left-0 bottom-0 h-1 w-full origin-left"
+                      style={{ backgroundColor: primary }}
+                      initial={{ scaleX: 0 }}
+                      animate={{ scaleX: paused || reduce ? 0 : 1 }}
+                      transition={{ duration: paused ? 0.3 : AUTO_MS / 1000, ease: "linear" }}
+                    />
+                  )}
+                </motion.div>
+              );
+            })}
+          </motion.div>
+        </motion.div>
+
+        {/* Floating labels around the pictures */}
+        {[
+          { label: "Web", pos: "top-2 left-0", delay: 0 },
+          { label: "Mobile", pos: "top-[45%] -right-2", delay: 1.2 },
+          { label: "Blockchain", pos: "bottom-6 left-2", delay: 2.4 },
+        ].map((chip) => (
+          <motion.span
+            key={chip.label}
+            className={`absolute z-20 ${chip.pos} rounded-full px-4 py-1.5 text-sm font-semibold shadow-lg backdrop-blur-md`}
+            style={{ backgroundColor: primary, color: base }}
+            initial={{ opacity: 0, scale: 0.6 }}
+            animate={reduce ? { opacity: 1, scale: 1 } : { opacity: 1, scale: 1, y: [0, -10, 0], rotate: [-3, 3, -3] }}
+            transition={{
+              opacity: { delay: 1 + chip.delay * 0.2, duration: 0.5 },
+              scale: { delay: 1 + chip.delay * 0.2, type: "spring" },
+              y: { duration: 4, repeat: Infinity, ease: "easeInOut", delay: chip.delay },
+              rotate: { duration: 5, repeat: Infinity, ease: "easeInOut", delay: chip.delay },
+            }}
+          >
+            {chip.label}
+          </motion.span>
+        ))}
+
+        {/* Little sparks that drift up */}
+        {!reduce &&
+          [12, 30, 52, 74, 90].map((left, i) => (
+            <motion.span
+              key={left}
+              className="absolute bottom-4 w-1.5 h-1.5 rounded-full pointer-events-none"
+              style={{ left: `${left}%`, backgroundColor: primary }}
+              animate={{ y: [0, -240 - i * 20], opacity: [0, 0.9, 0], scale: [0.6, 1.3, 0.4] }}
+              transition={{ duration: 4 + i * 0.6, repeat: Infinity, delay: i * 0.8, ease: "easeOut" }}
+            />
+          ))}
+      </div>
+
+      {/* Controls */}
+      <div className="mt-6 flex items-center justify-center gap-4">
+        <motion.button
+          type="button"
+          onClick={() => go(-1)}
+          aria-label="Previous picture"
+          whileHover={{ scale: 1.12, x: -3 }}
+          whileTap={{ scale: 0.88 }}
+          className="grid place-items-center w-11 h-11 rounded-full border"
+          style={{ borderColor: `${text}30` }}
+        >
+          <ChevronLeft size={20} />
+        </motion.button>
+
+        <div className="flex items-center gap-2">
+          {heroSlides.map((slide, i) => (
+            <motion.button
+              key={slide.title}
+              type="button"
+              onClick={() => setActive(i)}
+              aria-label={`Show ${slide.title}`}
+              aria-current={i === active}
+              className="h-2.5 rounded-full"
+              animate={{ width: i === active ? 36 : 10, backgroundColor: i === active ? primary : `${text}33` }}
+              whileHover={{ scale: 1.25 }}
+              transition={{ type: "spring", stiffness: 260, damping: 20 }}
+            />
+          ))}
+        </div>
+
+        <motion.button
+          type="button"
+          onClick={() => go(1)}
+          aria-label="Next picture"
+          whileHover={{ scale: 1.12, x: 3 }}
+          whileTap={{ scale: 0.88 }}
+          className="grid place-items-center w-11 h-11 rounded-full border"
+          style={{ borderColor: `${text}30` }}
+        >
+          <ChevronRight size={20} />
+        </motion.button>
+      </div>
+
+      {/* Name of the picture that is showing */}
+      <div className="mt-4 h-7 overflow-hidden text-center" aria-live="polite">
+        <AnimatePresence mode="wait">
+          <motion.p
+            key={current.title}
+            initial={{ y: 28, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -28, opacity: 0 }}
+            transition={{ duration: 0.35 }}
+            className="text-sm font-semibold"
+            style={{ color: primary }}
+          >
+            {active + 1} / {n} &middot; {current.title}
+          </motion.p>
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+};
+
+/* ---------- Page ---------- */
 
 const ServicesPage: React.FC = () => {
   const { theme } = useTheme();
+  const reduce = useReducedMotion();
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
 
-  const toggleFaq = (index: number) => {
-    setOpenFaqIndex(openFaqIndex === index ? null : index);
-  };
+  const primary = theme.primary;
+  const secondary = theme.secondary || theme.primary;
+  const base = theme["base-100"];
+  const text = theme["base-content"];
+  const soft = `${text}18`;
+
+  // Thin bar at the top that fills as you scroll
+  const { scrollYProgress } = useScroll();
+  const progress = useSpring(scrollYProgress, { stiffness: 120, damping: 24, mass: 0.3 });
+
+  const marqueeItems = techServices.map((s) => s.title);
+  const heroWords = ["I", "build", "software", "and", "connect", "networks."];
 
   return (
     <>
-      {/* 2. Integrate SEO Component */}
-      <SEO 
-        title="Gakenye Ndiritu | Services & Technical Consultancy" 
+      <SEO
+        title="Gakenye Ndiritu | Services & Technical Consultancy"
         description="Explore professional full-stack engineering, React Native mobile apps, blockchain solutions, API architecture, and network infrastructure services offered by Gakenye Ndiritu."
         path="/services"
       />
 
+      <style>{`
+        @keyframes sv-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+        @keyframes sv-blob { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(30px,-30px) scale(1.15); } }
+        @keyframes sv-spin { to { transform: rotate(360deg); } }
+        @keyframes sv-shine { 0% { transform: translateX(-120%) skewX(-20deg); } 60%,100% { transform: translateX(260%) skewX(-20deg); } }
+        .sv-marquee { animation: sv-marquee 38s linear infinite; }
+        .sv-marquee-wrap:hover .sv-marquee { animation-play-state: paused; }
+        .sv-blob { animation: sv-blob 12s ease-in-out infinite; }
+        .sv-spin { animation: sv-spin 26s linear infinite; }
+        .sv-spin-rev { animation: sv-spin 34s linear infinite reverse; }
+        .sv-shine::after {
+          content: ""; position: absolute; inset: 0; width: 40%;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,.45), transparent);
+          animation: sv-shine 3.2s ease-in-out infinite;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .sv-marquee, .sv-blob, .sv-spin, .sv-spin-rev, .sv-shine::after { animation: none !important; }
+        }
+      `}</style>
+
       <PageTitle title="Services & Technical Consultancy" />
       <Navbar />
+
+      {/* Scroll progress bar */}
+      <motion.div
+        className="fixed top-0 left-0 right-0 h-1 origin-left z-[60]"
+        style={{ scaleX: progress, backgroundColor: primary }}
+      />
+
       <div
-        className="relative font-sans pt-[4.5rem] lg:pt-[5rem] pb-[4.5rem] lg:pb-0 min-h-screen flex flex-col justify-between overflow-hidden"
-        style={{ backgroundColor: theme["base-100"], color: theme["base-content"] }}
+        className="relative font-sans pt-[4.5rem] lg:pt-[5rem] pb-[4.5rem] lg:pb-0 min-h-screen flex flex-col justify-between"
+        style={{ backgroundColor: base, color: text, overflowX: "clip" }}
       >
-        {/* Giant Watermark Logo in Background */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 overflow-hidden">
+        {/* Big logo in the background */}
+        <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-0 overflow-hidden">
           <img
             src={logo}
-            alt="Background Watermark Logo"
+            alt=""
+            aria-hidden="true"
             className="w-[70vw] md:w-[45vw] lg:w-[35vw] object-contain opacity-[0.03] select-none"
           />
         </div>
 
-        {/* Content Wrapper */}
+        {/* Dots pattern and glowing blobs */}
+        <div
+          className="absolute inset-x-0 top-0 h-[38rem] pointer-events-none opacity-60"
+          style={{
+            backgroundImage: `radial-gradient(${text}26 1px, transparent 1px)`,
+            backgroundSize: "26px 26px",
+            WebkitMaskImage: "radial-gradient(ellipse 70% 60% at 50% 0%, black 20%, transparent 75%)",
+            maskImage: "radial-gradient(ellipse 70% 60% at 50% 0%, black 20%, transparent 75%)",
+          }}
+        />
+        <div
+          className="sv-blob absolute -top-24 -right-24 w-[26rem] h-[26rem] rounded-full blur-[130px] opacity-25 pointer-events-none"
+          style={{ backgroundColor: primary }}
+        />
+        <div
+          className="sv-blob absolute top-[48rem] -left-24 w-[22rem] h-[22rem] rounded-full blur-[120px] opacity-15 pointer-events-none"
+          style={{ backgroundColor: secondary, animationDelay: "-5s" }}
+        />
+
         <div className="relative z-10">
-          {/* Hero Section */}
-          <motion.section
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
-            className="py-12 px-4 sm:py-16 sm:px-6 lg:px-20 flex flex-col-reverse lg:flex-row items-center gap-10"
-          >
-            <motion.div
-              className="flex-1 text-center lg:text-left"
-              initial={{ opacity: 0, x: -40 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
-            >
+          {/* ---------- HERO ---------- */}
+          <section className="py-12 px-4 sm:py-16 sm:px-6 lg:px-20 flex flex-col-reverse lg:flex-row items-center gap-12">
+            <div className="flex-1 text-center lg:text-left space-y-6">
+              <motion.div
+                initial={{ opacity: 0, y: -16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.05, duration: 0.6 }}
+                className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium backdrop-blur-md"
+                style={{ borderColor: `${primary}55`, backgroundColor: `${primary}12`, color: primary }}
+              >
+                <Sparkles size={14} className="animate-pulse" />
+                Services &amp; Consultancy
+              </motion.div>
+
               <h1
-                className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4"
-                style={{ color: theme.primary }}
+                className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.08]"
+                aria-label="I build software and connect networks."
               >
-                Technical Consultancy & Engineering Services
+                {heroWords.map((word, i) => (
+                  <span key={i} className="inline-block overflow-hidden align-bottom pb-[0.12em] mr-[0.25em]">
+                    <motion.span
+                      className="inline-block"
+                      initial={{ y: "110%" }}
+                      animate={{ y: 0 }}
+                      transition={{ delay: 0.15 + i * 0.1, duration: 0.8, ease: [0.2, 0.7, 0.2, 1] }}
+                      style={{ color: i >= 4 ? primary : undefined }}
+                    >
+                      {word}
+                    </motion.span>
+                  </span>
+                ))}
               </h1>
-              <p
-                className="text-base sm:text-lg lg:text-xl mb-4 sm:mb-6 italic font-semibold"
-                style={{ color: theme.secondary }}
-              >
-                "Expert software engineering, technical consultancy, and reliable network infrastructure solutions"
-              </p>
-              <Link
-                to="/contact"
-                className="btn px-4 py-2 sm:px-6 sm:py-3 text-base sm:text-lg font-semibold"
-                style={{ backgroundColor: theme.primary, color: theme["base-100"] }}
-              >
-                Get in Touch
-              </Link>
-            </motion.div>
-            <motion.div
-              className="flex-1 flex justify-center lg:justify-end"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8 }}
-            >
-              <img
-                src={heroImage}
-                alt="Technical Consultancy and Services"
-                className="w-full max-w-md rounded-lg shadow-lg"
-                style={{ borderColor: theme["base-300"] }}
-              />
-            </motion.div>
-          </motion.section>
 
-          {/* Services Grid Section */}
-          <section className="py-10 px-4 sm:py-12 sm:px-6 lg:px-20 text-center">
-            <motion.h2
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ duration: 0.7 }}
-              className="text-2xl sm:text-3xl font-bold mb-8 sm:mb-12"
-              style={{ color: theme.primary }}
-            >
-              What I Offer
-            </motion.h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {techServices.map((service, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: idx * 0.15 }}
-                  viewport={{ once: true }}
-                  whileHover={{ scale: 1.03 }}
-                  className="p-6 rounded-xl shadow-md text-left flex flex-col justify-between backdrop-blur-sm"
-                  style={{
-                    backgroundColor: `${theme["base-200"]}E6`,
-                    color: theme["base-content"],
-                    borderColor: theme["base-300"],
-                  }}
-                >
-                  <div>
-                    <h3 className="text-xl font-semibold mb-3" style={{ color: theme.primary }}>
-                      {service.title}
-                    </h3>
-                    <p className="text-sm sm:text-base leading-relaxed" style={{ color: theme.secondary }}>
-                      {service.desc}
-                    </p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </section>
+              <motion.p
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.85, duration: 0.7 }}
+                className="max-w-xl mx-auto lg:mx-0 text-base sm:text-lg lg:text-xl leading-relaxed opacity-75"
+              >
+                Software engineering, expert advice and reliable network work, all from one person you can trust.
+              </motion.p>
 
-          {/* FAQ Section */}
-          <section className="py-10 px-4 sm:py-12 sm:px-6 lg:px-20 max-w-4xl mx-auto">
-            <motion.h2
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ duration: 0.7 }}
-              className="text-2xl sm:text-3xl font-bold mb-8 text-center"
-              style={{ color: theme.primary }}
-            >
-              Frequently Asked Questions
-            </motion.h2>
-            <div className="space-y-4">
-              {faqs.map((faq, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: idx * 0.1 }}
-                  viewport={{ once: true }}
-                  className="rounded-xl shadow-md overflow-hidden border backdrop-blur-sm"
-                  style={{
-                    backgroundColor: `${theme["base-200"]}E6`,
-                    borderColor: theme["base-300"],
-                  }}
-                >
-                  <button
-                    onClick={() => toggleFaq(idx)}
-                    className="w-full p-5 text-left flex items-center justify-between font-semibold text-base sm:text-lg focus:outline-none"
-                    style={{ color: theme["base-content"] }}
+              <motion.div
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1, duration: 0.7 }}
+                className="flex flex-wrap justify-center lg:justify-start gap-3"
+              >
+                <motion.div whileHover={{ y: -3, scale: 1.04 }} whileTap={{ scale: 0.96 }}>
+                  <Link
+                    to="/contact"
+                    className="group relative overflow-hidden inline-flex items-center gap-2 rounded-full px-6 py-3 text-base sm:text-lg font-semibold shadow-lg sv-shine"
+                    style={{ backgroundColor: primary, color: base }}
                   >
-                    <span>{faq.question}</span>
-                    <ChevronDown
-                      size={20}
-                      className={`transition-transform duration-300 ${openFaqIndex === idx ? "rotate-180" : ""}`}
-                      style={{ color: theme.primary }}
-                    />
-                  </button>
-                  <AnimatePresence>
-                    {openFaqIndex === idx && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <div
-                          className="px-5 pb-5 text-sm sm:text-base leading-relaxed border-t pt-3"
-                          style={{ color: theme.secondary, borderColor: theme["base-300"] }}
-                        >
-                          {faq.answer}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                    Get in Touch
+                    <ArrowRight size={18} className="transition-transform duration-300 group-hover:translate-x-1" />
+                  </Link>
                 </motion.div>
+                <motion.a
+                  href="#offer"
+                  whileHover={{ y: -3, scale: 1.04 }}
+                  whileTap={{ scale: 0.96 }}
+                  className="inline-flex items-center rounded-full border px-6 py-3 text-base sm:text-lg font-semibold"
+                  style={{ borderColor: `${text}30` }}
+                >
+                  See what I offer
+                </motion.a>
+              </motion.div>
+            </div>
+
+            {/* Picture carousel */}
+            <HeroCarousel primary={primary} base={base} text={text} reduce={reduce} />
+          </section>
+
+          {/* ---------- MOVING LINE ---------- */}
+          <div
+            className="sv-marquee-wrap overflow-hidden border-y py-5"
+            style={{
+              borderColor: `${text}15`,
+              WebkitMaskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)",
+              maskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)",
+            }}
+            aria-hidden="true"
+          >
+            <div className="sv-marquee flex w-max gap-12 whitespace-nowrap">
+              {[...marqueeItems, ...marqueeItems].map((item, i) => (
+                <span key={i} className="flex items-center gap-12 text-xl font-semibold opacity-45">
+                  {item}
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: primary }} />
+                </span>
               ))}
+            </div>
+          </div>
+
+          {/* ---------- WHAT I OFFER ---------- */}
+          <section id="offer" className="py-16 px-4 sm:px-6 lg:px-20 max-w-7xl mx-auto scroll-mt-24">
+            <div className="text-center mb-12 space-y-3">
+              <WordTitle
+                text="What I Offer"
+                className="text-3xl sm:text-5xl font-extrabold tracking-tight"
+                color={primary}
+              />
+              <motion.p
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 0.65 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.3, duration: 0.7 }}
+                className="max-w-xl mx-auto"
+              >
+                Seven ways I can help you build, fix, grow and learn.
+              </motion.p>
+            </div>
+
+            <motion.div
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+              variants={container}
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true, amount: 0.1 }}
+            >
+              {techServices.map((service, idx) => {
+                const Icon = service.icon;
+                const isWide = idx === techServices.length - 1; // last card is wide on big screens
+                return (
+                  <motion.article
+                    key={service.title}
+                    variants={rise}
+                    onMouseMove={followMouse}
+                    whileHover={{ y: -8 }}
+                    className={`group relative overflow-hidden rounded-3xl border flex flex-col text-left ${
+                      isWide ? "lg:col-span-3 lg:flex-row" : ""
+                    }`}
+                    style={
+                      {
+                        borderColor: soft,
+                        backgroundColor: `${text}05`,
+                        "--mx": "50%",
+                        "--my": "50%",
+                      } as React.CSSProperties
+                    }
+                  >
+                    {/* Photo */}
+                    <div
+                      className={`relative overflow-hidden shrink-0 aspect-[16/10] ${
+                        isWide ? "lg:aspect-auto lg:w-1/2 lg:min-h-[20rem]" : ""
+                      }`}
+                      style={{ backgroundColor: `${primary}22` }}
+                    >
+                      <img
+                        src={service.image}
+                        alt={service.alt}
+                        loading="lazy"
+                        onError={(e) => (e.currentTarget.style.opacity = "0")}
+                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-[900ms] ease-out group-hover:scale-110"
+                      />
+                      <div
+                        className="absolute inset-0"
+                        style={{ background: `linear-gradient(to top, ${base}cc, transparent 55%)` }}
+                      />
+                      <span
+                        className="absolute left-5 bottom-4 grid place-items-center w-12 h-12 rounded-2xl shadow-lg transition-all duration-500 group-hover:rotate-6 group-hover:scale-110"
+                        style={{ backgroundColor: primary, color: base }}
+                      >
+                        <Icon size={22} />
+                      </span>
+                    </div>
+
+                    {/* Light that follows the mouse */}
+                    <div
+                      className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                      style={{
+                        background: `radial-gradient(340px circle at var(--mx) var(--my), ${primary}22, transparent 45%)`,
+                      }}
+                    />
+                    {/* Line that grows along the bottom on hover */}
+                    <span
+                      className="absolute bottom-0 left-0 h-1 w-0 group-hover:w-full transition-all duration-700 ease-out"
+                      style={{ backgroundColor: primary }}
+                    />
+
+                    <div
+                      className={`relative flex flex-col flex-1 p-6 sm:p-8 ${isWide ? "lg:justify-center lg:p-12" : ""}`}
+                    >
+                      <h3 className={`font-bold mb-3 leading-snug ${isWide ? "text-2xl sm:text-3xl" : "text-xl"}`}>
+                        {service.title}
+                      </h3>
+                      <p className="text-sm sm:text-base leading-relaxed opacity-70 mb-6">{service.desc}</p>
+
+                      <div className="mt-auto flex flex-wrap gap-2">
+                        {service.tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="rounded-full px-3 py-1 text-xs font-semibold transition-transform duration-300 group-hover:-translate-y-0.5"
+                            style={{ backgroundColor: `${primary}18`, color: primary }}
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </motion.article>
+                );
+              })}
+            </motion.div>
+          </section>
+
+          {/* ---------- HOW I WORK ---------- */}
+          <section className="py-16 px-4 sm:px-6 lg:px-20 max-w-6xl mx-auto">
+            <div className="text-center mb-14">
+              <WordTitle
+                text="How We Work Together"
+                className="text-3xl sm:text-5xl font-extrabold tracking-tight"
+                color={primary}
+              />
+            </div>
+
+            <div className="relative">
+              {/* Line that draws itself across the steps */}
+              <motion.div
+                className="hidden lg:block absolute top-7 left-[12%] right-[12%] h-0.5 origin-left"
+                style={{ backgroundColor: `${primary}55` }}
+                initial={{ scaleX: 0 }}
+                whileInView={{ scaleX: 1 }}
+                viewport={{ once: true, amount: 0.5 }}
+                transition={{ duration: 1.4, ease: "easeInOut" }}
+              />
+              <motion.div
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8"
+                variants={container}
+                initial="hidden"
+                whileInView="show"
+                viewport={{ once: true, amount: 0.3 }}
+              >
+                {steps.map((step) => {
+                  const Icon = step.icon;
+                  return (
+                    <motion.div key={step.title} variants={rise} className="relative text-center space-y-3">
+                      <motion.span
+                        whileHover={{ rotate: 10, scale: 1.12 }}
+                        className="relative z-10 mx-auto grid place-items-center w-14 h-14 rounded-full shadow-lg"
+                        style={{ backgroundColor: primary, color: base }}
+                      >
+                        <Icon size={24} />
+                      </motion.span>
+                      <h3 className="text-lg font-bold">{step.title}</h3>
+                      <p className="text-sm opacity-65 leading-relaxed max-w-[15rem] mx-auto">{step.desc}</p>
+                    </motion.div>
+                  );
+                })}
+              </motion.div>
             </div>
           </section>
 
-          {/* Call to Action */}
-          <motion.section
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            className="py-12 px-4 sm:py-16 sm:px-6 lg:px-20 text-center"
-          >
-            <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6" style={{ color: theme.primary }}>
-              Let's Build Something Together
-            </h2>
-            <p className="text-sm sm:text-base mb-6 max-w-2xl mx-auto" style={{ color: theme["base-content"] }}>
-              Have a software project, infrastructure challenge, or need expert technical consultancy for your next venture? Reach out and let's collaborate.
-            </p>
-            <Link
-              to="/contact"
-              className="btn px-4 py-2 sm:px-6 sm:py-3 text-base sm:text-lg font-semibold"
-              style={{ backgroundColor: theme.primary, color: theme["base-100"] }}
+          {/* ---------- FAQ ---------- */}
+          <section className="py-16 px-4 sm:px-6 lg:px-20 max-w-4xl mx-auto">
+            <div className="text-center mb-10">
+              <WordTitle
+                text="Common Questions"
+                className="text-3xl sm:text-5xl font-extrabold tracking-tight"
+                color={primary}
+              />
+            </div>
+
+            <motion.div
+              className="space-y-4"
+              variants={container}
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true, amount: 0.2 }}
             >
-              Contact Me
-            </Link>
-          </motion.section>
+              {faqs.map((faq, idx) => {
+                const isOpen = openFaqIndex === idx;
+                return (
+                  <motion.div
+                    key={idx}
+                    variants={rise}
+                    className="rounded-2xl border overflow-hidden backdrop-blur-sm transition-colors duration-300"
+                    style={{
+                      borderColor: isOpen ? `${primary}77` : soft,
+                      backgroundColor: isOpen ? `${primary}0d` : `${text}05`,
+                    }}
+                  >
+                    <button
+                      onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
+                      aria-expanded={isOpen}
+                      className="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4 font-semibold text-base sm:text-lg focus:outline-none focus-visible:ring-2"
+                      style={{ "--tw-ring-color": primary } as React.CSSProperties}
+                    >
+                      <span>{faq.question}</span>
+                      <motion.span
+                        animate={{ rotate: isOpen ? 180 : 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="grid place-items-center shrink-0 w-9 h-9 rounded-full"
+                        style={{ backgroundColor: `${primary}1a`, color: primary }}
+                      >
+                        <ChevronDown size={18} />
+                      </motion.span>
+                    </button>
+                    <AnimatePresence initial={false}>
+                      {isOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.35, ease: [0.2, 0.7, 0.2, 1] }}
+                          className="overflow-hidden"
+                        >
+                          <motion.p
+                            initial={{ y: -8 }}
+                            animate={{ y: 0 }}
+                            transition={{ duration: 0.35 }}
+                            className="px-5 sm:px-6 pb-6 text-sm sm:text-base leading-relaxed opacity-75"
+                          >
+                            {faq.answer}
+                          </motion.p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+          </section>
+
+          {/* ---------- CALL TO ACTION ---------- */}
+          <section className="py-16 px-4 sm:px-6 lg:px-20 max-w-6xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 50, scale: 0.97 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.8, ease: [0.2, 0.7, 0.2, 1] }}
+              className="relative overflow-hidden rounded-[2rem] md:rounded-[3rem] border-2 border-dashed p-8 sm:p-12 md:p-16 text-center"
+              style={{ borderColor: `${text}30` }}
+            >
+              <div
+                className="sv-spin absolute -right-20 -top-20 w-64 h-64 rounded-full border-2 border-dashed opacity-20 pointer-events-none"
+                style={{ borderColor: primary }}
+              />
+              <div
+                className="absolute -left-24 -bottom-24 w-72 h-72 rounded-full blur-[110px] opacity-20 pointer-events-none"
+                style={{ backgroundColor: primary }}
+              />
+
+              <div className="relative space-y-6">
+                <motion.span
+                  animate={reduce ? undefined : { y: [0, -10, 0], rotate: [0, 6, 0] }}
+                  transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                  className="inline-grid place-items-center w-14 h-14 rounded-2xl"
+                  style={{ backgroundColor: `${primary}1a`, color: primary }}
+                >
+                  <Rocket size={26} />
+                </motion.span>
+                <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight">Let's Build Something Together</h2>
+                <p className="max-w-2xl mx-auto text-base sm:text-lg opacity-70 leading-relaxed">
+                  Do you have a software idea, a network problem, or need good technical advice? Tell me about it and
+                  we will find the best way forward.
+                </p>
+                <motion.div className="inline-block" whileHover={{ y: -3, scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Link
+                    to="/contact"
+                    className="group relative overflow-hidden inline-flex items-center gap-2 rounded-full px-8 py-3.5 text-base sm:text-lg font-semibold shadow-lg sv-shine"
+                    style={{ backgroundColor: primary, color: base }}
+                  >
+                    Contact Me
+                    <ArrowRight size={18} className="transition-transform duration-300 group-hover:translate-x-1" />
+                  </Link>
+                </motion.div>
+              </div>
+            </motion.div>
+          </section>
         </div>
 
         <Footer />
