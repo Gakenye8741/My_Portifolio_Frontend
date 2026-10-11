@@ -1,21 +1,20 @@
-
-import React from 'react';
-import { motion, Variants } from 'framer-motion';
-import { Navbar } from '../Components/Navbar';
-import Footer from '../Components/Footer';
-import { useTheme } from '../ThemeContext';
-import Hero from '../Components/Home components/ContentManager';
-import About from '../Components/Home components/About';
-import Skills from '../Components/Home components/Skills';
-import ProjectCenter from '../Components/Home components/ProjectCenter';
+import React from "react";
+import { motion, Variants } from "framer-motion";
+import { Navbar } from "../Components/Navbar";
+import Footer from "../Components/Footer";
+import { useTheme } from "../ThemeContext";
+import Hero from "../Components/Home components/ContentManager";
+import About from "../Components/Home components/About";
+import Skills from "../Components/Home components/Skills";
+import ProjectCenter from "../Components/Home components/ProjectCenter";
 
 // Import the logo and components
 import logoMain from "../../public/LOGO.png";
-import PageTitle from '../Components/PageTitle';
-import SEO from '../Components/SEO';
-import VirtualAssistant from '../Components/VirtualAssistant';
+import PageTitle from "../Components/PageTitle";
+import SEO from "../Components/SEO";
+import VirtualAssistant from "../Components/VirtualAssistant";
 
-const Home = () => {
+const Home: React.FC = () => {
   const { theme } = useTheme();
 
   const sectionVariants: Variants = {
@@ -25,19 +24,19 @@ const Home = () => {
       y: 0,
       transition: {
         duration: 0.8,
-        ease: "easeOut" as const
-      }
-    }
+        ease: "easeOut" as const,
+      },
+    },
   };
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="min-h-screen transition-colors duration-500 flex flex-col relative"
+      className="relative flex min-h-screen flex-col overflow-x-clip transition-colors duration-500"
       style={{
         backgroundColor: theme["base-100"],
-        color: theme["base-content"]
+        color: theme["base-content"],
       }}
     >
       {/* SEO */}
@@ -51,16 +50,17 @@ const Home = () => {
       <PageTitle title="Home" />
 
       {/* Background logo decoration */}
-      <div className="fixed inset-0 flex items-center justify-center pointer-events-none overflow-hidden z-0">
+      <div className="pointer-events-none fixed inset-0 z-0 flex items-center justify-center overflow-hidden">
         <img
           src={logoMain}
           alt=""
           aria-hidden="true"
-          className="w-[80vw] h-[80vw] object-contain opacity-[0.03] select-none"
+          className="h-[80vw] w-[80vw] select-none object-contain opacity-[0.03]"
         />
       </div>
 
-      <div className="relative z-10 flex flex-col flex-1">
+      {/* Main page content */}
+      <div className="relative z-10 flex flex-1 flex-col">
         <Navbar />
 
         <motion.div
@@ -103,8 +103,20 @@ const Home = () => {
         <Footer />
       </div>
 
-      {/* Floating virtual assistant */}
-      <VirtualAssistant />
+   {/* Floating virtual assistant */}
+      <div
+        className="
+          pointer-events-none fixed inset-x-0 top-[94%] -translate-y-1/2 z-[100]
+          flex justify-end
+          px-3
+          sm:inset-x-auto sm:top-auto sm:bottom-5 sm:right-6 sm:translate-y-0
+          sm:px-0
+        "
+      >
+        <div className="pointer-events-auto">
+          <VirtualAssistant />
+        </div>
+      </div>
     </motion.div>
   );
 };

@@ -36,6 +36,7 @@ import { Navbar } from "../Components/Navbar";
 import { useTheme } from "../ThemeContext";
 import PageTitle from "../Components/PageTitle";
 import SEO from "../Components/SEO";
+import VirtualAssistant from "../Components/VirtualAssistant";
 
 /* ---------- Page information (simple English) ---------- */
 
@@ -981,6 +982,20 @@ const ServicesPage: React.FC = () => {
         </div>
 
         <Footer />
+        {/* Floating virtual assistant */}
+              <div
+                className="
+                  pointer-events-none fixed inset-x-0 top-[94%] -translate-y-1/2 z-[100]
+                  flex justify-end
+                  px-3
+                  sm:inset-x-auto sm:top-auto sm:bottom-5 sm:right-6 sm:translate-y-0
+                  sm:px-0
+                "
+              >
+                <div className="pointer-events-auto">
+                  <VirtualAssistant />
+                </div>
+              </div>
       </div>
     </>
   );

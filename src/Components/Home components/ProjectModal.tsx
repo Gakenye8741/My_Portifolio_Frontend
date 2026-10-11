@@ -16,6 +16,7 @@ import {
   Layers,
   Clock,
 } from 'lucide-react';
+import VirtualAssistant from '../VirtualAssistant';
 
 /* ---------- Types ---------- */
 
@@ -573,6 +574,21 @@ const ProjectDetailsPage = () => {
           .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
         }
       `}</style>
+
+      {/* Floating virtual assistant */}
+      <div
+        className="
+          pointer-events-none fixed inset-x-0 top-[94%] -translate-y-1/2 z-[100]
+          flex justify-end
+          px-3
+          sm:inset-x-auto sm:top-auto sm:bottom-5 sm:right-6 sm:translate-y-0
+          sm:px-0
+        "
+      >
+        <div className="pointer-events-auto">
+          <VirtualAssistant />
+        </div>
+      </div>
     </main>
   );
 };

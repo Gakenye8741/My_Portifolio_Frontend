@@ -23,11 +23,9 @@ export interface ProjectTimeline {
   date: string;
 }
 
-// 1. Added the Tech Interface to match your backend response
 export interface ProjectTech {
   projectId: string;
   technologyId: string;
-  // If your backend includes the joined technology data, add it here:
   technology?: {
     id: string;
     name: string;
@@ -50,8 +48,7 @@ export interface Project {
     fileUrl: string;
     fileName: string;
   };
-  // 2. Included 'techs' in the Project interface
-  techs: ProjectTech[]; 
+  techs: ProjectTech[];
   links: ProjectLink[];
   sections: ProjectSection[];
   timeline: ProjectTimeline[];
@@ -59,12 +56,11 @@ export interface Project {
 
 export const projectsApi = createApi({
   reducerPath: 'projectsApi',
-  baseQuery: fetchBaseQuery({ 
-    baseUrl: 'https://my-portifolio-backend-fb0a.onrender.com/api' 
+  baseQuery: fetchBaseQuery({
+    baseUrl: 'https://my-portifolio-backend-fb0a.onrender.com/api',
   }),
   tagTypes: ['Project'],
   endpoints: (builder) => ({
-    
     getProjects: builder.query<Project[], void>({
       query: () => '/projects',
       providesTags: (result) =>
@@ -95,7 +91,10 @@ export const projectsApi = createApi({
       invalidatesTags: [{ type: 'Project', id: 'LIST' }],
     }),
 
-    updateProject: builder.mutation<Project, { id: string; updates: Partial<Project> }>({
+    updateProject: builder.mutation<
+      Project,
+      { id: string; updates: Partial<Project> }
+    >({
       query: ({ id, updates }) => ({
         url: `/projects/${id}`,
         method: 'PUT',
@@ -121,6 +120,12 @@ export const {
   useGetProjectsQuery,
   useGetProjectBySlugQuery,
   useGetProjectDetailsQuery,
+
+  // add these three
+  useLazyGetProjectsQuery,
+  useLazyGetProjectBySlugQuery,
+  useLazyGetProjectDetailsQuery,
+
   useCreateProjectMutation,
   useUpdateProjectMutation,
   useDeleteProjectMutation,
