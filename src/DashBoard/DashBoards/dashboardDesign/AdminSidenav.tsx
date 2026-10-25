@@ -1,139 +1,356 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { 
-  Layout, Database, Cpu, Globe, 
-  LogOut, FolderCode, PlusCircle, 
-  Activity, User, Settings, ShieldCheck,
+import {
+  Layout,
+  Database,
+  LogOut,
+  FolderCode,
+  Settings,
+  ShieldCheck,
   CameraIcon,
   Link2,
   SectionIcon,
   Code,
-  TimerIcon
+  TimerIcon,
+  TrendingUp,
 } from "lucide-react";
 import { useTheme } from "../../../ThemeContext";
 import { clearCredentials } from "../../../Features/Auth/AuthSlice";
+import { SiPhonepe } from "react-icons/si";
+import { RiBloggerFill } from "react-icons/ri";
 
+type NavItem = {
+  name: string;
+  path: string;
+  icon: React.ReactNode;
+};
 
-const navItems = [
-  { name: "Console", path: "/admin-dashboard", id: "00", icon: <Layout size={18} /> },
-  { name: "Projects Archive", path: "manage-projects", id: "01", icon: <FolderCode size={18} /> },
-  { name: "Media  Manager", path: "media-manager", id: "02", icon: <CameraIcon size={18} /> },
-  { name: "Project Links", path: "manage-links", id: "03", icon: <Link2 size={18} /> },
-  { name: "Project Sections", path: "Section-manager", id: "04", icon: <SectionIcon size={18} /> },
-  { name: "Project Tech", path: "ProjectTech-manager", id: "05", icon: <Database size={18} /> },
-  { name: "Skills Manager", path: "skills-manager", id: "06", icon: <Code size={18} /> },
-  { name: "Project Timeline", path: "Project-timeline", id: "07", icon: <TimerIcon size={18} /> },
-  { name: "Config", path: "settings", id: "08", icon: <Settings size={18} /> },
+const groupPrimary: NavItem[] = [
+  { name: "Analytics", path: "analytics", icon: <TrendingUp size={16} /> },
 ];
 
-export const AdminSideNav = ({ onNavItemClick }: { onNavItemClick?: () => void }) => {
+const groupContent: NavItem[] = [
+  { name: "Projects", path: "manage-projects", icon: <FolderCode size={16} /> },
+  { name: "Media", path: "media-manager", icon: <CameraIcon size={16} /> },
+  { name: "Tech", path: "manage-tech", icon: <Link2 size={16} /> },
+  { name: "Contact", path: "contact-manager", icon: <SiPhonepe size={16} /> },
+  { name: "Blogs", path: "blog-manager", icon: <RiBloggerFill size={16} /> },
+  { name: "Skills", path: "skills-manager", icon: <Code size={16} /> },
+  { name: "Testimony-manager", path: "Testimony-managers", icon: <TimerIcon size={16} /> },
+  { name: "FAQ-manager", path: "FAQ-manager", icon: <TimerIcon size={16} /> },
+];
+
+const groupSystem: NavItem[] = [
+  { name: "Settings", path: "settings", icon: <Settings size={16} /> },
+];
+
+export const AdminSideNav = ({
+  onNavItemClick,
+}: {
+  onNavItemClick?: () => void;
+}) => {
   const { theme } = useTheme();
   const dispatch = useDispatch();
+
+  const primary = theme.primary;
+  const base = theme["base-100"];
+  const text = theme["base-content"];
+
+  /* Track collapsed state from parent's data-collapsed attribute */
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    const parent = document.querySelector('[data-collapsed]');
+    if (!parent) return;
+
+    const sync = () => {
+      setCollapsed(parent.getAttribute("data-collapsed") === "true");
+    };
+    sync();
+
+    const observer = new MutationObserver(sync);
+    observer.observe(parent, {
+      attributes: true,
+      attributeFilter: ["data-collapsed"],
+    });
+    return () => observer.disconnect();
+  }, []);
 
   const handleLogout = () => {
     dispatch(clearCredentials());
     onNavItemClick?.();
   };
 
+  /* Reusable renderer */
+  const renderLink = (item: NavItem, index = 0) => (
+    <NavLink
+      key={item.path}
+      to={item.path}
+      end={item.path === "/admin-dashboard"}
+      onClick={onNavItemClick}
+      title={collapsed ? item.name : undefined}
+      aria-label={collapsed ? item.name : undefined}
+      className={({ isActive }) =>
+        `sn-link group relative flex items-center rounded-lg px-2.5 py-2 text-[13px] font-medium overflow-hidden ${
+          collapsed ? "justify-center gap-0" : "gap-2.5"
+        } ${isActive ? "sn-active shadow-sm" : "opacity-75 hover:opacity-100"}`
+      }
+      style={({ isActive }) => ({
+        backgroundColor: isActive ? primary : "transparent",
+        color: isActive ? base : text,
+        animationDelay: `${index * 40}ms`,
+      })}
+    >
+      {({ isActive }) => (
+        <>
+          <span
+            className="sn-bar absolute left-0 top-1/2 -translate-y-1/2 w-[3px] rounded-r-full"
+            style={{ backgroundColor: isActive ? base : primary }}
+          />
+
+          <span
+            className="sn-icon grid h-7 w-7 shrink-0 place-items-center rounded-md"
+            style={{
+              backgroundColor: isActive ? `${base}26` : `${text}08`,
+              color: isActive ? base : text,
+            }}
+          >
+            {item.icon}
+          </span>
+
+          {!collapsed && (
+            <>
+              <span className="sn-label truncate">{item.name}</span>
+
+              {isActive && (
+                <span
+                  className="sn-dot ml-auto h-1.5 w-1.5 shrink-0 rounded-full"
+                  style={{ backgroundColor: `${base}cc` }}
+                />
+              )}
+            </>
+          )}
+        </>
+      )}
+    </NavLink>
+  );
+
   return (
-    <aside 
-      className="fixed left-0 top-20 w-80 flex flex-col p-4 transition-all duration-500 border-r border-opacity-5 z-[100]"
-      style={{ 
-        backgroundColor: theme["base-100"], 
-        borderColor: theme["base-content"],
-        height: 'calc(100vh - 5rem)' 
+    /* ✅ w-full + h-full — no longer fixed, no longer w-64 */
+    <aside
+      className="sn-root relative w-full h-full flex flex-col overflow-hidden backdrop-blur-xl"
+      style={{
+        backgroundColor: `${base}ee`,
       }}
     >
-      {/* --- MINIMALIST STATUS INDICATOR --- */}
-      <div className="flex items-center justify-between px-4 py-4 mb-2">
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <ShieldCheck size={20} style={{ color: theme.primary }} />
-            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full animate-ping" style={{ backgroundColor: theme.primary }} />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-[9px] font-black uppercase tracking-[0.2em]">Auth_Session</span>
-            <span className="text-[7px] font-mono opacity-30 uppercase tracking-tighter">Active_Node</span>
-          </div>
-        </div>
-      </div>
-
-      {/* --- NAVIGATION GRID --- */}
-      <nav className="flex-grow space-y-1 overflow-y-auto pr-2 custom-scrollbar">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.id}
-            to={item.path}
-            // "end" ensures Console isn't active when you are in other admin paths
-            end={item.path === "/admin-dashboard"} 
-            onClick={onNavItemClick}
-            className={({ isActive }) => `
-              group relative flex items-center justify-between p-3.5 rounded-xl transition-all duration-500
-              ${isActive ? 'opacity-100' : 'opacity-20 hover:opacity-100'}
-            `}
-            style={({ isActive }) => ({
-              backgroundColor: isActive ? `${theme.primary}08` : 'transparent',
-              color: isActive ? theme.primary : theme["base-content"]
-            })}
-          >
-            {({ isActive }) => (
-              <>
-                {/* Active Indicator Bar */}
-                <div 
-                  className={`absolute left-0 w-[3px] h-5 rounded-r-full transition-all duration-500 ${isActive ? 'opacity-100' : 'opacity-0'}`}
-                  style={{ backgroundColor: theme.primary }}
-                />
-                
-                <div className="flex items-center gap-4">
-                  <span className={`transition-all duration-500 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}>
-                    {item.icon}
-                  </span>
-                  <span className="text-[10px] font-black uppercase tracking-[0.15em]">
-                    {item.name}
-                  </span>
-                </div>
-
-                <span className={`text-[8px] font-mono transition-opacity ${isActive ? 'opacity-40' : 'opacity-0 group-hover:opacity-40'}`}>
-                  {item.id}
-                </span>
-              </>
-            )}
-          </NavLink>
-        ))}
-      </nav>
-
-      {/* --- TERMINATE SESSION BUTTON --- */}
-      <div className="mt-auto pt-4 border-t border-opacity-5" style={{ borderColor: theme["base-content"] }}>
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center gap-4 p-4 rounded-xl transition-all duration-300 hover:bg-red-500/10 text-red-500/60 hover:text-red-500 group"
-        >
-          <LogOut size={18} className="group-hover:-translate-x-1 transition-transform" />
-          <span className="text-[10px] font-black uppercase tracking-widest">Terminate_Session</span>
-        </button>
-
-        {/* SYSTEM DATA FOOTER */}
-        <div className="mt-4 px-2 pb-2 flex items-center justify-between">
-            <div className="flex flex-col gap-0.5">
-                <span className="text-[6px] font-bold opacity-20 uppercase tracking-tighter">Node</span>
-                <span className="text-[8px] font-mono font-bold opacity-30 italic">AZ-26</span>
-            </div>
-            <div className="h-4 w-[1px] bg-white/5 mx-2" />
-            <div className="flex flex-col gap-0.5 text-right">
-                <span className="text-[6px] font-bold opacity-20 uppercase tracking-tighter">Core</span>
-                <span className="text-[8px] font-mono font-bold opacity-30 italic">v2.06</span>
-            </div>
-        </div>
-      </div>
-
       <style>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 2px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { 
-          background: ${theme["base-content"]}15; 
-          border-radius: 10px; 
+        @keyframes sn-fadeUp {
+          from { opacity: 0; transform: translateY(6px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes sn-softPulse {
+          0%, 100% { transform: scale(1); opacity: .6; }
+          50%      { transform: scale(1.6); opacity: 0; }
+        }
+        .sn-link { animation: sn-fadeUp 400ms cubic-bezier(.2,.7,.2,1) both; }
+
+        .sn-link:hover .sn-icon {
+          transform: scale(1.08) rotate(-6deg);
+        }
+        .sn-link:hover .sn-label {
+          transform: translateX(1px);
+        }
+
+        .sn-bar {
+          height: 0;
+          transition: height 250ms cubic-bezier(.2,.7,.2,1);
+        }
+        .sn-link:hover .sn-bar,
+        .sn-link.sn-active .sn-bar {
+          height: 60%;
+        }
+
+        .sn-icon {
+          transition: transform 260ms cubic-bezier(.2,.7,.2,1),
+                      background-color 200ms ease,
+                      color 200ms ease;
+        }
+        .sn-label { transition: transform 220ms cubic-bezier(.2,.7,.2,1); }
+
+        @keyframes sn-dotIn {
+          0%   { transform: scale(0); opacity: 0; }
+          60%  { transform: scale(1.4); opacity: 1; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        .sn-dot { animation: sn-dotIn 400ms cubic-bezier(.2,.7,.2,1); }
+
+        .sn-ring {
+          position: absolute;
+          inset: 0;
+          border-radius: inherit;
+          box-shadow: 0 0 0 2px ${primary}55;
+          animation: sn-softPulse 3s ease-in-out infinite;
+          pointer-events: none;
+        }
+        .sn-brand:hover .sn-brand-icon {
+          transform: rotate(-6deg) scale(1.06);
+        }
+        .sn-brand-icon { transition: transform 300ms cubic-bezier(.2,.7,.2,1); }
+
+        .sn-signout:hover .sn-signout-icon {
+          transform: translateX(-2px) rotate(-6deg);
+        }
+        .sn-signout-icon { transition: transform 260ms cubic-bezier(.2,.7,.2,1); }
+
+        .sn-chip { transition: transform 220ms cubic-bezier(.2,.7,.2,1); }
+        .sn-chip:hover { transform: translateY(-1px); }
+
+        .sn-scroll::-webkit-scrollbar { width: 3px; }
+        .sn-scroll::-webkit-scrollbar-track { background: transparent; }
+        .sn-scroll::-webkit-scrollbar-thumb {
+          background: ${text}18;
+          border-radius: 10px;
+        }
+        .sn-scroll:hover::-webkit-scrollbar-thumb {
+          background: ${text}32;
+        }
+
+        .sn-section-label {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          transition: opacity 250ms ease;
+        }
+        .sn-section-label::before {
+          content: "";
+          width: 4px;
+          height: 4px;
+          border-radius: 999px;
+          background: ${primary}88;
+          opacity: 0;
+          transition: opacity 250ms ease, transform 250ms cubic-bezier(.2,.7,.2,1);
+          transform: scale(.5);
+        }
+        .sn-scroll:hover .sn-section-label::before {
+          opacity: 1;
+          transform: scale(1);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .sn-link,
+          .sn-bar,
+          .sn-icon,
+          .sn-label,
+          .sn-dot,
+          .sn-brand-icon,
+          .sn-signout-icon,
+          .sn-chip,
+          .sn-ring,
+          .sn-section-label::before {
+            animation: none !important;
+            transition: none !important;
+            transform: none !important;
+          }
+          .sn-bar { height: 60% !important; opacity: 0.5 !important; }
         }
       `}</style>
+
+      {/* ================= BRAND ROW ================= */}
+      <div className={`pt-3 pb-2 ${collapsed ? "px-2" : "px-3"}`}>
+        <div
+          className={`sn-brand group flex items-center rounded-lg py-1.5 ${
+            collapsed ? "justify-center gap-0 px-0" : "gap-2.5 px-2"
+          }`}
+        >
+          <div className="relative shrink-0">
+            <span
+              className="sn-brand-icon grid h-8 w-8 place-items-center rounded-lg"
+              style={{
+                backgroundColor: `${primary}1f`,
+                color: primary,
+                position: "relative",
+                zIndex: 1,
+              }}
+            >
+              <ShieldCheck size={17} />
+            </span>
+            <span className="sn-ring" />
+          </div>
+          {!collapsed && (
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-bold leading-tight">Admin</p>
+              <p className="text-[10px] uppercase tracking-wider opacity-50 leading-tight">
+                Signed in
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ================= NAV ================= */}
+      <nav className="sn-scroll flex-1 overflow-y-auto px-2 pb-2">
+        <div className="pt-1">{groupPrimary.map((i, idx) => renderLink(i, idx))}</div>
+
+        {!collapsed ? (
+          <p className="sn-section-label px-2 pt-4 pb-1 text-[10px] font-bold uppercase tracking-[0.14em] opacity-40">
+            Content
+          </p>
+        ) : (
+          <div className="my-2 mx-2 h-px" style={{ backgroundColor: `${text}10` }} />
+        )}
+        <div className="space-y-0.5">
+          {groupContent.map((i, idx) => renderLink(i, idx + 1))}
+        </div>
+
+        {!collapsed ? (
+          <p className="sn-section-label px-2 pt-4 pb-1 text-[10px] font-bold uppercase tracking-[0.14em] opacity-40">
+            System
+          </p>
+        ) : (
+          <div className="my-2 mx-2 h-px" style={{ backgroundColor: `${text}10` }} />
+        )}
+        <div className="space-y-0.5">
+          {groupSystem.map((i, idx) => renderLink(i, idx + groupContent.length + 1))}
+        </div>
+      </nav>
+
+      {/* ================= FOOTER ================= */}
+      <div
+        className="border-t px-2 py-2"
+        style={{ borderColor: `${text}10` }}
+      >
+        <button
+          onClick={handleLogout}
+          title={collapsed ? "Sign out" : undefined}
+          aria-label={collapsed ? "Sign out" : undefined}
+          className={`sn-signout group flex w-full items-center rounded-lg py-2 text-[13px] font-medium text-rose-500/80 transition-all duration-200 hover:bg-rose-500/10 hover:text-rose-500 ${
+            collapsed ? "justify-center gap-0 px-0" : "gap-2.5 px-2.5"
+          }`}
+        >
+          <span className="sn-signout-icon grid h-7 w-7 shrink-0 place-items-center rounded-md bg-rose-500/10">
+            <LogOut size={15} />
+          </span>
+          {!collapsed && <span>Sign out</span>}
+        </button>
+
+        {!collapsed && (
+          <div className="mt-2 flex items-center justify-between gap-2 px-1 pb-1">
+            <span
+              className="sn-chip flex-1 rounded-md px-2 py-1 text-center text-[10px] font-semibold tabular-nums"
+              style={{ backgroundColor: `${text}06`, color: text, opacity: 0.6 }}
+            >
+              AZ-26
+            </span>
+            <span
+              className="sn-chip flex-1 rounded-md px-2 py-1 text-center text-[10px] font-semibold tabular-nums"
+              style={{ backgroundColor: `${primary}10`, color: primary, opacity: 0.9 }}
+            >
+              v2.06
+            </span>
+          </div>
+        )}
+      </div>
     </aside>
   );
 };

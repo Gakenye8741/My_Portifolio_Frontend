@@ -18,14 +18,27 @@ import {
   Target,
   CalendarClock,
   ArrowUpRight,
+  Loader2,
+  AlertCircle,
+  User,
+  AtSign,
+  Tag,
+  FileText,
 } from 'lucide-react';
 import { RiWhatsappFill } from 'react-icons/ri';
+import toast from 'react-hot-toast';
 
 import logoMain from '../../public/LOGO.png';
 import Footer from '../Components/Footer';
 import PageTitle from '../Components/PageTitle';
 import SEO from '../Components/SEO';
 import VirtualAssistant from '../Components/VirtualAssistant';
+
+// ✅ API wiring
+import {
+  useSubmitContactMutation,
+  getContactErrorMessage,
+} from '../Features/Apis/Contact.Api';
 
 /* ---------- Page information ---------- */
 
@@ -69,7 +82,6 @@ const rise: Variants = {
   show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.7, ease: [0.2, 0.7, 0.2, 1] } },
 };
 
-// Makes the light on a card follow the mouse.
 const followMouse = (e: React.MouseEvent<HTMLElement>) => {
   const box = e.currentTarget.getBoundingClientRect();
   e.currentTarget.style.setProperty('--mx', `${e.clientX - box.left}px`);
@@ -83,19 +95,30 @@ const ContactPage = () => {
   const reduce = useReducedMotion();
   const [copied, setCopied] = useState<string | null>(null);
 
+  // ✅ Contact form state
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    subject: '',
+    message: '',
+  });
+  const [sent, setSent] = useState(false);
+
+  // ✅ API hook
+  const [submitContact, { isLoading, isError, error, reset }] = useSubmitContactMutation();
+
   const base = theme['base-100'];
   const text = theme['base-content'];
   const primary = theme.primary;
   const soft = `${text}18`;
 
-  // Copies a phone number or email so it is easy to paste
   const copy = async (value: string, key: string) => {
     try {
       await navigator.clipboard.writeText(value);
       setCopied(key);
       setTimeout(() => setCopied((c) => (c === key ? null : c)), 1800);
     } catch {
-      /* Copy is not allowed here, so we do nothing */
+      /* Copy not allowed */
     }
   };
 
@@ -114,6 +137,37 @@ const ContactPage = () => {
   );
 
   const heroWords = ["Let's", 'talk.'];
+
+  /* ✅ Form submit handler */
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await submitContact({
+        name: form.name.trim(),
+        email: form.email.trim(),
+        subject: form.subject.trim() || undefined, // subject optional
+        message: form.message.trim(),
+      }).unwrap();
+
+      toast.success('Message sent! I will get back to you soon.');
+      setSent(true);
+      reset();
+      setForm({ name: '', email: '', subject: '', message: '' });
+
+      // Reset success indicator after a moment
+      setTimeout(() => setSent(false), 6000);
+    } catch {
+      /* handled via isError + error below */
+    }
+  };
+
+  const inputBase = {
+    borderColor: soft,
+    backgroundColor: `${text}05`,
+    color: text,
+  } as React.CSSProperties;
+
+  const labelClass = 'text-xs font-bold uppercase tracking-wider opacity-55 mb-1.5 block';
 
   return (
     <main
@@ -157,7 +211,7 @@ const ContactPage = () => {
         />
       </div>
 
-      {/* Dots pattern and glowing blobs */}
+      {/* Dots pattern + glowing blobs */}
       <div
         className="absolute inset-x-0 top-0 h-[38rem] pointer-events-none opacity-60"
         style={{
@@ -179,22 +233,7 @@ const ContactPage = () => {
       <div className="relative z-10 max-w-6xl mx-auto space-y-16 md:space-y-20">
         {/* ---------- HEADER ---------- */}
         <header className="space-y-6">
-          {/* Availability badge with a pulsing dot */}
-          <motion.div
-            initial={{ opacity: 0, y: -16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05, duration: 0.6 }}
-            className="inline-flex items-center gap-3 rounded-full border px-4 py-2 text-sm font-medium backdrop-blur-md"
-            style={{ borderColor: `${primary}55`, backgroundColor: `${primary}12`, color: primary }}
-          >
-            <span className="relative grid place-items-center w-3 h-3">
-              <span className="ct-ping absolute inset-0 rounded-full bg-green-500" />
-              <span className="relative w-2.5 h-2.5 rounded-full bg-green-500" />
-            </span>
-            I am open to new projects
-          </motion.div>
-
-          <h1
+                   <h1
             className="text-6xl md:text-8xl font-extrabold tracking-tight leading-[1.02]"
             aria-label="Let's talk."
           >
@@ -233,9 +272,191 @@ const ContactPage = () => {
         >
           {/* Left side */}
           <div className="lg:col-span-3 space-y-6">
+            {/* ✅ CONTACT FORM */}
+            <motion.section
+              variants={rise}
+              className="relative overflow-hidden rounded-3xl border p-6 sm:p-8"
+              style={cardStyle}
+            >
+              {glow}
+              <div className="relative space-y-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h2 className="text-2xl font-extrabold tracking-tight">Send me a message</h2>
+                    <p className="mt-1 text-sm opacity-60">
+                      Fill the form below — I usually reply within a day.
+                    </p>
+                  </div>
+                  <span
+                    className="hidden sm:grid place-items-center shrink-0 w-11 h-11 rounded-2xl"
+                    style={{ backgroundColor: `${primary}1a`, color: primary }}
+                  >
+                    <MessageSquare size={20} />
+                  </span>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    {/* Name */}
+                    <div>
+                      <label htmlFor="ct-name" className={labelClass}>
+                        Your name <span style={{ color: primary }}>*</span>
+                      </label>
+                      <div className="relative">
+                        <User
+                          size={16}
+                          className="absolute left-3 top-1/2 -translate-y-1/2 opacity-40"
+                        />
+                        <input
+                          id="ct-name"
+                          type="text"
+                          required
+                          value={form.name}
+                          onChange={(e) => setForm({ ...form, name: e.target.value })}
+                          placeholder="Your full name"
+                          className="w-full rounded-xl border pl-10 pr-3 py-3 text-sm outline-none transition focus:ring-2"
+                          style={inputBase}
+                          disabled={isLoading}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Email */}
+                    <div>
+                      <label htmlFor="ct-email" className={labelClass}>
+                        Your email <span style={{ color: primary }}>*</span>
+                      </label>
+                      <div className="relative">
+                        <AtSign
+                          size={16}
+                          className="absolute left-3 top-1/2 -translate-y-1/2 opacity-40"
+                        />
+                        <input
+                          id="ct-email"
+                          type="email"
+                          required
+                          value={form.email}
+                          onChange={(e) => setForm({ ...form, email: e.target.value })}
+                          placeholder="you@example.com"
+                          className="w-full rounded-xl border pl-10 pr-3 py-3 text-sm outline-none transition focus:ring-2"
+                          style={inputBase}
+                          disabled={isLoading}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Subject (optional) */}
+                  <div>
+                    <label htmlFor="ct-subject" className={labelClass}>
+                      Subject <span className="opacity-50 normal-case tracking-normal">(optional)</span>
+                    </label>
+                    <div className="relative">
+                      <Tag
+                        size={16}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 opacity-40"
+                      />
+                      <input
+                        id="ct-subject"
+                        type="text"
+                        value={form.subject}
+                        onChange={(e) => setForm({ ...form, subject: e.target.value })}
+                        placeholder="What is this about?"
+                        className="w-full rounded-xl border pl-10 pr-3 py-3 text-sm outline-none transition focus:ring-2"
+                        style={inputBase}
+                        disabled={isLoading}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Message */}
+                  <div>
+                    <label htmlFor="ct-message" className={labelClass}>
+                      Your message <span style={{ color: primary }}>*</span>
+                    </label>
+                    <div className="relative">
+                      <FileText
+                        size={16}
+                        className="absolute left-3 top-3 opacity-40"
+                      />
+                      <textarea
+                        id="ct-message"
+                        required
+                        minLength={10}
+                        rows={5}
+                        value={form.message}
+                        onChange={(e) => setForm({ ...form, message: e.target.value })}
+                        placeholder="Tell me what you are building or the problem you want to solve…"
+                        className="w-full rounded-xl border pl-10 pr-3 py-3 text-sm outline-none transition focus:ring-2 resize-y min-h-[140px]"
+                        style={inputBase}
+                        disabled={isLoading}
+                      />
+                    </div>
+                    <p className="mt-1.5 text-xs opacity-45">
+                      {form.message.length} characters — at least 10 required.
+                    </p>
+                  </div>
+
+                  {/* Error */}
+                  {isError && (
+                    <div
+                      className="flex items-start gap-2 rounded-xl border px-3 py-2.5 text-sm"
+                      style={{
+                        borderColor: '#ef444455',
+                        backgroundColor: '#ef44441a',
+                        color: '#ef4444',
+                      }}
+                    >
+                      <AlertCircle size={16} className="mt-0.5 shrink-0" />
+                      <span>{getContactErrorMessage(error) || 'Something went wrong. Please try again.'}</span>
+                    </div>
+                  )}
+
+                  {/* Success */}
+                  {sent && (
+                    <div
+                      className="flex items-start gap-2 rounded-xl border px-3 py-2.5 text-sm"
+                      style={{
+                        borderColor: '#22c55e55',
+                        backgroundColor: '#22c55e1a',
+                        color: '#22c55e',
+                      }}
+                    >
+                      <CheckCircle2 size={16} className="mt-0.5 shrink-0" />
+                      <span>Message sent! I will get back to you soon.</span>
+                    </div>
+                  )}
+
+                  {/* Submit */}
+                  <motion.button
+                    type="submit"
+                    disabled={isLoading}
+                    whileHover={isLoading ? undefined : { y: -2, scale: 1.01 }}
+                    whileTap={isLoading ? undefined : { scale: 0.98 }}
+                    className="group relative overflow-hidden ct-shine inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3.5 text-base font-semibold shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: primary, color: base }}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 size={18} className="animate-spin" />
+                        Sending…
+                      </>
+                    ) : (
+                      <>
+                        Send message
+                        <Send
+                          size={16}
+                          className="transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1"
+                        />
+                      </>
+                    )}
+                  </motion.button>
+                </form>
+              </div>
+            </motion.section>
+
             {/* Phone, email and place */}
             <div className="grid sm:grid-cols-2 gap-4">
-              {/* Phone */}
               <motion.article
                 variants={rise}
                 onMouseMove={followMouse}
@@ -272,7 +493,6 @@ const ContactPage = () => {
                 </div>
               </motion.article>
 
-              {/* Email */}
               <motion.article
                 variants={rise}
                 onMouseMove={followMouse}
@@ -309,7 +529,6 @@ const ContactPage = () => {
                 </div>
               </motion.article>
 
-              {/* Place */}
               <motion.article
                 variants={rise}
                 onMouseMove={followMouse}
@@ -499,20 +718,19 @@ const ContactPage = () => {
       </div>
 
       <Footer />
-      {/* Floating virtual assistant */}
-            <div
-              className="
-                pointer-events-none fixed inset-x-0 top-[94%] -translate-y-1/2 z-[100]
-                flex justify-end
-                px-3
-                sm:inset-x-auto sm:top-auto sm:bottom-5 sm:right-6 sm:translate-y-0
-                sm:px-0
-              "
-            >
-              <div className="pointer-events-auto">
-                <VirtualAssistant />
-              </div>
-            </div>
+      <div
+        className="
+          pointer-events-none fixed inset-x-0 top-[94%] -translate-y-1/2 z-[100]
+          flex justify-end
+          px-3
+          sm:inset-x-auto sm:top-auto sm:bottom-5 sm:right-6 sm:translate-y-0
+          sm:px-0
+        "
+      >
+        <div className="pointer-events-auto">
+          <VirtualAssistant />
+        </div>
+      </div>
     </main>
   );
 };

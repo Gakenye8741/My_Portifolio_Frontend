@@ -17,6 +17,16 @@ import StackPage from "./Pages/StackPAge";
 import ContactPage from "./Pages/Contatc";
 import ServicesPage from "./Pages/Services";
 
+// ✅ NEW — blog pages
+import BlogPage from "./Pages/BlogPage";
+import BlogPostPage from "./Pages/BlogPostPage";
+import TechnologiesManager from "./DashBoard/AdminDashBoard/TechnologiesManager";
+import ContactManager from "./DashBoard/AdminDashBoard/ContactManager";
+import BlogManager from "./DashBoard/AdminDashBoard/BlogManager";
+import TestimonialsManager from "./DashBoard/AdminDashBoard/TestimonialsManager";
+import FAQsManager from "./DashBoard/AdminDashBoard/FAQsManager";
+import FAQsPage from "./Pages/FAQsPage";
+import Analytics from "./DashBoard/AdminDashBoard/AdminAnalytics";
 
 const App = () => {
   const router = createBrowserRouter([
@@ -32,48 +42,66 @@ const App = () => {
     },
     {
       // 3. INDIVIDUAL PROJECT DEEP DIVE
-      // The ':id' acts as a placeholder for the project's UUID
-      path: "/project/:id",
+      // The ':slug' acts as a placeholder for the project's slug
+      path: "/project/:slug",
       element: <ProjectDetailsPage />,
     },
     {
-      // 3. INDIVIDUAL PROJECT DEEP DIVE
-      // The ':id' acts as a placeholder for the project's UUID
+      // LOGIN PAGE
       path: "/Auth",
       element: <Login />,
     },
     {
       path: "/tech",
-      element: < StackPage />
+      element: <StackPage />,
     },
-     {
+    {
       path: "/services",
-      element: < ServicesPage />
+      element: <ServicesPage />,
     },
     {
       path: "/contact",
-      element: <ContactPage />
+      element: <ContactPage />,
+    },
+    // ✅ NEW — BLOG LISTING
+    {
+      path: "/blog",
+      element: <BlogPage />,
+    },
+    // ✅ NEW — INDIVIDUAL BLOG POST
+    {
+      path: "/blog/:slug",
+      element: <BlogPostPage />,
+    },
+     {
+      path: "/faqs",
+      element: <FAQsPage />,
     },
     {
       // 4. FALLBACK / 404
       path: "*",
       element: <Home />,
     },
+
     {
-      path: '/admin-dashboard',
+      path: "/admin-dashboard",
       element: (
         <ProtectedRoutes>
           <AdminDashBoard />
         </ProtectedRoutes>
       ),
       children: [
+        { path: "analytics", element: <Analytics /> },
         { path: "manage-projects", element: <ProjectManager /> },
         { path: "media-manager", element: <MediaManager /> },
-        { path: "manage-links", element: <ProjectLinksManager /> },
+        { path: "manage-tech", element: <TechnologiesManager /> },
+        { path: "contact-manager", element: <ContactManager /> },
+        { path: "blog-manager", element: <BlogManager /> },
         { path: "skills-manager", element: <SkillsManager /> },
-        { path: "ProjectTech-manager", element: <ProjectTechManager /> },
+        { path: "Testimony-managers", element: <TestimonialsManager /> },
         { path: "Section-manager", element: <ProjectSectionManager /> },
         { path: "Project-timeline", element: <TimelineManager /> },
+        { path: "FAQ-manager", element: <FAQsManager /> },
       ],
     },
   ]);

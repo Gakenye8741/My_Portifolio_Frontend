@@ -2,8 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useTheme } from '../../ThemeContext';
 import {
   Target, Award, ShieldCheck, Cpu, Cloud,
-  GraduationCap, MapPin, Briefcase, Sparkles, BookOpen,
-  User2Icon
+  GraduationCap, MapPin, Briefcase, BookOpen,
+  User2Icon, Sparkles,
 } from 'lucide-react';
 
 /* ---------- Small helper: plays an animation when scrolled into view ---------- */
@@ -57,7 +57,7 @@ const Card = ({ children, className = "" }: CardProps) => {
   return (
     <div
       onMouseMove={onMove}
-      className={`ab-card group relative h-full overflow-hidden rounded-[1.75rem] border p-7 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-2xl ${className}`}
+      className={`ab-card group relative h-full overflow-hidden rounded-[1.75rem] border p-7 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-2xl backdrop-blur-sm ${className}`}
     >
       <div className="relative z-10 h-full">{children}</div>
     </div>
@@ -166,7 +166,7 @@ const About = () => {
         }
         .ab-card:hover::before { opacity: 1; }
         .ab-card::after {
-          content: ""; position: absolute; left: 0; top: 0; height: 3px; width: 0;
+          content: ""; position: absolute; left: 0; bottom: 0; height: 3px; width: 0;
           background: var(--accent); transition: width .6s ease;
         }
         .ab-card:hover::after { width: 100%; }
@@ -183,6 +183,14 @@ const About = () => {
         /* Fact rows */
         .ab-row { transition: background-color .3s, transform .3s; }
         .ab-row:hover { background-color: var(--accent-soft); transform: translateX(4px); }
+
+        /* Story guide line */
+        .ab-story { position: relative; }
+        .ab-story::before {
+          content: ""; position: absolute; left: 15px; top: 6px; bottom: 6px;
+          width: 2px; background: linear-gradient(to bottom, var(--accent-soft), transparent);
+          border-radius: 2px;
+        }
 
         /* Background */
         @keyframes abOrbit { to { transform: rotate(360deg); } }
@@ -214,10 +222,23 @@ const About = () => {
 
       <div className="relative z-10 mx-auto max-w-[1300px] px-6 lg:px-16">
         {/* ---------- HEADER ---------- */}
-        <div className="mb-16 text-center lg:text-left">
-          <p className="mb-5 inline-flex items-center gap-2 text-sm font-semibold" style={{ color: theme.primary }}>
-            <User2Icon size={16} /> About me
-          </p>
+        <div className="mb-14 text-center lg:text-left">
+          {/* Status chip */}
+          <div className="mb-5 inline-flex flex-wrap items-center gap-2">
+            <span
+              className="inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-semibold"
+              style={{ borderColor: `${theme.primary}44`, backgroundColor: `${theme.primary}12`, color: theme.primary }}
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-500 opacity-60" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
+              </span>
+              Available for work
+            </span>
+            <p className="inline-flex items-center gap-2 text-sm font-semibold" style={{ color: theme.primary }}>
+              <User2Icon size={16} /> About me
+            </p>
+          </div>
 
           <h2 className="text-4xl font-extrabold leading-[1.08] tracking-tight md:text-6xl xl:text-7xl">
             {["I", "build", "software"].map((w, i) => (
@@ -269,30 +290,45 @@ const About = () => {
                 <h3 className="text-2xl font-bold">My story</h3>
               </div>
 
-              <div className="space-y-6">
+              <div className="ab-story space-y-6 pl-10">
                 {story.map((s, i) => (
-                  <div key={i} className="flex gap-4">
+                  <div key={i} className="relative flex gap-4">
                     <span
-                      className="ab-pulse mt-1 grid h-8 w-8 shrink-0 place-items-center rounded-full"
-                      style={{ backgroundColor: theme.primary, color: theme["base-100"], animationDelay: `${i * 0.6}s` }}
+                      className="ab-pulse absolute -left-10 top-0 grid h-8 w-8 shrink-0 place-items-center rounded-full"
+                      style={{
+                        backgroundColor: theme.primary,
+                        color: theme["base-100"],
+                        animationDelay: `${i * 0.6}s`,
+                      }}
                     >
                       {s.icon}
                     </span>
-                    <p className="max-w-2xl text-base leading-relaxed opacity-80 md:text-lg">{s.text}</p>
+                    <p className="max-w-2xl text-base leading-relaxed opacity-80 md:text-lg">
+                      {s.text}
+                    </p>
                   </div>
                 ))}
               </div>
 
-              <div className="mt-8 flex flex-wrap gap-2.5">
-                {chips.map((c, i) => (
-                  <span
-                    key={c}
-                    className="ab-chip cursor-default rounded-full border px-4 py-1.5 text-sm font-medium transition-transform duration-300"
-                    style={{ borderColor: "var(--accent-line)", animationDelay: `${0.4 + i * 0.1}s` }}
-                  >
-                    {c}
-                  </span>
-                ))}
+              {/* Focus chips */}
+              <div className="mt-10">
+                <p
+                  className="mb-3 inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.18em] opacity-55"
+                >
+                  <Sparkles size={12} style={{ color: theme.primary }} />
+                  Focus areas
+                </p>
+                <div className="flex flex-wrap gap-2.5">
+                  {chips.map((c, i) => (
+                    <span
+                      key={c}
+                      className="ab-chip cursor-default rounded-full border px-4 py-1.5 text-sm font-medium transition-transform duration-300"
+                      style={{ borderColor: "var(--accent-line)", animationDelay: `${0.4 + i * 0.1}s` }}
+                    >
+                      {c}
+                    </span>
+                  ))}
+                </div>
               </div>
             </Card>
           </Reveal>

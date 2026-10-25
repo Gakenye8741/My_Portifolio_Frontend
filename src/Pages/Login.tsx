@@ -1,166 +1,154 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import { useTheme } from '../ThemeContext';
+import { useState, useEffect } from "react";
+import type { FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import {
+  getErrorMessage,
+  useLoginMutation,
+  useLogoutMutation,
+  useMeQuery,
+} from "../Features/Apis/AuthApi";
+import { clearCredentials, setCredentials } from "../Features/Auth/AuthSlice";
 
-import { 
-  Lock, ShieldCheck, 
-  ArrowRight, AlertCircle, Eye, EyeOff, Mail 
-} from 'lucide-react';
-import { useLoginMutation } from '../Features/Apis/AuthApi';
-import { setCredentials } from '../Features/Auth/AuthSlice';
 
-const Login = () => {
-  const { theme } = useTheme();
+export default function LoginForm() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  
-  // RTK Query Mutation Hook
-  const [login, { isLoading }] = useLoginMutation();
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({ email: '', password: '' });
-  const [error, setError] = useState('');
+  const { data: user, isLoading: checkingSession } = useMeQuery();
+  const [login, { isLoading, error }] = useLoginMutation();
+  const [logout] = useLogoutMutation();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError('');
-
     try {
-      // 1. Execute mutation with current form data
-      const result = await login({ 
-        email: formData.email, 
-        password: formData.password 
-      }).unwrap();
+      // 1) login → sets HttpOnly cookie, returns the User
+      const loggedInUser = await login({ email, password }).unwrap();
 
-      // 2. Dispatch to Redux (Mapping exactly to your AuthSlice payload)
-      // Result from backend: { token, user: { role, email, etc... } }
-      dispatch(setCredentials({ 
-        user: result.user, 
-        token: result.token, 
-        role: result.user.role // Extracting role specifically to satisfy TS
-      }));
+      // 2) store the user in Redux + localStorage
+      dispatch(setCredentials(loggedInUser));
 
-      // 3. Navigate to the projects management center
-      navigate('/registry'); 
-    } catch (err: any) {
-      // 4. Detailed Error Catching
-      const errorMessage = err.data?.message || 'PROTOCOL_FAILURE: ACCESS_DENIED';
-      setError(errorMessage.toUpperCase());
+      // 3) only NOW redirect — after a real successful login
+      navigate("/", { replace: true });
+    } catch {
+      /* error shown below */
     }
   };
 
-  return (
-    <main className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden" 
-          style={{ backgroundColor: theme["base-100"], color: theme["base-content"] }}>
-            
-      
-      {/* Visual background glows */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full blur-[120px] opacity-10" style={{ backgroundColor: theme.primary }} />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full blur-[120px] opacity-10" style={{ backgroundColor: theme.primary }} />
+  const handleLogout = async () => {
+    try {
+      await logout().unwrap();     // server clears the cookie
+    } finally {
+      dispatch(clearCredentials()); // wipe Redux + localStorage
+      navigate("/login", { replace: true });
+    }
+  };
+
+  if (checkingSession && !user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-indigo-500/30 border-t-indigo-400" />
       </div>
+    );
+  }
 
-      <div className="w-full max-w-md relative z-10">
-        {/* LOGO AREA */}
-        <div className="text-center mb-10 space-y-4">
-          <div className="inline-flex p-4 rounded-3xl bg-black/40 border border-white/5 shadow-2xl mb-4">
-            <ShieldCheck size={40} style={{ color: theme.primary }} className="animate-pulse" />
-          </div>
-          <h2 className="text-4xl font-black uppercase italic tracking-tighter">
-            ADMIN_<span style={{ color: theme.primary }}>AUTH.</span>
-          </h2>
-          <p className="text-[10px] font-bold opacity-30 uppercase tracking-[0.5em]">System_Secure_Gateway_v2.0</p>
-        </div>
+  return (
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 px-4">
+      <div className="pointer-events-none absolute -top-32 -left-32 h-96 w-96 rounded-full bg-indigo-500/30 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-fuchsia-500/20 blur-3xl" />
 
-        {/* LOGIN FORM */}
-        <form onSubmit={handleLogin} className="space-y-6 p-8 md:p-12 rounded-[3.5rem] border border-white/5 bg-black/20 backdrop-blur-3xl shadow-2xl">
-          
-          {error && (
-            <div className="flex items-center gap-3 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-500 text-[9px] font-black uppercase tracking-widest animate-shake">
-              <AlertCircle size={16} /> {error}
+      <div className="relative w-full max-w-md">
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-xl">
+          <div className="mb-8 text-center">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 shadow-lg shadow-indigo-500/30">
+              <svg className="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 11c0-1.657-1.343-3-3-3S6 9.343 6 11s1.343 3 3 3 3-1.343 3-3zm0 0V7a4 4 0 118 0v4m-8 0h8m-8 0v6a2 2 0 002 2h4a2 2 0 002-2v-6" />
+              </svg>
             </div>
+            <h1 className="text-2xl font-bold tracking-tight text-white">Welcome back</h1>
+            <p className="mt-1 text-sm text-slate-400">Sign in to continue to your portfolio</p>
+          </div>
+
+          {/* If a user is already logged in, show a friendly state */}
+          {user ? (
+            <div className="space-y-4 text-center">
+              <p className="text-slate-300">
+                You're signed in as{" "}
+                <span className="font-semibold text-white">{user.fullName}</span>
+              </p>
+              <button
+                onClick={() => navigate("/")}
+                className="w-full rounded-xl bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-4 py-3 font-semibold text-white shadow-lg shadow-indigo-500/30"
+              >
+                Go to homepage
+              </button>
+              <button
+                onClick={handleLogout}
+                className="w-full rounded-xl border border-white/10 px-4 py-3 text-sm text-slate-300 hover:bg-white/5"
+              >
+                Log out
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div>
+                <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-slate-300">
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  required
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-slate-500 outline-none transition focus:border-indigo-400 focus:bg-white/10 focus:ring-2 focus:ring-indigo-500/40"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-slate-300">
+                  Password
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-slate-500 outline-none transition focus:border-indigo-400 focus:bg-white/10 focus:ring-2 focus:ring-indigo-500/40"
+                />
+              </div>
+
+              {error && (
+                <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+                  {getErrorMessage(error)}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-4 py-3 font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:shadow-xl hover:shadow-indigo-500/40 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <span className="relative flex items-center justify-center gap-2">
+                  {isLoading && (
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                  )}
+                  {isLoading ? "Signing in…" : "Log in"}
+                </span>
+              </button>
+            </form>
           )}
 
-          <div className="space-y-6">
-            {/* Email Input */}
-            <div className="space-y-2 group">
-              <label className="text-[9px] font-black uppercase tracking-widest opacity-30 ml-2">Access_Identifier (Email)</label>
-              <div className="relative">
-                <Mail size={18} className="absolute left-5 top-1/2 -translate-y-1/2 opacity-20 group-focus-within:opacity-100 transition-opacity" style={{ color: theme.primary }} />
-                <input 
-                  type="email" 
-                  required
-                  placeholder="ADMIN@EXAMPLE.COM"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full bg-black/40 border-2 border-white/5 rounded-2xl py-5 pl-14 pr-6 text-xs font-bold uppercase tracking-widest focus:outline-none focus:border-primary/40 transition-all placeholder:opacity-20"
-                />
-              </div>
-            </div>
-
-            {/* Password Input */}
-            <div className="space-y-2 group">
-              <label className="text-[9px] font-black uppercase tracking-widest opacity-30 ml-2">Security_Protocol</label>
-              <div className="relative">
-                <Lock size={18} className="absolute left-5 top-1/2 -translate-y-1/2 opacity-20 group-focus-within:opacity-100 transition-opacity" style={{ color: theme.primary }} />
-                <input 
-                  type={showPassword ? "text" : "password"} 
-                  required
-                  placeholder="••••••••"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full bg-black/40 border-2 border-white/5 rounded-2xl py-5 pl-14 pr-14 text-xs font-bold uppercase tracking-widest focus:outline-none focus:border-primary/40 transition-all placeholder:opacity-20"
-                />
-                <button 
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-5 top-1/2 -translate-y-1/2 opacity-20 hover:opacity-100 transition-opacity"
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <button 
-            type="submit" 
-            disabled={isLoading}
-            className="w-full relative group overflow-hidden py-6 rounded-2xl transition-all active:scale-95 disabled:opacity-50"
-            style={{ backgroundColor: theme.primary, color: theme["base-100"] }}
-          >
-            <span className="relative z-10 flex items-center justify-center gap-3 text-[11px] font-black uppercase tracking-[0.3em]">
-              {isLoading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-                  AUTHENTICATING...
-                </>
-              ) : (
-                <>
-                  Establish_Session <ArrowRight size={18} />
-                </>
-              )}
-            </span>
-          </button>
-        </form>
-
-        <div className="mt-8 text-center">
-          <button onClick={() => navigate('/')} className="text-[9px] font-black uppercase tracking-widest opacity-30 hover:opacity-100 transition-all">
-            ← Return_to_Public_Registry
-          </button>
+          <p className="mt-6 text-center text-xs text-slate-500">
+            Secure authentication · Your data is protected
+          </p>
         </div>
       </div>
-
-      <style>{`
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-5px); }
-          75% { transform: translateX(5px); }
-        }
-        .animate-shake { animation: shake 0.2s ease-in-out 0s 2; }
-      `}</style>
-    </main>
+    </div>
   );
-};
-
-export default Login;
+}

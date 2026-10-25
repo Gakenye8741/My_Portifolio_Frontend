@@ -31,6 +31,8 @@ import {
   X,
   SearchX,
   Clock,
+  Sparkles,
+  RefreshCw,
 } from 'lucide-react';
 import { RiWhatsappFill } from 'react-icons/ri';
 
@@ -59,10 +61,8 @@ const socials = [
   { icon: <Instagram size={20} />, link: 'https://www.instagram.com/_code.d_by_gakenye_/', label: 'Instagram' },
 ];
 
-// Words that are typed on the title
 const roles = ['websites', 'mobile apps', 'smart systems', 'AI tools'];
 
-// Gets the year from a date. Gives empty text if the date is not good.
 const getYear = (value?: string) => {
   if (!value) return '';
   const d = new Date(value);
@@ -83,7 +83,6 @@ const statCard: Variants = {
 
 /* ---------- Small helper parts ---------- */
 
-// Fades, slides and scales content in when you scroll to it.
 const Reveal = ({
   children,
   delay = 0,
@@ -107,7 +106,6 @@ const Reveal = ({
   );
 };
 
-// Title that slides up word by word.
 const WordTitle = ({ text, className = '' }: { text: string; className?: string }) => (
   <motion.h2
     className={className}
@@ -133,7 +131,6 @@ const WordTitle = ({ text, className = '' }: { text: string; className?: string 
   </motion.h2>
 );
 
-// Card that tilts in 3D as the mouse moves over it.
 const Tilt = ({
   children,
   className = '',
@@ -172,7 +169,6 @@ const Tilt = ({
   );
 };
 
-// A number that counts up when you can see it.
 const CountUp = ({ to }: { to: number }) => {
   const ref = useRef<HTMLSpanElement>(null);
   const [value, setValue] = useState(0);
@@ -207,7 +203,6 @@ const CountUp = ({ to }: { to: number }) => {
   return <span ref={ref}>{value}</span>;
 };
 
-// Saves where the mouse is on a card, so the light can follow it.
 const followMouse = (e: React.MouseEvent<HTMLElement>) => {
   const box = e.currentTarget.getBoundingClientRect();
   e.currentTarget.style.setProperty('--mx', `${e.clientX - box.left}px`);
@@ -218,7 +213,7 @@ const followMouse = (e: React.MouseEvent<HTMLElement>) => {
 
 const AUTO_MS = 4000;
 
-type Slide = { id: string; title: string; note: string; image: string };
+type Slide = { id: string; slug: string; title: string; note: string; image: string };
 
 const HeroCarousel = ({
   slides,
@@ -231,7 +226,7 @@ const HeroCarousel = ({
 }: {
   slides: Slide[];
   chips: string[];
-  onOpen: (id: string) => void;
+  onOpen: (slug: string) => void;
   primary: string;
   base: string;
   text: string;
@@ -243,7 +238,6 @@ const HeroCarousel = ({
   const [paused, setPaused] = useState(false);
   const slidesKey = slides.map((s) => s.id).join(',');
 
-  // Whole stage tilts with the mouse
   const mx = useMotionValue(0);
   const my = useMotionValue(0);
   const sx = useSpring(mx, { stiffness: 80, damping: 14 });
@@ -253,12 +247,10 @@ const HeroCarousel = ({
 
   const go = (direction: number) => setActive((a) => (n ? (a + direction + n) % n : 0));
 
-  // Go back to the first picture when the list changes
   useEffect(() => {
     setActive(0);
   }, [slidesKey]);
 
-  // Moves to the next picture by itself
   useEffect(() => {
     if (paused || reduce || n < 2) return;
     const id = setInterval(() => setActive((a) => (a + 1) % n), AUTO_MS);
@@ -291,7 +283,6 @@ const HeroCarousel = ({
       onMouseMove={onMove}
     >
       <div className="relative">
-        {/* Glow that breathes behind the pictures */}
         <motion.div
           className="absolute inset-x-10 inset-y-6 rounded-full blur-[90px] pointer-events-none"
           style={{ backgroundColor: primary }}
@@ -299,7 +290,6 @@ const HeroCarousel = ({
           transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
         />
 
-        {/* Two rings that spin in opposite ways */}
         <div
           className="pg-spin absolute inset-2 sm:inset-0 rounded-full border-2 border-dashed opacity-25 pointer-events-none"
           style={{ borderColor: primary }}
@@ -309,7 +299,6 @@ const HeroCarousel = ({
           style={{ borderColor: text }}
         />
 
-        {/* Stage */}
         <motion.div
           className="relative h-[22rem] sm:h-[29rem] select-none"
           style={{ perspective: 1400, touchAction: 'pan-y' }}
@@ -341,7 +330,7 @@ const HeroCarousel = ({
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
-                      isActive ? onOpen(slide.id) : setActive(i);
+                      isActive ? onOpen(slide.slug) : setActive(i);
                     }
                   }}
                   className="absolute inset-0 m-auto w-[64%] h-[86%] rounded-3xl overflow-hidden shadow-2xl focus:outline-none"
@@ -363,10 +352,9 @@ const HeroCarousel = ({
                     filter: `blur(${abs * 1.5}px) brightness(${1 - abs * 0.25})`,
                   }}
                   transition={{ type: 'spring', stiffness: 110, damping: 15, mass: 0.9 }}
-                  onClick={() => (isActive ? onOpen(slide.id) : setActive(i))}
+                  onClick={() => (isActive ? onOpen(slide.slug) : setActive(i))}
                   aria-hidden={!isActive}
                 >
-                  {/* Picture slowly zooms while it is on show */}
                   <motion.img
                     src={slide.image}
                     alt={slide.title}
@@ -381,7 +369,6 @@ const HeroCarousel = ({
                     style={{ background: `linear-gradient(to top, ${base}f0 0%, ${base}55 35%, transparent 65%)` }}
                   />
 
-                  {/* Shine that sweeps across when the picture arrives */}
                   <motion.div
                     className="absolute inset-y-0 w-1/3 pointer-events-none"
                     style={{
@@ -393,7 +380,6 @@ const HeroCarousel = ({
                     transition={{ duration: 1.1, delay: 0.25, ease: 'easeInOut' }}
                   />
 
-                  {/* Words on the picture */}
                   <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6 flex items-end gap-3">
                     <motion.span
                       className="grid place-items-center shrink-0 w-11 h-11 rounded-2xl shadow-lg"
@@ -417,7 +403,6 @@ const HeroCarousel = ({
                     </motion.div>
                   </div>
 
-                  {/* Time bar that fills before the next picture */}
                   {isActive && n > 1 && (
                     <motion.span
                       key={`${active}-${paused}`}
@@ -434,7 +419,6 @@ const HeroCarousel = ({
           </motion.div>
         </motion.div>
 
-        {/* Floating tool labels around the pictures */}
         {chips.slice(0, 3).map((label, i) => (
           <motion.span
             key={label}
@@ -453,7 +437,6 @@ const HeroCarousel = ({
           </motion.span>
         ))}
 
-        {/* Little sparks that drift up */}
         {!reduce &&
           [12, 30, 52, 74, 90].map((left, i) => (
             <motion.span
@@ -466,7 +449,6 @@ const HeroCarousel = ({
           ))}
       </div>
 
-      {/* Controls */}
       {n > 1 && (
         <div className="mt-6 flex items-center justify-center gap-4">
           <motion.button
@@ -511,7 +493,6 @@ const HeroCarousel = ({
         </div>
       )}
 
-      {/* Name of the picture that is showing */}
       {current && (
         <div className="mt-4 h-7 overflow-hidden text-center" aria-live="polite">
           <AnimatePresence mode="wait">
@@ -539,23 +520,21 @@ const ProjectsRegistry = () => {
   const { theme } = useTheme();
   const navigate = useNavigate();
   const reduce = useReducedMotion();
-  const { data: projects, isLoading } = useGetProjectsQuery();
+
+  const { data: projectsResponse, isLoading, refetch } = useGetProjectsQuery();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [activeStatus, setActiveStatus] = useState<StatusFilter>('all');
 
-  // Typing effect
   const [roleIndex, setRoleIndex] = useState(0);
   const [typed, setTyped] = useState('');
   const [deleting, setDeleting] = useState(false);
 
-  // Bar at the top that fills as you scroll
   const { scrollYProgress } = useScroll();
   const progress = useSpring(scrollYProgress, { stiffness: 120, damping: 24, mass: 0.3 });
 
-  // Light that follows the mouse across the page
   const cursorX = useMotionValue(-600);
   const cursorY = useMotionValue(-600);
   const glowX = useSpring(cursorX, { stiffness: 60, damping: 20 });
@@ -565,7 +544,8 @@ const ProjectsRegistry = () => {
   const text = theme['base-content'];
   const primary = theme.primary;
 
-  // Projects that match the search and the status button
+  const projects = projectsResponse?.data ?? [];
+
   const filteredProjects = useMemo(() => {
     if (!projects) return [];
     const term = searchTerm.toLowerCase();
@@ -579,7 +559,6 @@ const ProjectsRegistry = () => {
     });
   }, [searchTerm, activeStatus, projects]);
 
-  // Numbers for the small cards
   const counts = useMemo(() => {
     const list = projects ?? [];
     return {
@@ -589,7 +568,6 @@ const ProjectsRegistry = () => {
     } as Record<StatusFilter, number>;
   }, [projects]);
 
-  // All the different tools used in all projects
   const toolNames = useMemo(() => {
     const set = new Set<string>();
     (projects ?? []).forEach((p) =>
@@ -598,10 +576,8 @@ const ProjectsRegistry = () => {
     return Array.from(set);
   }, [projects]);
 
-  // The first 5 projects go in the picture stack
   const stackProjects = useMemo(() => filteredProjects.slice(0, 5), [filteredProjects]);
 
-  // Typing effect
   useEffect(() => {
     const word = roles[roleIndex];
     let delay = deleting ? 45 : 90;
@@ -619,7 +595,6 @@ const ProjectsRegistry = () => {
     return () => clearTimeout(t);
   }, [typed, deleting, roleIndex]);
 
-  // Follow the mouse with a soft light
   useEffect(() => {
     if (reduce) return;
     const move = (e: MouseEvent) => {
@@ -633,11 +608,10 @@ const ProjectsRegistry = () => {
   const borderSoft = `${text}18`;
   const borderMid = `${text}30`;
 
-  const open = (id: string) => navigate(`/project/${id}`);
+  const open = (slug: string) => navigate(`/project/${slug}`);
   const goToList = () =>
     document.getElementById('all-projects')?.scrollIntoView({ behavior: 'smooth' });
 
-  // Colours used by the cards (they are read with CSS variables)
   const cardVars = {
     '--bd': borderSoft,
     '--hv': `${primary}77`,
@@ -646,7 +620,7 @@ const ProjectsRegistry = () => {
     '--my': '50%',
   } as React.CSSProperties;
 
-  /* ----- Loading screen (Gakenye logo) ----- */
+  /* ---------- Loading ---------- */
   if (isLoading) {
     return (
       <div
@@ -677,6 +651,68 @@ const ProjectsRegistry = () => {
     );
   }
 
+  /* ---------- ✅ Not found / no data at all ---------- */
+  const noDataAtAll = !isLoading && counts.all === 0;
+  if (noDataAtAll) {
+    return (
+      <main
+        className="relative min-h-screen"
+        style={{ backgroundColor: base, color: text, overflowX: 'clip' }}
+      >
+        <SEO
+          title="Gakenye Ndiritu | Projects"
+          description="Projects by Gakenye Ndiritu."
+          path="/projects"
+        />
+        <PageTitle title="Projects" />
+        <div className="relative z-10">
+          <Navbar />
+          <section className="pt-32 pb-24 px-6 lg:px-16">
+            <div className="max-w-3xl mx-auto text-center">
+              <div
+                className="mx-auto mb-6 grid h-24 w-24 place-items-center rounded-3xl"
+                style={{ backgroundColor: `${primary}1f` }}
+              >
+                <Layers size={44} style={{ color: primary }} />
+              </div>
+              <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
+                No projects <span style={{ color: primary }}>yet.</span>
+              </h1>
+              <p className="mt-4 text-base opacity-70 max-w-lg mx-auto leading-relaxed">
+                I haven't published anything here yet. This page will fill up soon —
+                check back later, or reach out if you'd like to work together.
+              </p>
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+                <button
+                  onClick={() => refetch()}
+                  className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl active:scale-95"
+                  style={{ backgroundColor: primary, color: base }}
+                >
+                  <RefreshCw size={15} /> Try again
+                </button>
+                <a
+                  href="https://wa.link/f3ajog"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full border px-6 py-3 text-sm font-semibold transition-all hover:-translate-y-0.5"
+                  style={{ borderColor: borderMid, color: text }}
+                >
+                  <RiWhatsappFill size={16} /> Say hi
+                </a>
+              </div>
+            </div>
+          </section>
+        </div>
+        <Footer />
+        <div className="pointer-events-none fixed inset-x-0 top-[94%] -translate-y-1/2 z-[100] flex justify-end px-3 sm:inset-x-auto sm:top-auto sm:bottom-5 sm:right-6 sm:translate-y-0 sm:px-0">
+          <div className="pointer-events-auto">
+            <VirtualAssistant />
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main
       className="relative min-h-screen transition-colors duration-500"
@@ -684,7 +720,7 @@ const ProjectsRegistry = () => {
     >
       <SEO
         title="Gakenye Ndiritu | Projects Archive & Portfolio"
-        description="Explore production-ready full-stack applications, e-voting blockchain systems, and web solutions built by Gakenye Ndiritu using React,React Native,Node.js, and TypeScript."
+        description="Explore production-ready full-stack applications, e-voting blockchain systems, and web solutions built by Gakenye Ndiritu using React, React Native, Node.js, and TypeScript."
         path="/projects"
       />
 
@@ -735,13 +771,11 @@ const ProjectsRegistry = () => {
         }
       `}</style>
 
-      {/* Bar at the top that fills as you scroll */}
       <motion.div
         className="fixed top-0 left-0 right-0 h-1 origin-left z-[60]"
         style={{ scaleX: progress, backgroundColor: primary }}
       />
 
-      {/* Soft light that follows the mouse */}
       {!reduce && (
         <motion.div
           className="fixed top-0 left-0 w-[30rem] h-[30rem] -ml-[15rem] -mt-[15rem] rounded-full blur-[110px] opacity-[0.18] pointer-events-none z-0 hidden md:block"
@@ -749,7 +783,6 @@ const ProjectsRegistry = () => {
         />
       )}
 
-      {/* Big logo in the background */}
       <div className="fixed inset-0 flex items-center justify-center pointer-events-none overflow-hidden z-0">
         <img
           src={logoMain}
@@ -759,7 +792,6 @@ const ProjectsRegistry = () => {
         />
       </div>
 
-      {/* Small dots pattern at the top */}
       <div
         className="absolute inset-x-0 top-0 h-[44rem] pointer-events-none opacity-60"
         style={{
@@ -770,7 +802,6 @@ const ProjectsRegistry = () => {
         }}
       />
 
-      {/* Background glow */}
       <div
         className="hero-blob absolute -top-32 -right-24 w-[26rem] h-[26rem] rounded-full blur-[130px] opacity-25 pointer-events-none"
         style={{ backgroundColor: primary }}
@@ -783,27 +814,11 @@ const ProjectsRegistry = () => {
       <div className="relative z-10">
         <Navbar />
 
-        {/* ---------- Top part ---------- */}
+        {/* ---------- TOP / HERO ---------- */}
         <section className="pt-32 lg:pt-28 pb-12">
           <div className="w-full max-w-[1300px] mx-auto px-6 lg:px-16 grid grid-cols-1 lg:grid-cols-12 gap-14 items-center">
-            {/* TEXT */}
             <div className="lg:col-span-7 order-2 lg:order-1 text-center lg:text-left">
-              <motion.div
-                initial={{ opacity: 0, y: -20, scale: 0.8 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ delay: 0.05, duration: 0.7, type: 'spring', stiffness: 160, damping: 14 }}
-                className="inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm backdrop-blur-md"
-                style={{
-                  borderColor: `${primary}55`,
-                  backgroundColor: `${primary}12`,
-                }}
-              >
-                <span className="relative grid place-items-center w-2.5 h-2.5">
-                  <span className="pg-ping absolute inset-0 rounded-full bg-green-500" />
-                  <span className="relative w-2 h-2 rounded-full bg-green-500" />
-                </span>
-                {counts.all} {counts.all === 1 ? 'project' : 'projects'} built so far
-              </motion.div>
+              
 
               <h1 className="mt-6 text-5xl md:text-6xl xl:text-7xl font-extrabold tracking-tight leading-[1.05]">
                 {['Here', 'are', 'my'].map((word, i) => (
@@ -880,7 +895,6 @@ const ProjectsRegistry = () => {
                 </div>
               </motion.div>
 
-              {/* Small number cards */}
               <motion.div
                 className="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-4 text-left"
                 variants={statsContainer}
@@ -917,11 +931,11 @@ const ProjectsRegistry = () => {
               </motion.div>
             </div>
 
-            {/* PICTURE CAROUSEL */}
             <div className="lg:col-span-5 order-1 lg:order-2 flex justify-center">
               <HeroCarousel
                 slides={stackProjects.map((p: any) => ({
                   id: p.id,
+                  slug: p.slug,
                   title: p.title,
                   note: p.mainDescription,
                   image: p.thumbnail?.fileUrl || logoMain,
@@ -937,7 +951,7 @@ const ProjectsRegistry = () => {
           </div>
         </section>
 
-        {/* Moving list of tools (the sides fade out) */}
+        {/* ---------- MARQUEE ---------- */}
         {toolNames.length > 0 && (
           <div
             className="hero-marquee-wrap relative z-10 overflow-hidden border-y py-5"
@@ -961,12 +975,15 @@ const ProjectsRegistry = () => {
           </div>
         )}
 
-        {/* ---------- All projects ---------- */}
+        {/* ---------- ALL PROJECTS ---------- */}
         <section id="all-projects" className="px-6 lg:px-16 py-16 md:py-24 scroll-mt-20">
           <div className="max-w-[1300px] mx-auto">
             <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
               <div>
-                <WordTitle text="All projects" className="text-4xl md:text-6xl font-extrabold tracking-tight" />
+                <WordTitle
+                  text="All projects"
+                  className="text-4xl md:text-6xl font-extrabold tracking-tight"
+                />
                 <Reveal delay={300}>
                   <p className="mt-3 text-base opacity-60">
                     Showing {filteredProjects.length} of {counts.all}
@@ -975,7 +992,7 @@ const ProjectsRegistry = () => {
               </div>
             </div>
 
-            {/* Search, status buttons and view buttons */}
+            {/* Toolbar */}
             <Reveal delay={100}>
               <div
                 className="md:sticky md:top-[72px] z-30 rounded-3xl border p-3 sm:p-4 backdrop-blur-xl flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-4"
@@ -990,7 +1007,10 @@ const ProjectsRegistry = () => {
                     boxShadow: searchFocused ? `0 0 0 4px ${primary}22` : 'none',
                   }}
                 >
-                  <motion.span animate={searchFocused ? { rotate: [0, -15, 15, 0] } : { rotate: 0 }} transition={{ duration: 0.5 }}>
+                  <motion.span
+                    animate={searchFocused ? { rotate: [0, -15, 15, 0] } : { rotate: 0 }}
+                    transition={{ duration: 0.5 }}
+                  >
                     <Search className="opacity-50 shrink-0" size={18} />
                   </motion.span>
                   <input
@@ -1039,7 +1059,6 @@ const ProjectsRegistry = () => {
                             color: isActive ? base : text,
                           }}
                         >
-                          {/* Coloured pill that slides to the chosen button */}
                           {isActive && (
                             <motion.span
                               layoutId="statusPill"
@@ -1093,8 +1112,45 @@ const ProjectsRegistry = () => {
               </div>
             </Reveal>
 
-            {/* Projects */}
-            {filteredProjects.length > 0 ? (
+            {/* ✅ No matches (but data exists) */}
+            {filteredProjects.length === 0 ? (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 30 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ duration: 0.7, type: 'spring', stiffness: 120, damping: 14 }}
+                className="mt-8 py-16 md:py-24 px-6 flex flex-col items-center justify-center text-center space-y-5 rounded-3xl border-2 border-dashed"
+                style={{ borderColor: borderSoft }}
+              >
+                <motion.div
+                  animate={reduce ? undefined : { y: [0, -10, 0], rotate: [0, -6, 6, 0] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                >
+                  <SearchX size={56} className="opacity-30" />
+                </motion.div>
+                <div className="space-y-2">
+                  <h3 className="text-2xl md:text-3xl font-extrabold tracking-tight">
+                    Nothing matches that search
+                  </h3>
+                  <p className="text-sm md:text-base opacity-60 max-w-sm mx-auto">
+                    {searchTerm
+                      ? `No project found for "${searchTerm}". Try a different word, or clear the filters.`
+                      : 'No projects match this filter. Try a different one.'}
+                  </p>
+                </div>
+                <motion.button
+                  onClick={() => {
+                    setSearchTerm('');
+                    setActiveStatus('all');
+                  }}
+                  whileHover={{ y: -3, scale: 1.05 }}
+                  whileTap={{ scale: 0.94 }}
+                  className="pg-shine inline-flex items-center gap-2 rounded-full px-7 py-3.5 font-bold shadow-lg"
+                  style={{ backgroundColor: primary, color: base }}
+                >
+                  <Sparkles size={16} /> Clear filters
+                </motion.button>
+              </motion.div>
+            ) : (
               <div
                 key={`${activeStatus}-${viewMode}`}
                 className={
@@ -1132,15 +1188,14 @@ const ProjectsRegistry = () => {
                         }}
                       >
                         {viewMode === 'grid' ? (
-                          /* ----- Grid card ----- */
                           <Tilt className="h-full">
                             <article
-                              onClick={() => open(project.id)}
+                              onClick={() => open(project.slug)}
                               onMouseMove={followMouse}
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter' || e.key === ' ') {
                                   e.preventDefault();
-                                  open(project.id);
+                                  open(project.slug);
                                 }
                               }}
                               tabIndex={0}
@@ -1150,11 +1205,10 @@ const ProjectsRegistry = () => {
                               style={{
                                 ...cardVars,
                                 backgroundColor: `${text}05`,
-                                // @ts-ignore: colour of the focus ring
+                                // @ts-ignore
                                 '--tw-ring-color': primary,
                               }}
                             >
-                              {/* Light that follows the mouse */}
                               <div
                                 className="pointer-events-none absolute inset-0 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                                 style={{
@@ -1162,7 +1216,6 @@ const ProjectsRegistry = () => {
                                 }}
                               />
 
-                              {/* Line that grows along the bottom on hover */}
                               <span
                                 className="absolute bottom-0 left-0 z-20 h-1 w-0 group-hover:w-full transition-all duration-700 ease-out"
                                 style={{ backgroundColor: primary }}
@@ -1183,7 +1236,6 @@ const ProjectsRegistry = () => {
                                 )}
                                 <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/50 to-transparent" />
 
-                                {/* Shine that sweeps across the picture on hover */}
                                 <span className="pointer-events-none absolute inset-y-0 left-0 w-1/3 -translate-x-[150%] -skew-x-[20deg] bg-gradient-to-r from-transparent via-white/30 to-transparent group-hover:translate-x-[420%] transition-transform duration-[900ms] ease-in-out" />
 
                                 {project.status && (
@@ -1199,7 +1251,6 @@ const ProjectsRegistry = () => {
                                   </span>
                                 )}
 
-                                {/* Arrow that pops in on hover */}
                                 <span
                                   className="absolute top-4 right-4 grid place-items-center w-10 h-10 rounded-full opacity-0 translate-y-2 scale-50 -rotate-45 group-hover:opacity-100 group-hover:translate-y-0 group-hover:scale-100 group-hover:rotate-0 transition-all duration-500 ease-[cubic-bezier(.3,.9,.3,1.4)]"
                                   style={{ backgroundColor: primary, color: base }}
@@ -1260,14 +1311,13 @@ const ProjectsRegistry = () => {
                             </article>
                           </Tilt>
                         ) : (
-                          /* ----- List row ----- */
                           <article
-                            onClick={() => open(project.id)}
+                            onClick={() => open(project.slug)}
                             onMouseMove={followMouse}
                             onKeyDown={(e) => {
                               if (e.key === 'Enter' || e.key === ' ') {
                                 e.preventDefault();
-                                open(project.id);
+                                open(project.slug);
                               }
                             }}
                             tabIndex={0}
@@ -1277,7 +1327,7 @@ const ProjectsRegistry = () => {
                             style={{
                               ...cardVars,
                               backgroundColor: `${text}05`,
-                              // @ts-ignore: colour of the focus ring
+                              // @ts-ignore
                               '--tw-ring-color': primary,
                             }}
                           >
@@ -1287,7 +1337,6 @@ const ProjectsRegistry = () => {
                                 background: `radial-gradient(420px circle at var(--mx) var(--my), ${primary}1f, transparent 45%)`,
                               }}
                             />
-                            {/* Bar on the left that grows on hover */}
                             <span
                               className="absolute left-0 top-4 bottom-4 w-1 rounded-full origin-top scale-y-0 group-hover:scale-y-100 transition-transform duration-300"
                               style={{ backgroundColor: primary }}
@@ -1349,60 +1398,17 @@ const ProjectsRegistry = () => {
                   })}
                 </AnimatePresence>
               </div>
-            ) : (
-              /* ---------- Nothing found ---------- */
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9, y: 30 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                transition={{ duration: 0.7, type: 'spring', stiffness: 120, damping: 14 }}
-                className="mt-8 py-20 md:py-28 px-6 flex flex-col items-center justify-center text-center space-y-6 rounded-3xl border-2 border-dashed"
-                style={{ borderColor: borderSoft }}
-              >
-                <motion.div
-                  animate={reduce ? undefined : { y: [0, -12, 0], rotate: [0, -8, 8, 0] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                >
-                  <SearchX size={64} className="opacity-30" />
-                </motion.div>
-                <div className="space-y-2">
-                  <h3 className="text-2xl md:text-3xl font-extrabold tracking-tight">No projects found</h3>
-                  <p className="text-sm md:text-base opacity-60 max-w-sm mx-auto">
-                    Try another word, or clear the filters to see all projects.
-                  </p>
-                </div>
-                <motion.button
-                  onClick={() => {
-                    setSearchTerm('');
-                    setActiveStatus('all');
-                  }}
-                  whileHover={{ y: -3, scale: 1.05 }}
-                  whileTap={{ scale: 0.94 }}
-                  className="pg-shine rounded-full px-8 py-4 font-bold shadow-lg"
-                  style={{ backgroundColor: primary, color: base }}
-                >
-                  Clear filters
-                </motion.button>
-              </motion.div>
             )}
           </div>
         </section>
       </div>
 
       <Footer />
-      {/* Floating virtual assistant */}
-            <div
-              className="
-                pointer-events-none fixed inset-x-0 top-[94%] -translate-y-1/2 z-[100]
-                flex justify-end
-                px-3
-                sm:inset-x-auto sm:top-auto sm:bottom-5 sm:right-6 sm:translate-y-0
-                sm:px-0
-              "
-            >
-              <div className="pointer-events-auto">
-                <VirtualAssistant />
-              </div>
-            </div>
+      <div className="pointer-events-none fixed inset-x-0 top-[94%] -translate-y-1/2 z-[100] flex justify-end px-3 sm:inset-x-auto sm:top-auto sm:bottom-5 sm:right-6 sm:translate-y-0 sm:px-0">
+        <div className="pointer-events-auto">
+          <VirtualAssistant />
+        </div>
+      </div>
     </main>
   );
 };

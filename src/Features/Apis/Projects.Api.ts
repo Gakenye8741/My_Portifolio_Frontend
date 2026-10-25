@@ -1,132 +1,370 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+// src/Features/Apis/Projects.Api.ts
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import type { FetchBaseQueryError } from "@reduxjs/toolkit/query";
+import type { SerializedError } from "@reduxjs/toolkit";
 
-// --- Interfaces ---
-export interface ProjectLink {
+// ==========================================
+// TYPES
+// ==========================================
+export type TProjectStatus = "draft" | "published" | "archived";
+
+export type TLinkType =
+  | "github_frontend"
+  | "github_backend"
+  | "github_fullstack"
+  | "live_demo"
+  | "documentation"
+  | "design";
+
+export type TProjectLink = {
   id: string;
+  projectId: string;
   label: string;
   url: string;
-  type: string;
-}
+  type: TLinkType;
+};
 
-export interface ProjectSection {
+export type TProjectSection = {
   id: string;
-  sectionTitle: string;
-  explanation: string;
+  projectId: string;
+  mediaId: string | null;
+  sectionTitle: string | null;
+  explanation: string | null;
   order: number;
-  media?: { fileUrl: string };
-}
+  media?: { id: string; fileUrl: string; fileName: string } | null;
+};
 
-export interface ProjectTimeline {
+export type TProjectTimeline = {
   id: string;
+  projectId: string;
   title: string;
-  description: string;
+  description: string | null;
   date: string;
-}
+};
 
-export interface ProjectTech {
+export type TProjectTech = {
   projectId: string;
   technologyId: string;
-  technology?: {
+  role: string | null;
+  yearsUsed: number | null;
+  technology: {
     id: string;
     name: string;
-    icon?: string;
+    category:
+      | "frontend"
+      | "backend"
+      | "database"
+      | "devops"
+      | "mobile"
+      | "ai";
+    iconName: string | null;
   };
-}
+};
 
-export interface Project {
-  name: any;
+export type TProject = {
   id: string;
   title: string;
   slug: string;
   mainDescription: string;
-  mainThumbnailId: string;
-  status: 'published' | 'draft' | 'archived';
+  mainThumbnailId: string | null;
+  status: TProjectStatus;
   isFeatured: boolean;
   viewCount: number;
   createdAt: string;
-  thumbnail?: {
-    fileUrl: string;
-    fileName: string;
+  updatedAt: string;
+  deletedAt: string | null;
+  thumbnail?: { id: string; fileUrl: string; fileName: string } | null;
+  techs?: TProjectTech[];
+  links?: TProjectLink[];
+  sections?: TProjectSection[];
+  timeline?: TProjectTimeline[];
+};
+
+export type TPaginatedProjects = {
+  data: TProject[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
   };
-  techs: ProjectTech[];
-  links: ProjectLink[];
-  sections: ProjectSection[];
-  timeline: ProjectTimeline[];
+};
+
+export type TProjectFilters = {
+  status?: TProjectStatus;
+  featured?: boolean;
+  search?: string;
+  techIds?: string[];
+  includeDeleted?: boolean;
+  sortBy?: "createdAt" | "updatedAt" | "viewCount" | "title";
+  sortOrder?: "asc" | "desc";
+  page?: number;
+  limit?: number;
+};
+
+export type TProjectLinkInput = {
+  label: string;
+  url: string;
+  type?: TLinkType;
+};
+
+export type TProjectSectionInput = {
+  sectionTitle?: string | null;
+  explanation?: string | null;
+  mediaId?: string | null;
+  order?: number;
+};
+
+export type TProjectTimelineInput = {
+  title: string;
+  description?: string | null;
+  date?: string;
+};
+
+export type TCreateProjectInput = {
+  title: string;
+  slug?: string;
+  mainDescription: string;
+  mainThumbnailId?: string | null;
+  status?: TProjectStatus;
+  isFeatured?: boolean;
+  links?: TProjectLinkInput[];
+  sections?: TProjectSectionInput[];
+  techIds?: string[];
+  timeline?: TProjectTimelineInput[];
+};
+
+export type TUpdateProjectInput = Partial<TCreateProjectInput>;
+
+export type TProjectStats = {
+  total: number;
+  published: number;
+  draft: number;
+  archived: number;
+  featured: number;
+  totalViews: number;
+};
+
+export interface ProjectsApiErrorBody {
+  message?: string;
+  error?: string;
 }
 
+// ==========================================
+// API — same style as AuthApi.ts
+// ==========================================
+const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:5000/api";
+
 export const projectsApi = createApi({
-  reducerPath: 'projectsApi',
+  reducerPath: "projectsApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: 'https://my-portifolio-backend-fb0a.onrender.com/api',
+    baseUrl: `${API_URL}/projects`, // 👈 backend mounts projects under /projects
+    credentials: "include",          // 👈 send HttpOnly session cookie
   }),
-  tagTypes: ['Project'],
+  tagTypes: ["Project", "ProjectStats"],
+
   endpoints: (builder) => ({
-    getProjects: builder.query<Project[], void>({
-      query: () => '/projects',
+    // ==========================================
+    // PUBLIC — LIST  (GET /api/projects)
+    // ==========================================
+    getProjects: builder.query<TPaginatedProjects, TProjectFilters | void>({
+      query: (filters) => ({
+        url: "/",
+        params: filters || undefined,
+      }),
       providesTags: (result) =>
         result
           ? [
-              ...result.map(({ id }) => ({ type: 'Project' as const, id })),
-              { type: 'Project', id: 'LIST' },
+              ...result.data.map(({ id }) => ({
+                type: "Project" as const,
+                id,
+              })),
+              { type: "Project", id: "LIST" },
             ]
-          : [{ type: 'Project', id: 'LIST' }],
+          : [{ type: "Project", id: "LIST" }],
     }),
 
-    getProjectDetails: builder.query<Project, string>({
-      query: (id) => `/projects/${id}`,
-      providesTags: (result, error, id) => [{ type: 'Project', id }],
+    // ==========================================
+    // PUBLIC — BY SLUG  (GET /api/projects/slug/:slug)
+    // ==========================================
+    getProjectBySlug: builder.query<{ data: TProject }, string>({
+      query: (slug) => `/slug/${slug}`,
+      providesTags: (_r, _e, slug) => [{ type: "Project", id: `slug-${slug}` }],
     }),
 
-    getProjectBySlug: builder.query<Project, string>({
-      query: (slug) => `/projects/slug/${slug}`,
-      providesTags: (result, error, slug) => [{ type: 'Project', id: slug }],
+    // ==========================================
+    // ADMIN — STATS  (GET /api/projects/admin/stats)
+    // ==========================================
+    getProjectStats: builder.query<{ data: TProjectStats }, void>({
+      query: () => "/admin/stats",
+      providesTags: ["ProjectStats"],
     }),
 
-    createProject: builder.mutation<Project, Partial<Project>>({
-      query: (newProject) => ({
-        url: '/projects',
-        method: 'POST',
-        body: newProject,
-      }),
-      invalidatesTags: [{ type: 'Project', id: 'LIST' }],
+    // ==========================================
+    // ADMIN — GET BY ID  (GET /api/projects/:id)
+    // ==========================================
+    getProjectDetails: builder.query<{ data: TProject }, string>({
+      query: (id) => `/${id}`,
+      providesTags: (_r, _e, id) => [{ type: "Project", id }],
     }),
 
-    updateProject: builder.mutation<
-      Project,
-      { id: string; updates: Partial<Project> }
+    // ==========================================
+    // ADMIN — CREATE  (POST /api/projects)
+    // ==========================================
+    createProject: builder.mutation<
+      { message: string; data: TProject },
+      TCreateProjectInput
     >({
-      query: ({ id, updates }) => ({
-        url: `/projects/${id}`,
-        method: 'PUT',
-        body: updates,
+      query: (body) => ({
+        url: "/",
+        method: "POST",
+        body,
       }),
-      invalidatesTags: (result, error, { id }) => [
-        { type: 'Project', id },
-        { type: 'Project', id: 'LIST' },
+      invalidatesTags: [
+        { type: "Project", id: "LIST" },
+        "ProjectStats",
       ],
     }),
 
-    deleteProject: builder.mutation<{ success: boolean }, string>({
-      query: (id) => ({
-        url: `/projects/${id}`,
-        method: 'DELETE',
+    // ==========================================
+    // ADMIN — UPDATE  (PUT /api/projects/:id)
+    // ==========================================
+    updateProject: builder.mutation<
+      { message: string; data: TProject },
+      { id: string; updates: TUpdateProjectInput }
+    >({
+      query: ({ id, updates }) => ({
+        url: `/${id}`,
+        method: "PUT",
+        body: updates,
       }),
-      invalidatesTags: [{ type: 'Project', id: 'LIST' }],
+      invalidatesTags: (_r, _e, { id }) => [
+        { type: "Project", id },
+        { type: "Project", id: "LIST" },
+        "ProjectStats",
+      ],
+    }),
+
+    // ==========================================
+    // ADMIN — TOGGLE FEATURED  (PATCH /api/projects/:id/featured)
+    // ==========================================
+    toggleProjectFeatured: builder.mutation<
+      { message: string; data: TProject },
+      string
+    >({
+      query: (id) => ({
+        url: `/${id}/featured`,
+        method: "PATCH",
+      }),
+      invalidatesTags: (_r, _e, id) => [
+        { type: "Project", id },
+        { type: "Project", id: "LIST" },
+        "ProjectStats",
+      ],
+    }),
+
+    // ==========================================
+    // ADMIN — UPDATE STATUS  (PATCH /api/projects/:id/status)
+    // ==========================================
+    updateProjectStatus: builder.mutation<
+      { message: string; data: TProject },
+      { id: string; status: TProjectStatus }
+    >({
+      query: ({ id, status }) => ({
+        url: `/${id}/status`,
+        method: "PATCH",
+        body: { status },
+      }),
+      invalidatesTags: (_r, _e, { id }) => [
+        { type: "Project", id },
+        { type: "Project", id: "LIST" },
+        "ProjectStats",
+      ],
+    }),
+
+    // ==========================================
+    // ADMIN — SOFT DELETE  (DELETE /api/projects/:id)
+    // ==========================================
+    deleteProject: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (_r, _e, id) => [
+        { type: "Project", id },
+        { type: "Project", id: "LIST" },
+        "ProjectStats",
+      ],
+    }),
+
+    // ==========================================
+    // ADMIN — RESTORE  (POST /api/projects/:id/restore)
+    // ==========================================
+    restoreProject: builder.mutation<
+      { message: string; data: TProject },
+      string
+    >({
+      query: (id) => ({
+        url: `/${id}/restore`,
+        method: "POST",
+      }),
+      invalidatesTags: (_r, _e, id) => [
+        { type: "Project", id },
+        { type: "Project", id: "LIST" },
+        "ProjectStats",
+      ],
+    }),
+
+    // ==========================================
+    // ADMIN — HARD DELETE  (DELETE /api/projects/:id/hard)
+    // ==========================================
+    hardDeleteProject: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `/${id}/hard`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (_r, _e, id) => [
+        { type: "Project", id },
+        { type: "Project", id: "LIST" },
+        "ProjectStats",
+      ],
     }),
   }),
 });
 
+// ==========================================
+// HOOKS
+// ==========================================
 export const {
   useGetProjectsQuery,
-  useGetProjectBySlugQuery,
-  useGetProjectDetailsQuery,
-
-  // add these three
   useLazyGetProjectsQuery,
+  useGetProjectBySlugQuery,
   useLazyGetProjectBySlugQuery,
+  useGetProjectStatsQuery,
+  useGetProjectDetailsQuery,
   useLazyGetProjectDetailsQuery,
-
   useCreateProjectMutation,
   useUpdateProjectMutation,
+  useToggleProjectFeaturedMutation,
+  useUpdateProjectStatusMutation,
   useDeleteProjectMutation,
+  useRestoreProjectMutation,
+  useHardDeleteProjectMutation,
 } = projectsApi;
+
+// ==========================================
+// ERROR HELPER — same shape as AuthApi.getErrorMessage
+// ==========================================
+export const getProjectErrorMessage = (
+  error: FetchBaseQueryError | SerializedError | undefined
+): string => {
+  if (!error) return "";
+  if ("status" in error) {
+    if (error.status === "FETCH_ERROR") return "Cannot reach the server.";
+    const data = error.data as ProjectsApiErrorBody | undefined;
+    return data?.message ?? data?.error ?? `Request failed (${error.status})`;
+  }
+  return error.message ?? "Something went wrong.";
+};

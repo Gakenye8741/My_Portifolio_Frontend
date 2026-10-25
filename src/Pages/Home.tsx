@@ -13,6 +13,8 @@ import logoMain from "../../public/LOGO.png";
 import PageTitle from "../Components/PageTitle";
 import SEO from "../Components/SEO";
 import VirtualAssistant from "../Components/VirtualAssistant";
+import Testimonials from "../Components/Home components/Testimonials";
+import Certifications from "../Components/Home components/Certifications";
 
 const Home: React.FC = () => {
   const { theme } = useTheme();
@@ -99,11 +101,30 @@ const Home: React.FC = () => {
           <ProjectCenter />
         </motion.div>
 
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+          variants={sectionVariants}
+        >
+          <Testimonials />
+        </motion.div>
+
+        {/* ✅ NEW — Certifications section */}
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+          variants={sectionVariants}
+        >
+          <Certifications />
+        </motion.div>
+
         {/* Footer */}
         <Footer />
       </div>
 
-   {/* Floating virtual assistant */}
+      {/* Floating virtual assistant */}
       <div
         className="
           pointer-events-none fixed inset-x-0 top-[94%] -translate-y-1/2 z-[100]

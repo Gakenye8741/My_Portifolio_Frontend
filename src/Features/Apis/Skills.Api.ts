@@ -1,91 +1,219 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+// src/Features/Apis/Skills.Api.ts
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import type { FetchBaseQueryError } from "@reduxjs/toolkit/query";
+import type { SerializedError } from "@reduxjs/toolkit";
+import type { TTechnology } from "./Technologies.Api";
 
-// --- TYPES ---
-export interface MediaAsset {
+// ✅ re-export so existing consumers can keep importing from Skills.Api
+export type { TTechnology } from "./Technologies.Api";
+
+// ==========================================
+// TYPES
+// ==========================================
+export type TSkillCategory =
+  | "frontend"
+  | "backend"
+  | "database"
+  | "devops"
+  | "mobile"
+  | "ai";
+
+export type TSkill = {
   id: string;
-  fileName: string;
-  fileUrl: string;
-  fileType: string;
-  fileSize: number;
+  techId: string;
+  proficiency: number;        // 0–100
+  yearsExperience: number;
+  technology: TTechnology;    // 👈 imported from Technologies.Api
+};
+
+export type TSkillFilters = {
+  category?: TSkillCategory;
+  minProficiency?: number;    // 0–100
+  search?: string;
+  sortBy?: "proficiency" | "yearsExperience" | "name";
+  sortOrder?: "asc" | "desc";
+};
+
+export type TSkillsGrouped = Partial<Record<TSkillCategory, TSkill[]>>;
+
+export type TCreateSkillInput = {
+  techId: string;
+  proficiency: number;        // 0–100
+  yearsExperience?: number;   // ≥ 0
+};
+
+export type TUpdateSkillInput = {
+  proficiency?: number;
+  yearsExperience?: number;
+};
+
+export type TUpsertSkillByTechInput = {
+  proficiency: number;
+  yearsExperience?: number;
+};
+
+export interface SkillsApiErrorBody {
+  message?: string;
+  error?: string;
 }
 
-export interface TechSkill {
-  iconUrl: string | undefined;
-  id: string;
-  name: string;
-  category: 'frontend' | 'backend' | 'language' | 'database' | 'tools';
-  iconId: string;
-  icon?: MediaAsset;
-  skill?: {
-    proficiency: number;
-    yearsExperience: number;
-  };
-}
+// ==========================================
+// API
+// ==========================================
+const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:5000/api";
 
-// --- API SERVICE ---
-export const SkillsApi = createApi({
-  reducerPath: 'SkillsApi',
-  baseQuery: fetchBaseQuery({ baseUrl: 'https://my-portifolio-backend-fb0a.onrender.com/api' }),
-  tagTypes: ['TechSkill', 'Media'],
+export const skillsApi = createApi({
+  reducerPath: "skillsApi",
+  baseQuery: fetchBaseQuery({
+    baseUrl: `${API_URL}/skills`,
+    credentials: "include",
+  }),
+  tagTypes: ["Skill", "SkillGrouped"],
+
   endpoints: (builder) => ({
-    
-    // 1. Create Media Asset (Icon)
-    createMedia: builder.mutation<MediaAsset, Partial<MediaAsset>>({
-      query: (body) => ({
-        url: '/media',
-        method: 'POST',
-        body,
-      }),
-      invalidatesTags: ['Media'],
-    }),
-
-    // 2. Create Tech + Skill (Transactional)
-    createTechSkill: builder.mutation<TechSkill, { techData: any; skillData: any }>({
-      query: (body) => ({
-        url: '/tech-skills',
-        method: 'POST',
-        body,
-      }),
-      invalidatesTags: ['TechSkill'],
-    }),
-
-    // 3. Get All Tech & Skills (with optional category filter)
-    getTechSkills: builder.query<TechSkill[], string | void>({
-      query: (category) => ({
-        url: '/tech-skills',
-        params: category ? { category } : undefined,
+    // ==========================================
+    // PUBLIC — LIST  (GET /api/skills)
+    // ==========================================
+    getSkills: builder.query<{ data: TSkill[] }, TSkillFilters | void>({
+      query: (filters) => ({
+        url: "/",
+        params: filters || undefined,
       }),
       providesTags: (result) =>
         result
-          ? [...result.map(({ id }) => ({ type: 'TechSkill' as const, id })), { type: 'TechSkill', id: 'LIST' }]
-          : [{ type: 'TechSkill', id: 'LIST' }],
+          ? [
+              ...result.data.map(({ id }) => ({ type: "Skill" as const, id })),
+              { type: "Skill", id: "LIST" },
+            ]
+          : [{ type: "Skill", id: "LIST" }],
     }),
 
-    // 5. Update Tech + Skill
-    updateTechSkill: builder.mutation<TechSkill, { id: string; techUpdates: any; skillUpdates?: any }>({
-      query: ({ id, ...body }) => ({
-        url: `/tech-skills/${id}`,
-        method: 'PUT',
+    // ==========================================
+    // PUBLIC — GROUPED  (GET /api/skills/grouped)
+    // ==========================================
+    getSkillsGrouped: builder.query<{ data: TSkillsGrouped }, void>({
+      query: () => "/grouped",
+      providesTags: ["SkillGrouped"],
+    }),
+
+    // ==========================================
+    // PUBLIC — BY TECH ID  (GET /api/skills/by-tech/:techId)
+    // ==========================================
+    getSkillByTechId: builder.query<{ data: TSkill }, string>({
+      query: (techId) => `/by-tech/${techId}`,
+      providesTags: (_r, _e, techId) => [{ type: "Skill", id: `tech-${techId}` }],
+    }),
+
+    // ==========================================
+    // PUBLIC — GET BY ID  (GET /api/skills/:id)
+    // ==========================================
+    getSkillById: builder.query<{ data: TSkill }, string>({
+      query: (id) => `/${id}`,
+      providesTags: (_r, _e, id) => [{ type: "Skill", id }],
+    }),
+
+    // ==========================================
+    // ADMIN — CREATE  (POST /api/skills)
+    // ==========================================
+    createSkill: builder.mutation<
+      { message: string; data: TSkill },
+      TCreateSkillInput
+    >({
+      query: (body) => ({
+        url: "/",
+        method: "POST",
         body,
       }),
-      invalidatesTags: (result, error, { id }) => [{ type: 'TechSkill', id }],
+      invalidatesTags: [
+        { type: "Skill", id: "LIST" },
+        "SkillGrouped",
+      ],
     }),
 
-    // 6. Delete Technology
-    deleteTechSkill: builder.mutation<{ success: boolean; id: string }, string>({
-      query: (id) => ({
-        url: `/tech-skills/${id}`,
-        method: 'DELETE',
+    // ==========================================
+    // ADMIN — UPDATE  (PUT /api/skills/:id)
+    // ==========================================
+    updateSkill: builder.mutation<
+      { message: string; data: TSkill },
+      { id: string; updates: TUpdateSkillInput }
+    >({
+      query: ({ id, updates }) => ({
+        url: `/${id}`,
+        method: "PUT",
+        body: updates,
       }),
-      invalidatesTags: [{ type: 'TechSkill', id: 'LIST' }],
+      invalidatesTags: (_r, _e, { id }) => [
+        { type: "Skill", id },
+        { type: "Skill", id: "LIST" },
+        "SkillGrouped",
+      ],
+    }),
+
+    // ==========================================
+    // ADMIN — UPSERT BY TECH  (PUT /api/skills/by-tech/:techId)
+    // ==========================================
+    upsertSkillByTech: builder.mutation<
+      { message: string; data: TSkill },
+      { techId: string; updates: TUpsertSkillByTechInput }
+    >({
+      query: ({ techId, updates }) => ({
+        url: `/by-tech/${techId}`,
+        method: "PUT",
+        body: updates,
+      }),
+      invalidatesTags: (_r, _e, { techId }) => [
+        { type: "Skill", id: `tech-${techId}` },
+        { type: "Skill", id: "LIST" },
+        "SkillGrouped",
+      ],
+    }),
+
+    // ==========================================
+    // ADMIN — DELETE  (DELETE /api/skills/:id)
+    // ==========================================
+    deleteSkill: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (_r, _e, id) => [
+        { type: "Skill", id },
+        { type: "Skill", id: "LIST" },
+        "SkillGrouped",
+      ],
     }),
   }),
 });
 
+// ==========================================
+// HOOKS
+// ==========================================
 export const {
-  useCreateMediaMutation,
-  useCreateTechSkillMutation,
-  useGetTechSkillsQuery,
-  useUpdateTechSkillMutation,
-  useDeleteTechSkillMutation,
-} = SkillsApi;
+  useGetSkillsQuery,
+  useLazyGetSkillsQuery,
+  useGetSkillsGroupedQuery,
+  useLazyGetSkillsGroupedQuery,
+  useGetSkillByTechIdQuery,
+  useLazyGetSkillByTechIdQuery,
+  useGetSkillByIdQuery,
+  useLazyGetSkillByIdQuery,
+  useCreateSkillMutation,
+  useUpdateSkillMutation,
+  useUpsertSkillByTechMutation,
+  useDeleteSkillMutation,
+} = skillsApi;
+
+// ==========================================
+// ERROR HELPER
+// ==========================================
+export const getSkillErrorMessage = (
+  error: FetchBaseQueryError | SerializedError | undefined
+): string => {
+  if (!error) return "";
+  if ("status" in error) {
+    if (error.status === "FETCH_ERROR") return "Cannot reach the server.";
+    const data = error.data as SkillsApiErrorBody | undefined;
+    return data?.message ?? data?.error ?? `Request failed (${error.status})`;
+  }
+  return error.message ?? "Something went wrong.";
+};

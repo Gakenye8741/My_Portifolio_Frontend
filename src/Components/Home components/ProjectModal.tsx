@@ -1,7 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTheme } from '../../ThemeContext';
-import { useGetProjectDetailsQuery } from '../../Features/Apis/Projects.Api';
+import {
+  useGetProjectBySlugQuery,
+  getProjectErrorMessage,
+  type TProject,
+} from '../../Features/Apis/Projects.Api';
 import { Navbar } from '../Navbar';
 import {
   Github,
@@ -15,35 +19,11 @@ import {
   Check,
   Layers,
   Clock,
+  FileText,
+  Palette,
+  ExternalLink,
 } from 'lucide-react';
 import VirtualAssistant from '../VirtualAssistant';
-
-/* ---------- Types ---------- */
-
-interface ProjectLink { id: string; label: string; url: string; type: string; }
-interface ProjectSection {
-  id: string;
-  sectionTitle: string;
-  explanation: string;
-  order: number;
-  media?: { fileUrl: string };
-}
-interface ProjectTimeline { id: string; title: string; description: string; date: string; }
-
-interface DetailedProject {
-  id: string;
-  title: string;
-  slug: string;
-  mainDescription: string;
-  status: string;
-  viewCount: number;
-  createdAt: string;
-  thumbnail?: { fileUrl: string };
-  links: ProjectLink[];
-  techs: { technology: { name: string } }[];
-  sections: ProjectSection[];
-  timeline: ProjectTimeline[];
-}
 
 /* ---------- Small helpers ---------- */
 
@@ -54,6 +34,24 @@ const formatDate = (value?: string) => {
   return isNaN(d.getTime())
     ? ''
     : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+};
+
+// Icon based on the link's `type` field from the backend
+const linkIcon = (type?: string) => {
+  switch (type) {
+    case 'github_frontend':
+    case 'github_backend':
+    case 'github_fullstack':
+      return <Github size={18} />;
+    case 'live_demo':
+      return <Globe size={18} />;
+    case 'documentation':
+      return <FileText size={18} />;
+    case 'design':
+      return <Palette size={18} />;
+    default:
+      return <ExternalLink size={18} />;
+  }
 };
 
 // Fades and slides content in when it comes into view.
@@ -103,7 +101,7 @@ const Reveal = ({
 /* ---------- Page ---------- */
 
 const ProjectDetailsPage = () => {
-  const { id } = useParams<{ id: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { theme } = useTheme();
 
@@ -112,14 +110,17 @@ const ProjectDetailsPage = () => {
   const [copied, setCopied] = useState(false);
   const [scrollPercent, setScrollPercent] = useState(0);
 
-  const { data, isLoading, error } = useGetProjectDetailsQuery(id || '');
-  const project = data as DetailedProject | undefined;
+  // ✅ Fetch by slug → GET /api/projects/slug/:slug
+  const { data, isLoading, error, refetch } = useGetProjectBySlugQuery(slug || '', {
+    skip: !slug,
+  });
+  const project: TProject | undefined = data?.data;
 
   // Go to the top when the project changes
   useEffect(() => {
     window.scrollTo(0, 0);
     setActiveSlide(0);
-  }, [id]);
+  }, [slug]);
 
   // Reading progress bar at the top of the page
   useEffect(() => {
@@ -141,7 +142,7 @@ const ProjectDetailsPage = () => {
   const slides = useMemo(() => {
     const fromSections = sections
       .filter((s) => s.media?.fileUrl)
-      .map((s) => ({ url: s.media!.fileUrl, caption: s.sectionTitle }));
+      .map((s) => ({ url: s.media!.fileUrl, caption: s.sectionTitle ?? '' }));
     if (fromSections.length > 0) return fromSections;
     if (project?.thumbnail?.fileUrl) {
       return [{ url: project.thumbnail.fileUrl, caption: project.title }];
@@ -222,15 +223,24 @@ const ProjectDetailsPage = () => {
         <AlertCircle size={44} className="mb-5 text-red-500 animate-bounce" />
         <h2 className="text-2xl md:text-3xl font-semibold">We could not find this project</h2>
         <p className="mt-2 text-sm opacity-60 max-w-sm">
-          It may have been moved or removed. Go back to see all projects.
+          {getProjectErrorMessage(error) || 'It may have been moved or removed. Go back to see all projects.'}
         </p>
-        <button
-          onClick={() => navigate('/projects')}
-          className="mt-8 px-7 py-3 rounded-full text-sm font-medium transition-transform hover:-translate-y-0.5 active:scale-95"
-          style={{ backgroundColor: primary, color: base }}
-        >
-          Back to projects
-        </button>
+        <div className="mt-8 flex items-center gap-3">
+          <button
+            onClick={() => refetch()}
+            className="px-6 py-3 rounded-full text-sm font-medium transition-transform hover:-translate-y-0.5 active:scale-95"
+            style={{ backgroundColor: primary, color: base }}
+          >
+            Try again
+          </button>
+          <button
+            onClick={() => navigate('/projects')}
+            className="px-6 py-3 rounded-full text-sm font-medium border transition-transform hover:-translate-y-0.5 active:scale-95"
+            style={{ borderColor: line, color: text }}
+          >
+            Back to projects
+          </button>
+        </div>
       </div>
     );
   }
@@ -334,9 +344,9 @@ const ProjectDetailsPage = () => {
 
           {techs.length > 0 && (
             <div className="mt-6 flex flex-wrap gap-2">
-              {techs.map((tech, idx) => (
+              {techs.map((tech) => (
                 <span
-                  key={idx}
+                  key={tech.technologyId}
                   className="px-3.5 py-1.5 text-sm rounded-full border transition-colors"
                   style={{ borderColor: line, backgroundColor: soft }}
                 >
@@ -435,19 +445,35 @@ const ProjectDetailsPage = () => {
                   className="group pl-6 border-l-2 transition-colors duration-500"
                   style={{ borderColor: line }}
                 >
-                  <h2 className="text-2xl md:text-4xl font-semibold tracking-tight transition-colors duration-500 group-hover:opacity-100">
-                    <span
-                      className="bg-no-repeat bg-left-bottom transition-[background-size] duration-500 [background-size:0%_2px] group-hover:[background-size:100%_2px]"
-                      style={{
-                        backgroundImage: `linear-gradient(${primary}, ${primary})`,
-                      }}
+                  {section.sectionTitle && (
+                    <h2 className="text-2xl md:text-4xl font-semibold tracking-tight transition-colors duration-500 group-hover:opacity-100">
+                      <span
+                        className="bg-no-repeat bg-left-bottom transition-[background-size] duration-500 [background-size:0%_2px] group-hover:[background-size:100%_2px]"
+                        style={{
+                          backgroundImage: `linear-gradient(${primary}, ${primary})`,
+                        }}
+                      >
+                        {section.sectionTitle}
+                      </span>
+                    </h2>
+                  )}
+                  {section.explanation && (
+                    <p className="mt-5 text-base md:text-lg leading-relaxed opacity-70 max-w-2xl whitespace-pre-line">
+                      {section.explanation}
+                    </p>
+                  )}
+                  {section.media?.fileUrl && (
+                    <div
+                      className="mt-6 aspect-video overflow-hidden rounded-2xl border"
+                      style={{ borderColor: line }}
                     >
-                      {section.sectionTitle}
-                    </span>
-                  </h2>
-                  <p className="mt-5 text-base md:text-lg leading-relaxed opacity-70 max-w-2xl">
-                    {section.explanation}
-                  </p>
+                      <img
+                        src={section.media.fileUrl}
+                        alt={section.sectionTitle ?? ''}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
                 </div>
               </Reveal>
             ))}
@@ -470,11 +496,7 @@ const ProjectDetailsPage = () => {
                         style={{ backgroundColor: primary, color: base }}
                       >
                         <span className="flex items-center gap-3">
-                          {link.label.toLowerCase().includes('github') ? (
-                            <Github size={18} />
-                          ) : (
-                            <Globe size={18} />
-                          )}
+                          {linkIcon(link.type)}
                           {link.label}
                         </span>
                         <ArrowUpRight
@@ -514,6 +536,12 @@ const ProjectDetailsPage = () => {
                       <dt className="opacity-50">Views</dt>
                       <dd className="font-medium">{project.viewCount ?? 0}</dd>
                     </div>
+                    {project.isFeatured && (
+                      <div className="flex justify-between gap-4">
+                        <dt className="opacity-50">Featured</dt>
+                        <dd className="font-medium" style={{ color: primary }}>Yes</dd>
+                      </div>
+                    )}
                   </dl>
                 </div>
               </Reveal>
@@ -541,9 +569,11 @@ const ProjectDetailsPage = () => {
                           />
                           <p className="text-xs opacity-50">{formatDate(event.date)}</p>
                           <h4 className="mt-0.5 text-sm font-medium">{event.title}</h4>
-                          <p className="mt-1 text-sm opacity-60 leading-relaxed">
-                            {event.description}
-                          </p>
+                          {event.description && (
+                            <p className="mt-1 text-sm opacity-60 leading-relaxed">
+                              {event.description}
+                            </p>
+                          )}
                         </li>
                       ))}
                     </ol>

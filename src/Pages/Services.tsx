@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
   motion,
@@ -27,6 +27,16 @@ import {
   ArrowRight,
   Sparkles,
   GraduationCap,
+  ShoppingCart,
+  Bike,
+  Ticket,
+  School,
+  CalendarCheck,
+  CreditCard,
+  Home,
+  Stethoscope,
+  Users,
+  ArrowUpRight,
 } from "lucide-react";
 
 import heroImage from "../assets/computer-laptop-macbook-coding.jpg";
@@ -40,7 +50,6 @@ import VirtualAssistant from "../Components/VirtualAssistant";
 
 /* ---------- Page information (simple English) ---------- */
 
-// Free photos from Unsplash. Change the photo id to use a different picture.
 const photo = (id: string) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=1000&q=70`;
 
 const techServices = [
@@ -49,7 +58,7 @@ const techServices = [
     desc: "I build websites and web apps from start to finish. They are fast, safe and ready to grow with you.",
     tags: ["PostgreSQL", "Express", "React", "Node.js", "TypeScript"],
     icon: Globe,
-    image: photo("photo-1555952494-efd681c7e3f9"), // code on a screen
+    image: photo("photo-1555952494-efd681c7e3f9"),
     alt: "Colourful web code on a computer screen",
   },
   {
@@ -57,7 +66,7 @@ const techServices = [
     desc: "I make phone apps for iPhone and Android from one codebase. They feel smooth and are easy to use.",
     tags: ["React Native", "Expo", "iOS", "Android"],
     icon: Smartphone,
-    image: photo("photo-1515879218367-8466d910aaa4"), // code on a screen
+    image: photo("photo-1515879218367-8466d910aaa4"),
     alt: "App code on a computer screen",
   },
   {
@@ -65,7 +74,7 @@ const techServices = [
     desc: "I write smart contracts. These are small programs on a blockchain that run by themselves. I test them on the Ethereum Sepolia network.",
     tags: ["Solidity", "Smart contracts", "Ethereum Sepolia"],
     icon: Boxes,
-    image: photo("photo-1641352109623-f7b1eff605fd"), // gold bitcoin
+    image: photo("photo-1641352109623-f7b1eff605fd"),
     alt: "A gold bitcoin shining on dark stones",
   },
   {
@@ -73,7 +82,7 @@ const techServices = [
     desc: "I help you pick the right tools, plan your system and make your database faster, so your project starts on the right foot.",
     tags: ["Software design", "Database tuning", "Tech choices"],
     icon: Lightbulb,
-    image: photo("photo-1681164315014-06bf36b2597a"), // man at two monitors
+    image: photo("photo-1681164315014-06bf36b2597a"),
     alt: "A man working in front of two computer monitors",
   },
   {
@@ -81,7 +90,7 @@ const techServices = [
     desc: "I do hands-on network work: hanging ADSS aerial cable, preparing fibre, writing maintenance reports and finding where the signal is lost.",
     tags: ["ADSS cable", "Fibre", "Troubleshooting"],
     icon: Network,
-    image: photo("photo-1744868562210-fffb7fa882d9"), // fibre optic cables
+    image: photo("photo-1744868562210-fffb7fa882d9"),
     alt: "Yellow and green fibre optic cables neatly connected",
   },
   {
@@ -89,7 +98,7 @@ const techServices = [
     desc: "I build safe and quick APIs, login systems and server code that your app can depend on every day.",
     tags: ["REST APIs", "Login security", "Server logic"],
     icon: Server,
-    image: photo("photo-1504164996022-09080787b6b3"), // code on a computer
+    image: photo("photo-1504164996022-09080787b6b3"),
     alt: "Server code on a computer screen",
   },
   {
@@ -97,12 +106,108 @@ const techServices = [
     desc: "I teach programming in small, easy steps. You learn a language by building real things, at your own speed, with help from me when you get stuck.",
     tags: ["JavaScript", "TypeScript", "React", "Solidity"],
     icon: GraduationCap,
-    image: photo("photo-1461749280684-dccba630e2f6"), // programming on a monitor
+    image: photo("photo-1461749280684-dccba630e2f6"),
     alt: "A monitor showing programming code",
   },
 ];
 
-// Pictures shown in the hero carousel
+/* ---------- Types of apps I can build ---------- */
+
+const appTypes = [
+  {
+    title: "E-commerce Stores",
+    tagline: "Sell online, easily",
+    desc: "Product catalogues, carts, checkout, M-Pesa/Stripe payments, order tracking, and an admin dashboard for you to manage everything.",
+    icon: ShoppingCart,
+    stack: ["React", "Node.js", "PostgreSQL", "Stripe", "M-Pesa"],
+    accentFrom: "#10b981",
+    accentTo: "#059669",
+    image: photo("photo-1556742049-0cfed4f6a45d"),
+  },
+  {
+    title: "Delivery & Logistics",
+    tagline: "Move things from A to B",
+    desc: "Live rider tracking, route assignment, delivery time estimates, customer notifications, and a dispatcher dashboard.",
+    icon: Bike,
+    stack: ["React Native", "Socket.IO", "Google Maps", "Node.js"],
+    accentFrom: "#f59e0b",
+    accentTo: "#d97706",
+    image: photo("photo-1615824143262-ba78b2f6a6ea"),
+  },
+  {
+    title: "Ticketing & Events",
+    tagline: "Sell tickets, scan at the door",
+    desc: "Event listings, seat/tier selection, QR-code tickets, on-site scanner, and a real-time sales dashboard for organisers.",
+    icon: Ticket,
+    stack: ["Next.js", "QR Codes", "PostgreSQL", "Stripe"],
+    accentFrom: "#8b5cf6",
+    accentTo: "#7c3aed",
+    image: photo("photo-1492684223066-81342ee5ff30"),
+  },
+  {
+    title: "School Management",
+    tagline: "Run a school without paperwork",
+    desc: "Student records, timetables, attendance, fees, exam scores, report cards, and parent logins — one system for the whole school.",
+    icon: School,
+    stack: ["React", "Express", "PostgreSQL", "Drizzle", "PDF"],
+    accentFrom: "#0ea5e9",
+    accentTo: "#0284c7",
+    image: photo("photo-1580582932707-520aed937b7b"),
+  },
+  {
+    title: "Bookings & Reservations",
+    tagline: "Let clients book themselves",
+    desc: "Calendar-based booking, availability rules, automatic confirmations via email/SMS, and a simple dashboard to manage appointments.",
+    icon: CalendarCheck,
+    stack: ["React", "Node.js", "Redis", "Twilio", "Stripe"],
+    accentFrom: "#ec4899",
+    accentTo: "#db2777",
+    image: photo("photo-1517245386807-bb43f82c33c4"),
+  },
+  {
+    title: "Fintech & Payments",
+    tagline: "Move money, safely",
+    desc: "Wallets, ledgers, transaction history, payment reconciliation, admin controls, and integration with mobile money or card processors.",
+    icon: CreditCard,
+    stack: ["Node.js", "PostgreSQL", "M-Pesa API", "Stripe", "JWT"],
+    accentFrom: "#6366f1",
+    accentTo: "#4f46e5",
+    image: photo("photo-1563013544-824ae1b704d3"),
+  },
+  {
+    title: "Property & Rentals",
+    tagline: "List, rent, manage",
+    desc: "Property listings with photos, landlord & tenant logins, rent collection, maintenance requests, and a simple admin dashboard to track everything.",
+    icon: Home,
+    stack: ["React", "Node.js", "PostgreSQL", "Cloudinary", "M-Pesa"],
+    accentFrom: "#0891b2",
+    accentTo: "#0e7490",
+    image: photo("photo-1560518883-ce09059eeffa"),
+  },
+  {
+    title: "Healthcare & Clinics",
+    tagline: "Patients first",
+    desc: "Patient records, appointments, doctor schedules, prescription history, and secure dashboards for clinic staff — fully role-based.",
+    icon: Stethoscope,
+    stack: ["React", "Express", "PostgreSQL", "JWT", "Twilio"],
+    accentFrom: "#ef4444",
+    accentTo: "#dc2626",
+    image: photo("photo-1631815588090-d4bfec5b1ccb"),
+  },
+  {
+    title: "Community & Social",
+    tagline: "Connect your people",
+    desc: "User profiles, follow/feed, comments, likes, notifications, and content moderation — great for communities, churches, alumni groups, and networks.",
+    icon: Users,
+    stack: ["React", "Node.js", "PostgreSQL", "Redis", "Socket.IO"],
+    accentFrom: "#a855f7",
+    accentTo: "#9333ea",
+    image: photo("photo-1511367461989-f85a21fda167"),
+  },
+];
+
+/* ---------- Rest unchanged ---------- */
+
 const AUTO_MS = 4500;
 const heroSlides = [
   {
@@ -174,7 +279,6 @@ const faqs = [
 
 /* ---------- Small helper parts ---------- */
 
-// Makes the light on a card follow the mouse.
 const followMouse = (e: React.MouseEvent<HTMLElement>) => {
   const box = e.currentTarget.getBoundingClientRect();
   e.currentTarget.style.setProperty("--mx", `${e.clientX - box.left}px`);
@@ -196,7 +300,6 @@ const rise: Variants = {
   },
 };
 
-// Section title that slides up word by word.
 const WordTitle = ({
   text,
   className = "",
@@ -231,7 +334,7 @@ const WordTitle = ({
   </motion.h2>
 );
 
-/* ---------- Hero picture carousel ---------- */
+/* ---------- Hero picture carousel (unchanged) ---------- */
 
 const HeroCarousel = ({
   primary,
@@ -249,7 +352,6 @@ const HeroCarousel = ({
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
 
-  // Whole stage tilts with the mouse
   const mx = useMotionValue(0);
   const my = useMotionValue(0);
   const sx = useSpring(mx, { stiffness: 80, damping: 14 });
@@ -259,7 +361,6 @@ const HeroCarousel = ({
 
   const go = (direction: number) => setActive((a) => (a + direction + n) % n);
 
-  // Moves to the next picture by itself
   useEffect(() => {
     if (paused || reduce) return;
     const id = setInterval(() => setActive((a) => (a + 1) % n), AUTO_MS);
@@ -291,7 +392,6 @@ const HeroCarousel = ({
       onMouseMove={onMove}
     >
       <div className="relative">
-        {/* Glow that breathes behind the pictures */}
         <motion.div
           className="absolute inset-x-10 inset-y-6 rounded-full blur-[90px] pointer-events-none"
           style={{ backgroundColor: primary }}
@@ -299,7 +399,6 @@ const HeroCarousel = ({
           transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
         />
 
-        {/* Two rings that spin in opposite ways */}
         <div
           className="sv-spin absolute inset-2 sm:inset-0 rounded-full border-2 border-dashed opacity-25 pointer-events-none"
           style={{ borderColor: primary }}
@@ -309,7 +408,6 @@ const HeroCarousel = ({
           style={{ borderColor: text }}
         />
 
-        {/* Stage */}
         <motion.div
           className="relative h-[22rem] sm:h-[29rem] select-none"
           style={{ perspective: 1400, touchAction: "pan-y" }}
@@ -352,7 +450,6 @@ const HeroCarousel = ({
                   onClick={() => !isActive && setActive(i)}
                   aria-hidden={!isActive}
                 >
-                  {/* Picture slowly zooms while it is on show */}
                   <motion.img
                     src={slide.image}
                     alt={slide.alt}
@@ -368,7 +465,6 @@ const HeroCarousel = ({
                     style={{ background: `linear-gradient(to top, ${base}f0 0%, ${base}55 35%, transparent 65%)` }}
                   />
 
-                  {/* Shine that sweeps across when the picture arrives */}
                   <motion.div
                     className="absolute inset-y-0 w-1/3 pointer-events-none"
                     style={{
@@ -380,7 +476,6 @@ const HeroCarousel = ({
                     transition={{ duration: 1.1, delay: 0.25, ease: "easeInOut" }}
                   />
 
-                  {/* Words on the picture */}
                   <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6 flex items-end gap-3">
                     <motion.span
                       className="grid place-items-center shrink-0 w-11 h-11 rounded-2xl shadow-lg"
@@ -402,7 +497,6 @@ const HeroCarousel = ({
                     </motion.div>
                   </div>
 
-                  {/* Time bar that fills before the next picture */}
                   {isActive && (
                     <motion.span
                       key={`${active}-${paused}`}
@@ -419,7 +513,6 @@ const HeroCarousel = ({
           </motion.div>
         </motion.div>
 
-        {/* Floating labels around the pictures */}
         {[
           { label: "Web", pos: "top-2 left-0", delay: 0 },
           { label: "Mobile", pos: "top-[45%] -right-2", delay: 1.2 },
@@ -442,7 +535,6 @@ const HeroCarousel = ({
           </motion.span>
         ))}
 
-        {/* Little sparks that drift up */}
         {!reduce &&
           [12, 30, 52, 74, 90].map((left, i) => (
             <motion.span
@@ -455,7 +547,6 @@ const HeroCarousel = ({
           ))}
       </div>
 
-      {/* Controls */}
       <div className="mt-6 flex items-center justify-center gap-4">
         <motion.button
           type="button"
@@ -498,7 +589,6 @@ const HeroCarousel = ({
         </motion.button>
       </div>
 
-      {/* Name of the picture that is showing */}
       <div className="mt-4 h-7 overflow-hidden text-center" aria-live="polite">
         <AnimatePresence mode="wait">
           <motion.p
@@ -531,12 +621,218 @@ const ServicesPage: React.FC = () => {
   const text = theme["base-content"];
   const soft = `${text}18`;
 
-  // Thin bar at the top that fills as you scroll
   const { scrollYProgress } = useScroll();
   const progress = useSpring(scrollYProgress, { stiffness: 120, damping: 24, mass: 0.3 });
 
   const marqueeItems = techServices.map((s) => s.title);
   const heroWords = ["I", "build", "software", "and", "connect", "networks."];
+
+  /* ---------- Mobile carousel for app-types ---------- */
+  const [appIndex, setAppIndex] = useState(0);
+  const [appPaused, setAppPaused] = useState(false);
+  const appTrackRef = useRef<HTMLDivElement>(null);
+  const preferReduced = useRef(false);
+
+  useEffect(() => {
+    preferReduced.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }, []);
+
+  const scrollAppTo = useCallback((idx: number) => {
+    const track = appTrackRef.current;
+    if (!track) return;
+    const children = track.querySelectorAll<HTMLElement>("[data-app-slide]");
+    const target = children[idx];
+    if (!target) return;
+    track.scrollTo({
+      left: target.offsetLeft - track.offsetLeft,
+      behavior: preferReduced.current ? "auto" : "smooth",
+    });
+  }, []);
+
+  const onAppScroll = () => {
+    const track = appTrackRef.current;
+    if (!track) return;
+    const children = track.querySelectorAll<HTMLElement>("[data-app-slide]");
+    const center = track.scrollLeft + track.clientWidth / 2;
+    let closest = 0;
+    let min = Infinity;
+    children.forEach((el, i) => {
+      const elCenter = el.offsetLeft - track.offsetLeft + el.clientWidth / 2;
+      const dist = Math.abs(center - elCenter);
+      if (dist < min) {
+        min = dist;
+        closest = i;
+      }
+    });
+    setAppIndex(closest);
+  };
+
+  const goApp = (dir: -1 | 1) => {
+    if (appTypes.length === 0) return;
+    const next = (appIndex + dir + appTypes.length) % appTypes.length;
+    setAppIndex(next);
+    scrollAppTo(next);
+  };
+
+  /* ---------- Auto-scroll the mobile carousel ---------- */
+  useEffect(() => {
+    if (reduce) return;
+    if (appPaused) return;
+    if (appTypes.length < 2) return;
+
+    const id = window.setInterval(() => {
+      setAppIndex((prev) => {
+        const next = (prev + 1) % appTypes.length;
+        scrollAppTo(next);
+        return next;
+      });
+    }, 4500);
+
+    return () => window.clearInterval(id);
+  }, [appPaused, reduce, scrollAppTo]);
+
+  /* Pause when the browser tab is hidden */
+  useEffect(() => {
+    const onVis = () => setAppPaused(document.hidden);
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
+
+  /* ---------- Single app-type card (reused) ---------- */
+  const renderAppCard = (
+    app: (typeof appTypes)[number],
+    index: number,
+    showImage = false
+  ) => {
+    const Icon = app.icon;
+    return (
+      <motion.article
+        key={app.title}
+        variants={rise}
+        onMouseMove={followMouse}
+        whileHover={{ y: -8 }}
+        className="sv-app-card group relative flex flex-col rounded-3xl border overflow-hidden text-left h-full"
+        style={
+          {
+            borderColor: soft,
+            backgroundColor: `${text}05`,
+            "--mx": "50%",
+            "--my": "50%",
+            ["--sv-accent" as any]: app.accentFrom,
+          } as React.CSSProperties
+        }
+      >
+        <div
+          className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-0"
+          style={{
+            background: `radial-gradient(320px circle at var(--mx) var(--my), ${app.accentFrom}22, transparent 45%)`,
+          }}
+        />
+
+        <div
+          className="relative h-2 w-full"
+          style={{ background: `linear-gradient(90deg, ${app.accentFrom}, ${app.accentTo})` }}
+        />
+
+        {/* Optional thumbnail band — only on mobile carousel */}
+        {showImage && (
+          <div
+            className="relative w-full aspect-[16/9] overflow-hidden"
+            style={{ backgroundColor: `${app.accentFrom}22` }}
+          >
+            <img
+              src={app.image}
+              alt={app.title}
+              loading="lazy"
+              onError={(e) => (e.currentTarget.style.opacity = "0")}
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-[900ms] ease-out group-hover:scale-110"
+            />
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `linear-gradient(to top, ${base}ee 0%, ${base}66 45%, transparent 90%)`,
+              }}
+            />
+            <span
+              className="absolute left-4 bottom-3 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider shadow-lg backdrop-blur-md"
+              style={{
+                backgroundColor: app.accentFrom,
+                color: "#ffffff",
+              }}
+            >
+              <Icon size={11} />
+              {app.tagline}
+            </span>
+          </div>
+        )}
+
+        <div className="relative z-[2] flex flex-col p-6 sm:p-7 flex-1">
+          <div className="mb-5 flex items-start justify-between">
+            <motion.div
+              whileHover={{ rotate: -6, scale: 1.08 }}
+              transition={{ type: "spring", stiffness: 260, damping: 16 }}
+              className="grid place-items-center w-14 h-14 rounded-2xl shadow-lg"
+              style={{
+                background: `linear-gradient(135deg, ${app.accentFrom}, ${app.accentTo})`,
+                color: "#ffffff",
+              }}
+            >
+              <Icon size={26} />
+            </motion.div>
+
+            <span
+              className="rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider"
+              style={{
+                borderColor: `${app.accentFrom}55`,
+                color: app.accentFrom,
+                backgroundColor: `${app.accentFrom}12`,
+              }}
+            >
+              {app.tagline}
+            </span>
+          </div>
+
+          <h3 className="text-xl font-bold leading-snug mb-2">{app.title}</h3>
+          <p className="text-sm leading-relaxed opacity-70 mb-5 flex-1">{app.desc}</p>
+
+          <div className="mt-auto flex flex-wrap gap-1.5">
+            {app.stack.map((s) => (
+              <span
+                key={s}
+                className="rounded-full px-2.5 py-1 text-[11px] font-semibold transition-transform duration-300 group-hover:-translate-y-0.5"
+                style={{
+                  backgroundColor: `${app.accentFrom}18`,
+                  color: app.accentFrom,
+                }}
+              >
+                {s}
+              </span>
+            ))}
+          </div>
+
+          <div
+            className="mt-5 flex items-center justify-between pt-4 border-t"
+            style={{ borderColor: `${text}18` }}
+          >
+            <span className="text-[11px] font-semibold opacity-50 uppercase tracking-wider">
+              Want one?
+            </span>
+            <Link
+              to="/contact"
+              className="group/cta inline-flex items-center gap-1.5 text-xs font-bold transition-all"
+              style={{ color: app.accentFrom }}
+            >
+              Let&apos;s talk
+              <ArrowUpRight
+                size={13}
+                className="transition-transform group-hover/cta:translate-x-0.5 group-hover/cta:-translate-y-0.5"
+              />
+            </Link>
+          </div>
+        </div>
+      </motion.article>
+    );
+  };
 
   return (
     <>
@@ -551,6 +847,7 @@ const ServicesPage: React.FC = () => {
         @keyframes sv-blob { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(30px,-30px) scale(1.15); } }
         @keyframes sv-spin { to { transform: rotate(360deg); } }
         @keyframes sv-shine { 0% { transform: translateX(-120%) skewX(-20deg); } 60%,100% { transform: translateX(260%) skewX(-20deg); } }
+        @keyframes sv-orbit { to { transform: rotate(360deg); } }
         .sv-marquee { animation: sv-marquee 38s linear infinite; }
         .sv-marquee-wrap:hover .sv-marquee { animation-play-state: paused; }
         .sv-blob { animation: sv-blob 12s ease-in-out infinite; }
@@ -561,15 +858,44 @@ const ServicesPage: React.FC = () => {
           background: linear-gradient(90deg, transparent, rgba(255,255,255,.45), transparent);
           animation: sv-shine 3.2s ease-in-out infinite;
         }
+        .sv-app-card { position: relative; overflow: hidden; }
+        .sv-app-card::before {
+          content: ""; position: absolute; inset: 0;
+          background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,.08) 45%, transparent 60%);
+          transform: translateX(-120%);
+          transition: transform 1s cubic-bezier(.2,.7,.2,1);
+          pointer-events: none; z-index: 1;
+        }
+        .sv-app-card:hover::before { transform: translateX(120%); }
+        .sv-app-card::after {
+          content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px;
+          transform: scaleX(0); transform-origin: left; transition: transform .6s ease;
+        }
+        .sv-app-card:hover::after { transform: scaleX(1); }
+        .sv-orbit { animation: sv-orbit 40s linear infinite; }
+
+        /* Mobile-only carousel for the app-types grid */
+        .sv-app-track {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+          scroll-behavior: smooth;
+          scroll-padding-left: 0.5rem;
+          scroll-padding-right: 0.5rem;
+        }
+        .sv-app-track::-webkit-scrollbar { display: none; }
+        .sv-app-slide { scroll-snap-align: center; flex: 0 0 auto; }
+        .sv-app-dot { transition: width .3s, background-color .3s, opacity .3s; }
+
         @media (prefers-reduced-motion: reduce) {
-          .sv-marquee, .sv-blob, .sv-spin, .sv-spin-rev, .sv-shine::after { animation: none !important; }
+          .sv-marquee, .sv-blob, .sv-spin, .sv-spin-rev, .sv-shine::after, .sv-orbit { animation: none !important; }
+          .sv-app-card::before { transition: none; }
+          .sv-app-track { scroll-behavior: auto; }
         }
       `}</style>
 
       <PageTitle title="Services & Technical Consultancy" />
       <Navbar />
 
-      {/* Scroll progress bar */}
       <motion.div
         className="fixed top-0 left-0 right-0 h-1 origin-left z-[60]"
         style={{ scaleX: progress, backgroundColor: primary }}
@@ -579,7 +905,6 @@ const ServicesPage: React.FC = () => {
         className="relative font-sans pt-[4.5rem] lg:pt-[5rem] pb-[4.5rem] lg:pb-0 min-h-screen flex flex-col justify-between"
         style={{ backgroundColor: base, color: text, overflowX: "clip" }}
       >
-        {/* Big logo in the background */}
         <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-0 overflow-hidden">
           <img
             src={logo}
@@ -589,7 +914,6 @@ const ServicesPage: React.FC = () => {
           />
         </div>
 
-        {/* Dots pattern and glowing blobs */}
         <div
           className="absolute inset-x-0 top-0 h-[38rem] pointer-events-none opacity-60"
           style={{
@@ -612,16 +936,7 @@ const ServicesPage: React.FC = () => {
           {/* ---------- HERO ---------- */}
           <section className="py-12 px-4 sm:py-16 sm:px-6 lg:px-20 flex flex-col-reverse lg:flex-row items-center gap-12">
             <div className="flex-1 text-center lg:text-left space-y-6">
-              <motion.div
-                initial={{ opacity: 0, y: -16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.05, duration: 0.6 }}
-                className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium backdrop-blur-md"
-                style={{ borderColor: `${primary}55`, backgroundColor: `${primary}12`, color: primary }}
-              >
-                <Sparkles size={14} className="animate-pulse" />
-                Services &amp; Consultancy
-              </motion.div>
+              
 
               <h1
                 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.08]"
@@ -679,7 +994,6 @@ const ServicesPage: React.FC = () => {
               </motion.div>
             </div>
 
-            {/* Picture carousel */}
             <HeroCarousel primary={primary} base={base} text={text} reduce={reduce} />
           </section>
 
@@ -731,7 +1045,7 @@ const ServicesPage: React.FC = () => {
             >
               {techServices.map((service, idx) => {
                 const Icon = service.icon;
-                const isWide = idx === techServices.length - 1; // last card is wide on big screens
+                const isWide = idx === techServices.length - 1;
                 return (
                   <motion.article
                     key={service.title}
@@ -750,7 +1064,6 @@ const ServicesPage: React.FC = () => {
                       } as React.CSSProperties
                     }
                   >
-                    {/* Photo */}
                     <div
                       className={`relative overflow-hidden shrink-0 aspect-[16/10] ${
                         isWide ? "lg:aspect-auto lg:w-1/2 lg:min-h-[20rem]" : ""
@@ -776,14 +1089,12 @@ const ServicesPage: React.FC = () => {
                       </span>
                     </div>
 
-                    {/* Light that follows the mouse */}
                     <div
                       className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                       style={{
                         background: `radial-gradient(340px circle at var(--mx) var(--my), ${primary}22, transparent 45%)`,
                       }}
                     />
-                    {/* Line that grows along the bottom on hover */}
                     <span
                       className="absolute bottom-0 left-0 h-1 w-0 group-hover:w-full transition-all duration-700 ease-out"
                       style={{ backgroundColor: primary }}
@@ -815,6 +1126,166 @@ const ServicesPage: React.FC = () => {
             </motion.div>
           </section>
 
+          {/* ---------- TYPES OF APPS I BUILD ---------- */}
+          <section
+            id="app-types"
+            className="relative py-16 px-4 sm:px-6 lg:px-20 max-w-7xl mx-auto scroll-mt-24"
+          >
+            <div
+              className="sv-orbit pointer-events-none absolute -right-40 top-20 w-[28rem] h-[28rem] rounded-full border-2 border-dashed opacity-[0.08]"
+              style={{ borderColor: primary }}
+              aria-hidden="true"
+            />
+
+            <div className="relative text-center mb-12 space-y-3">
+              <motion.div
+                initial={{ opacity: 0, y: -12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+                className="inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em]"
+                style={{ borderColor: `${primary}55`, backgroundColor: `${primary}12`, color: primary }}
+              >
+                <Sparkles size={12} />
+                Apps I Build
+              </motion.div>
+              <WordTitle
+                text="Types of Apps I Can Build"
+                className="text-3xl sm:text-5xl font-extrabold tracking-tight"
+                color={primary}
+              />
+              <motion.p
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 0.65 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.3, duration: 0.7 }}
+                className="max-w-2xl mx-auto"
+              >
+                Different businesses need different apps. Here are the kinds I've built or can build
+                for you — from stores to schools to delivery fleets.
+              </motion.p>
+            </div>
+
+            {/* ========== DESKTOP + TABLET: grid ========== */}
+            <motion.div
+              className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6"
+              variants={container}
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true, amount: 0.1 }}
+            >
+              {appTypes.map((app) => renderAppCard(app, 0))}
+            </motion.div>
+
+            {/* ========== MOBILE: carousel with auto-scroll ========== */}
+            <div className="sm:hidden">
+              {appTypes.length > 1 && (
+                <div className="mb-3 flex items-center justify-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest opacity-40">
+                  <ChevronLeft size={11} />
+                  Swipe · auto-advances
+                  <ChevronRight size={11} />
+                </div>
+              )}
+
+              <div
+                ref={appTrackRef}
+                className="sv-app-track flex gap-3 overflow-x-auto snap-x snap-mandatory pb-3"
+                onScroll={onAppScroll}
+                onMouseEnter={() => setAppPaused(true)}
+                onMouseLeave={() => setAppPaused(false)}
+                onTouchStart={() => setAppPaused(true)}
+                onTouchEnd={() => setAppPaused(false)}
+                onFocus={() => setAppPaused(true)}
+                onBlur={() => setAppPaused(false)}
+                role="region"
+                aria-label="Types of apps carousel. Auto-advances every few seconds."
+              >
+                {appTypes.map((app, i) => (
+                  <div
+                    key={app.title}
+                    data-app-slide
+                    className="sv-app-slide w-[85%] min-w-0"
+                  >
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, amount: 0.15 }}
+                      transition={{ duration: 0.5, ease: [0.2, 0.7, 0.2, 1] }}
+                      className="h-full"
+                    >
+                      {renderAppCard(app, i, true)}
+                    </motion.div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Arrows */}
+              {appTypes.length > 1 && (
+                <div className="mt-3 flex items-center justify-center gap-2">
+                  <button
+                    onClick={() => goApp(-1)}
+                    aria-label="Previous app type"
+                    className="inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-xs font-semibold"
+                    style={{ borderColor: `${text}30`, color: text }}
+                  >
+                    <ChevronLeft size={14} />
+                    Prev
+                  </button>
+                  <button
+                    onClick={() => goApp(1)}
+                    aria-label="Next app type"
+                    className="inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-xs font-semibold"
+                    style={{ borderColor: `${text}30`, color: text }}
+                  >
+                    Next
+                    <ChevronRight size={14} />
+                  </button>
+                </div>
+              )}
+
+              {/* Dots */}
+              {appTypes.length > 1 && (
+                <div className="mt-4 flex items-center justify-center gap-1.5">
+                  {appTypes.map((_, i) => {
+                    const active = i === appIndex;
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => {
+                          setAppIndex(i);
+                          scrollAppTo(i);
+                        }}
+                        aria-label={`Show app type ${i + 1}`}
+                        aria-current={active}
+                        className="sv-app-dot h-2.5 rounded-full"
+                        style={{
+                          width: active ? 28 : 10,
+                          backgroundColor: active ? primary : `${text}44`,
+                          opacity: active ? 1 : 0.6,
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Closing note */}
+            <motion.p
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 0.6 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.4, duration: 0.6 }}
+              className="mt-10 text-center text-sm"
+            >
+              Don't see yours?{" "}
+              <Link to="/contact" className="font-semibold underline underline-offset-4" style={{ color: primary }}>
+                Tell me the idea
+              </Link>{" "}
+              — I build custom too.
+            </motion.p>
+          </section>
+
           {/* ---------- HOW I WORK ---------- */}
           <section className="py-16 px-4 sm:px-6 lg:px-20 max-w-6xl mx-auto">
             <div className="text-center mb-14">
@@ -826,7 +1297,6 @@ const ServicesPage: React.FC = () => {
             </div>
 
             <div className="relative">
-              {/* Line that draws itself across the steps */}
               <motion.div
                 className="hidden lg:block absolute top-7 left-[12%] right-[12%] h-0.5 origin-left"
                 style={{ backgroundColor: `${primary}55` }}
@@ -982,20 +1452,19 @@ const ServicesPage: React.FC = () => {
         </div>
 
         <Footer />
-        {/* Floating virtual assistant */}
-              <div
-                className="
-                  pointer-events-none fixed inset-x-0 top-[94%] -translate-y-1/2 z-[100]
-                  flex justify-end
-                  px-3
-                  sm:inset-x-auto sm:top-auto sm:bottom-5 sm:right-6 sm:translate-y-0
-                  sm:px-0
-                "
-              >
-                <div className="pointer-events-auto">
-                  <VirtualAssistant />
-                </div>
-              </div>
+        <div
+          className="
+            pointer-events-none fixed inset-x-0 top-[94%] -translate-y-1/2 z-[100]
+            flex justify-end
+            px-3
+            sm:inset-x-auto sm:top-auto sm:bottom-5 sm:right-6 sm:translate-y-0
+            sm:px-0
+          "
+        >
+          <div className="pointer-events-auto">
+            <VirtualAssistant />
+          </div>
+        </div>
       </div>
     </>
   );

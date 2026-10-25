@@ -1,52 +1,70 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-interface AuthState {
-    user: any | null;
-    token: string | null;
-    isAuthenticated: boolean;
-    role: string | null;
+export interface AuthUser {
+  id: string;
+  fullName: string;
+  email: string;
+  isAdmin: boolean;
+  createdAt: string;
 }
 
-// Check localStorage so the user stays logged in on page refresh
+interface AuthState {
+  user: AuthUser | null;
+  isAuthenticated: boolean;
+  role: "admin" | "user" | null;
+}
+
+/** Safe reader — never trusts a string "null" from old persisted data */
+function readStoredUser(): AuthUser | null {
+  try {
+    const raw = localStorage.getItem("user_data");
+    if (!raw || raw === "null" || raw === "undefined") return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object" && typeof parsed.id === "string") {
+      return parsed as AuthUser;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+const persistedUser = readStoredUser();
+
 const initialState: AuthState = {
-    user: JSON.parse(localStorage.getItem("user_data") || "null"),
-    token: localStorage.getItem("access_token"),
-    isAuthenticated: !!localStorage.getItem("access_token"),
-    role: localStorage.getItem("user_role"),
+  user: persistedUser,
+  isAuthenticated: !!persistedUser,
+  role: persistedUser ? (persistedUser.isAdmin ? "admin" : "user") : null,
 };
 
 const authSlice = createSlice({
-    name: 'auth',
-    initialState,
-    reducers: {
-        setCredentials: (state, action: PayloadAction<{ user: any, token: string, role: string }>) => {
-            const { user, token, role } = action.payload;
-            
-            // 1. Update Redux State
-            state.user = user;
-            state.token = token;
-            state.role = role;
-            state.isAuthenticated = true;
+  name: "auth",
+  initialState,
+  reducers: {
+    setCredentials: (state, action: PayloadAction<AuthUser>) => {
+      const user = action.payload;
+      state.user = user;
+      state.isAuthenticated = true;
+      state.role = user.isAdmin ? "admin" : "user";
+      localStorage.setItem("user_data", JSON.stringify(user));
+    },
 
-            // 2. Update LocalStorage for persistence
-            localStorage.setItem("access_token", token);
-            localStorage.setItem("user_role", role);
-            localStorage.setItem("user_data", JSON.stringify(user));
-        },
-        clearCredentials: (state) => {
-            // 1. Reset Redux State
-            state.user = null;
-            state.token = null;
-            state.role = null;
-            state.isAuthenticated = false;
-
-            // 2. Clear LocalStorage
-            localStorage.removeItem("access_token");
-            localStorage.removeItem("user_role");
-            localStorage.removeItem("user_data");
-        },
-    }
+    clearCredentials: (state) => {
+      state.user = null;
+      state.isAuthenticated = false;
+      state.role = null;
+      localStorage.removeItem("user_data");
+      localStorage.removeItem("access_token"); // legacy cleanup
+      localStorage.removeItem("user_role");    // legacy cleanup
+    },
+  },
 });
 
 export const { setCredentials, clearCredentials } = authSlice.actions;
+
+export const selectUser = (s: { auth: AuthState }) => s.auth.user;
+export const selectIsAuthenticated = (s: { auth: AuthState }) => s.auth.isAuthenticated;
+export const selectRole = (s: { auth: AuthState }) => s.auth.role;
+export const selectIsAdmin = (s: { auth: AuthState }) => s.auth.role === "admin";
+
 export default authSlice.reducer;

@@ -372,14 +372,7 @@ const Hero = () => {
       <main className="relative z-10 w-full max-w-[1300px] mx-auto px-6 lg:px-16 grid grid-cols-1 lg:grid-cols-12 gap-14 items-center">
         {/* TEXT */}
         <div className="lg:col-span-7 order-2 lg:order-1 text-center lg:text-left">
-          <div
-            className="hero-rise inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm"
-            style={{ borderColor: `${theme.primary}55`, animationDelay: "0.05s" }}
-          >
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            Open for new projects
-          </div>
-
+        
           <h1
             className="hero-rise mt-6 text-4xl md:text-6xl xl:text-7xl font-extrabold tracking-tight leading-[1.05]"
             style={{ animationDelay: "0.15s" }}

@@ -1,50 +1,63 @@
 import React, { useState, useEffect } from 'react';
-import { useGetProjectsQuery } from "../../Features/Apis/Projects.Api";
-import { useGetTechSkillsQuery } from "../../Features/Apis/Skills.Api"; 
-import { 
-  useGetProjectTechStackQuery, 
-  useSyncProjectTechMutation 
-} from "../../Features/Apis/ProjectTech.Api";
+import {
+  useGetProjectsQuery,
+  useGetProjectDetailsQuery,
+  useUpdateProjectMutation,
+} from "../../Features/Apis/Projects.Api";
+import { useGetTechnologiesQuery } from "../../Features/Apis/Technologies.Api";
 import { useTheme } from '../../ThemeContext';
-import { 
-  Cpu, Check, Search, Filter, 
+import {
+  Cpu, Check, Search, Filter,
   Zap, Save, Loader2, Database,
   Terminal, Boxes, XCircle
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
+const autoIconPreviewUrl = (name: string) => {
+  const clean = name.toLowerCase().replace(/\s+/g, '').replace(/\./g, 'dot');
+  return `https://cdn.simpleicons.org/${clean}`;
+};
+
 const ProjectTechManager = () => {
   const { theme } = useTheme();
-  
+
   // --- UI STATE ---
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTechIds, setSelectedTechIds] = useState<string[]>([]);
 
   // --- API HOOKS ---
-  const { data: projects } = useGetProjectsQuery();
-  const { data: allTechs, isLoading: techsLoading } = useGetTechSkillsQuery();
-  const { data: currentStack, isFetching: stackFetching } = useGetProjectTechStackQuery(selectedProjectId, { 
-    skip: !selectedProjectId 
-  });
-  
-  const [syncTech, { isLoading: isSyncing }] = useSyncProjectTechMutation();
+  const { data: projectsData } = useGetProjectsQuery({ limit: 200 });
+  const { data: techsData, isLoading: techsLoading } = useGetTechnologiesQuery();
+
+  // ✅ Fetch the project (which includes its `techs` array)
+  const { data: projectDetails, isFetching: stackFetching } = useGetProjectDetailsQuery(
+    selectedProjectId,
+    { skip: !selectedProjectId }
+  );
+
+  // ✅ Sync tech via the projects PUT endpoint with { techIds }
+  const [updateProject, { isLoading: isSyncing }] = useUpdateProjectMutation();
+
+  const projects = projectsData?.data ?? [];
+  const allTechs = techsData?.data ?? [];
 
   // Sync local selection when a project is selected
   useEffect(() => {
-    // Added safety check for technologies property
-    if (currentStack?.technologies) {
-      setSelectedTechIds(currentStack.technologies.map((t: any) => t.id));
+    if (projectDetails?.data?.techs) {
+      setSelectedTechIds(
+        projectDetails.data.techs.map((t) => t.technologyId)
+      );
     } else {
       setSelectedTechIds([]);
     }
-  }, [currentStack]);
+  }, [projectDetails]);
 
   // --- HANDLERS ---
   const toggleTech = (techId: string) => {
-    setSelectedTechIds(prev => 
-      prev.includes(techId) 
-        ? prev.filter(id => id !== techId) 
+    setSelectedTechIds((prev) =>
+      prev.includes(techId)
+        ? prev.filter((id) => id !== techId)
         : [...prev, techId]
     );
   };
@@ -52,9 +65,9 @@ const ProjectTechManager = () => {
   const handleSync = async () => {
     if (!selectedProjectId) return;
     try {
-      await syncTech({ 
-        projectId: selectedProjectId, 
-        body: { technologyIds: selectedTechIds } 
+      await updateProject({
+        id: selectedProjectId,
+        updates: { techIds: selectedTechIds },
       }).unwrap();
       toast.success("TECH_STACK_SYNCHRONIZED");
     } catch (err) {
@@ -62,16 +75,16 @@ const ProjectTechManager = () => {
     }
   };
 
-  // Added safety fallback to empty array
-  const filteredTechs = (allTechs || [])?.filter(t => 
-    t.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    t.category.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredTechs = (allTechs || []).filter(
+    (t) =>
+      t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
     <div className="min-h-screen p-4 lg:p-8 transition-all duration-500" style={{ backgroundColor: theme["base-100"], color: theme["base-content"] }}>
       <div className="max-w-6xl mx-auto">
-        
+
         {/* --- HEADER --- */}
         <header className="mb-10 border-b pb-8" style={{ borderColor: `${theme.primary}15` }}>
           <div className="flex items-center gap-2 mb-3">
@@ -89,15 +102,18 @@ const ProjectTechManager = () => {
             <label className="text-[9px] font-black uppercase opacity-30 ml-2">Select_Project_Node</label>
             <div className="relative">
               <Boxes className="absolute left-5 top-1/2 -translate-y-1/2 opacity-20" size={18} />
-              <select 
+              <select
                 value={selectedProjectId}
                 onChange={(e) => setSelectedProjectId(e.target.value)}
                 className="w-full bg-transparent border-2 rounded-2xl py-5 pl-14 pr-8 text-xs font-bold uppercase outline-none transition-all"
                 style={{ backgroundColor: `${theme["base-content"]}03`, borderColor: `${theme["base-content"]}10` }}
               >
                 <option value="" className="bg-black text-white">-- MOUNT_PROJECT_IDENTITY --</option>
-                {/* Added optional chaining to projects */}
-                {projects?.map(p => <option key={p.id} value={p.id} className="bg-black text-white">{p.title}</option>)}
+                {projects?.map((p) => (
+                  <option key={p.id} value={p.id} className="bg-black text-white">
+                    {p.title}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -106,7 +122,7 @@ const ProjectTechManager = () => {
             <label className="text-[9px] font-black uppercase opacity-30 ml-2">Search_Library</label>
             <div className="relative">
               <Search className="absolute left-5 top-1/2 -translate-y-1/2 opacity-20" size={18} />
-              <input 
+              <input
                 type="text"
                 placeholder="Filter by Name/Category..."
                 value={searchTerm}
@@ -121,7 +137,7 @@ const ProjectTechManager = () => {
         {/* --- MAIN INTERFACE --- */}
         {selectedProjectId ? (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-700">
-            
+
             {/* Stats Bar */}
             <div className="flex items-center gap-6 p-4 rounded-2xl border-2 border-dashed" style={{ borderColor: `${theme.primary}20` }}>
                <div className="flex items-center gap-2 px-4 py-2 bg-indigo-500/10 rounded-xl">
@@ -136,21 +152,26 @@ const ProjectTechManager = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {techsLoading || stackFetching ? (
                 <div className="col-span-full py-20 flex justify-center"><Loader2 className="animate-spin opacity-20" size={40} /></div>
-              ) : filteredTechs?.map(tech => {
+              ) : filteredTechs?.map((tech) => {
                 const isActive = selectedTechIds.includes(tech.id);
+                const iconUrl = tech.iconName ? autoIconPreviewUrl(tech.iconName) : null;
                 return (
-                  <div 
+                  <div
                     key={tech.id}
                     onClick={() => toggleTech(tech.id)}
                     className="group relative cursor-pointer rounded-3xl p-6 border-2 transition-all duration-300 hover:scale-[1.03] active:scale-95"
-                    style={{ 
+                    style={{
                       backgroundColor: isActive ? `${theme.primary}10` : `${theme["base-content"]}02`,
-                      borderColor: isActive ? theme.primary : `${theme["base-content"]}08`
+                      borderColor: isActive ? theme.primary : `${theme["base-content"]}08`,
                     }}
                   >
                     <div className="flex flex-col items-center gap-4 text-center">
-                       {tech.iconUrl ? (
-                         <img src={tech.iconUrl} className={`w-10 h-10 object-contain transition-all ${isActive ? 'grayscale-0' : 'grayscale opacity-30'}`} alt={tech.name} />
+                       {iconUrl ? (
+                         <img
+                           src={iconUrl}
+                           className={`w-10 h-10 object-contain transition-all ${isActive ? 'grayscale-0' : 'grayscale opacity-30'}`}
+                           alt={tech.name}
+                         />
                        ) : (
                          <Cpu size={32} className={`transition-all ${isActive ? 'opacity-100' : 'opacity-10'}`} style={{ color: isActive ? theme.primary : 'inherit' }} />
                        )}
@@ -173,7 +194,7 @@ const ProjectTechManager = () => {
 
             {/* Float Action Button / Sync */}
             <div className="sticky bottom-10 flex justify-center">
-               <button 
+               <button
                 onClick={handleSync}
                 disabled={isSyncing}
                 className="group px-12 py-6 rounded-full font-black text-[11px] uppercase tracking-[0.5em] shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center gap-4 transition-all hover:scale-105 active:scale-95"

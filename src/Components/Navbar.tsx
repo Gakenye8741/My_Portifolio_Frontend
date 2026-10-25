@@ -1,13 +1,18 @@
-import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
+// src/Components/Navbar.tsx
+import React, { useState, useEffect, useRef } from "react";
 import {
   LogOut,
   LayoutDashboard,
-  ChevronDown,
   Home,
   Code2,
   Cpu,
   Mail,
   Briefcase,
+  BookOpen,
+  HelpCircle,
+  MoreHorizontal,
+  X,
+  ChevronRight,
 } from "lucide-react";
 import logo from "../../public/LOGO.png";
 import { useSelector, useDispatch } from "react-redux";
@@ -17,110 +22,78 @@ import { clearCredentials } from "../Features/Auth/AuthSlice";
 import type { RootState } from "../App/store";
 import ThemeToggle from "../ThemeToggle";
 
-// The pages in the menu
-const menuItems = [
-  { name: "Home", path: "/", icon: Home },
+/* ---------- Menu ---------- */
+const primaryItems = [
+  { name: "Home",     path: "/",         icon: Home },
   { name: "Projects", path: "/projects", icon: Code2 },
-  { name: "Tools", path: "/tech", icon: Cpu },
-  { name: "Services", path: "/services", icon: Briefcase },
-  { name: "Contact", path: "/contact", icon: Mail },
+  { name: "Blog",     path: "/blog",     icon: BookOpen },
+  { name: "FAQs",     path: "/faqs",     icon: HelpCircle },
+  { name: "Contact",  path: "/contact",  icon: Mail },
 ];
 
-// Checks if a menu item is the page you are on
+const moreItems = [
+  { name: "Tools",    path: "/tech",     icon: Cpu },
+  { name: "Services", path: "/services", icon: Briefcase },
+];
+
+const allItems = [...primaryItems, ...moreItems];
+
 const isPageActive = (path: string, pathname: string) => {
   if (path === "/") return pathname === "/";
-  // "/project/123" (one project) also counts as the Projects page
   if (path === "/projects") return pathname.startsWith("/project");
+  if (path === "/blog")     return pathname.startsWith("/blog");
+  if (path === "/faqs")     return pathname.startsWith("/faq");
   return pathname.startsWith(path);
 };
 
-// Gets the first letters of a name, like "GN" for "Gakenye Ndiritu"
-const getInitials = (name?: string) => {
-  return (
-    name
-      ?.split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2) || "AD"
-  );
-};
+const getInitials = (name?: string) =>
+  name?.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "AD";
 
+/* ============================================================ */
 export const Navbar: React.FC = () => {
   const { theme } = useTheme();
   const dispatch = useDispatch();
   const location = useLocation();
   const navigate = useNavigate();
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const linkRefs = useRef<(HTMLAnchorElement | null)[]>([]);
 
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [scrollPercent, setScrollPercent] = useState(0);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [hovered, setHovered] = useState<number | null>(null);
-  const [pill, setPill] = useState({ left: 0, width: 0, visible: false });
+  const [moreOpen, setMoreOpen]         = useState(false);
 
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
 
-  const base = theme["base-100"];
-  const text = theme["base-content"];
+  const base    = theme["base-100"];
+  const text    = theme["base-content"];
   const primary = theme.primary;
+  const borderSoft = `${text}12`;
 
-  const activeIndex = menuItems.findIndex((item) => isPageActive(item.path, location.pathname));
-  const pillTarget = hovered ?? activeIndex;
-
-  // Scroll: make the bar float, and fill the thin line at the bottom
+  /* ---------- Close menus on route change ---------- */
   useEffect(() => {
-    const handleScroll = () => {
-      const y = window.scrollY;
-      setIsScrolled(y > 20);
-      const total = document.documentElement.scrollHeight - window.innerHeight;
-      setScrollPercent(total > 0 ? Math.min((y / total) * 100, 100) : 0);
-    };
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+    setUserMenuOpen(false);
+    setMoreOpen(false);
+  }, [location.pathname]);
+
+  /* ---------- Close on outside / Esc ---------- */
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setUserMenuOpen(false);
       }
     };
-    const handleKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setUserMenuOpen(false);
-    };
-
-    handleScroll();
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("keydown", handleKey);
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleKey);
-    };
-  }, []);
-
-  // Close the user menu when you go to another page
-  useEffect(() => {
-    setUserMenuOpen(false);
-  }, [location.pathname]);
-
-  // Move the sliding highlight behind the right link
-  useLayoutEffect(() => {
-    const place = () => {
-      const el = linkRefs.current[pillTarget];
-      if (el) {
-        setPill({ left: el.offsetLeft, width: el.offsetWidth, visible: true });
-      } else {
-        setPill((p) => ({ ...p, visible: false }));
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setUserMenuOpen(false);
+        setMoreOpen(false);
       }
     };
-    place();
-    window.addEventListener("resize", place);
-    // Fonts can change the link sizes a little after the page loads
-    const timer = setTimeout(place, 300);
+    document.addEventListener("mousedown", onClick);
+    document.addEventListener("keydown", onKey);
     return () => {
-      window.removeEventListener("resize", place);
-      clearTimeout(timer);
+      document.removeEventListener("mousedown", onClick);
+      document.removeEventListener("keydown", onKey);
     };
-  }, [pillTarget, location.pathname]);
+  }, []);
 
   const handleLogout = () => {
     dispatch(clearCredentials());
@@ -128,149 +101,197 @@ export const Navbar: React.FC = () => {
     navigate("/");
   };
 
-  const borderSoft = `${text}14`;
-
   return (
     <>
       <style>{`
-        @keyframes nb-drop {
-          from { opacity: 0; transform: translateY(-100%); }
+        /* Reserve space so the mobile bottom bar never covers content */
+        @media (max-width: 1023px) {
+          body { padding-bottom: calc(5.25rem + env(safe-area-inset-bottom)); }
+        }
+
+        /* ---------- Animations ---------- */
+        @keyframes nb-slide-down {
+          from { opacity: 0; transform: translateY(-8px); }
           to   { opacity: 1; transform: translateY(0); }
         }
-        @keyframes nb-item {
-          from { opacity: 0; transform: translateY(-10px); }
+        @keyframes nb-slide-up {
+          from { opacity: 0; transform: translateY(100%); }
           to   { opacity: 1; transform: translateY(0); }
         }
-        @keyframes nb-up {
-          from { opacity: 0; transform: translateY(140%); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes nb-logo {
-          from { opacity: 0; transform: rotate(-180deg) scale(0.4); }
-          to   { opacity: 1; transform: rotate(0) scale(1); }
+        @keyframes nb-fade-in {
+          from { opacity: 0; }
+          to   { opacity: 1; }
         }
         @keyframes nb-pop {
-          0%   { transform: scale(0.7) translateY(4px); }
-          55%  { transform: scale(1.2) translateY(-3px); }
-          100% { transform: scale(1) translateY(0); }
+          0%   { transform: scale(0.5); opacity: 0; }
+          60%  { transform: scale(1.15); }
+          100% { transform: scale(1); opacity: 1; }
         }
-        .nb-drop { animation: nb-drop 0.7s cubic-bezier(.2,.7,.2,1) both; }
-        .nb-item { opacity: 0; animation: nb-item 0.6s cubic-bezier(.2,.7,.2,1) forwards; }
-        .nb-up   { animation: nb-up 0.8s cubic-bezier(.2,.7,.2,1) 0.3s both; }
-        .nb-logo { animation: nb-logo 0.9s cubic-bezier(.2,.7,.2,1) 0.1s both; }
-        .nb-pop  { animation: nb-pop 0.45s cubic-bezier(.3,.8,.3,1); }
+        @keyframes nb-logo-in {
+          0%   { opacity: 0; transform: rotate(-25deg) scale(0.7); }
+          100% { opacity: 1; transform: rotate(0) scale(1); }
+        }
+        @keyframes nb-pulse-dot {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50%      { transform: scale(1.6); opacity: 0.7; }
+        }
+        @keyframes nb-shine {
+          0%   { transform: translateX(-120%) skewX(-20deg); }
+          60%, 100% { transform: translateX(260%) skewX(-20deg); }
+        }
+        @keyframes nb-ring-pulse {
+          0%   { box-shadow: 0 0 0 0 ${primary}66; }
+          70%  { box-shadow: 0 0 0 8px ${primary}00; }
+          100% { box-shadow: 0 0 0 0 ${primary}00; }
+        }
 
-        /* On phones, add space at the bottom so the bottom bar does not cover the page */
-        @media (max-width: 1023px) {
-          body { padding-bottom: calc(5.75rem + env(safe-area-inset-bottom)); }
+        .nb-slide-down { animation: nb-slide-down 0.25s cubic-bezier(.2,.7,.2,1) both; }
+        .nb-slide-up   { animation: nb-slide-up 0.35s cubic-bezier(.2,.7,.2,1) both; }
+        .nb-fade-in    { animation: nb-fade-in 0.2s ease-out both; }
+        .nb-pop        { animation: nb-pop 0.35s cubic-bezier(.3,.8,.3,1) both; }
+        .nb-logo-in    { animation: nb-logo-in 0.7s cubic-bezier(.2,.7,.2,1) 0.05s both; }
+
+        /* Logo hover */
+        .nb-logo:hover { transform: rotate(-8deg) scale(1.05); }
+        .nb-logo { transition: transform 0.4s cubic-bezier(.2,.7,.2,1); }
+
+        /* Brand dot pulses */
+        .nb-brand-dot { animation: nb-pulse-dot 2.4s ease-in-out infinite; }
+
+        /* Desktop link hover */
+        .nb-link { position: relative; transition: color 0.2s ease, background-color 0.2s ease; }
+        .nb-link .nb-underline {
+          position: absolute; bottom: 2px; left: 50%;
+          width: 0; height: 2px;
+          background-color: ${primary};
+          border-radius: 2px;
+          transform: translateX(-50%);
+          transition: width 0.3s cubic-bezier(.2,.7,.2,1);
+        }
+        .nb-link:hover .nb-underline { width: 60%; }
+        .nb-link[data-active="true"] .nb-underline { width: 60%; }
+        .nb-link .nb-link-icon { transition: transform 0.3s cubic-bezier(.3,.8,.3,1); }
+        .nb-link:hover .nb-link-icon { transform: translateY(-1px) rotate(-6deg) scale(1.1); }
+
+        /* Hire me shine */
+        .nb-hire { position: relative; overflow: hidden; }
+        .nb-hire::after {
+          content: ""; position: absolute; inset: 0; width: 40%;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent);
+          animation: nb-shine 3.2s ease-in-out infinite;
+          pointer-events: none;
+        }
+        .nb-hire:hover { transform: translateY(-2px) scale(1.03); }
+        .nb-hire:active { transform: scale(0.97); }
+        .nb-hire { transition: transform 0.25s cubic-bezier(.2,.7,.2,1); }
+
+        /* Avatar ring pulse */
+        .nb-avatar { transition: transform 0.3s cubic-bezier(.3,.8,.3,1); }
+        .nb-avatar:hover { transform: scale(1.08); animation: nb-ring-pulse 1.4s ease-out infinite; }
+
+        /* Mobile bottom nav active indicator */
+        .nb-bottom-link { transition: transform 0.2s ease; }
+        .nb-bottom-link:active { transform: scale(0.9); }
+
+        /* More sheet handle */
+        .nb-sheet-handle {
+          width: 40px; height: 4px; border-radius: 999px;
+          background-color: ${text}22; margin: 8px auto 0;
         }
 
         @media (prefers-reduced-motion: reduce) {
-          .nb-drop, .nb-item, .nb-up, .nb-logo, .nb-pop {
-            animation: none !important; opacity: 1 !important; transform: none !important;
+          * {
+            animation: none !important;
+            transition-duration: 0ms !important;
           }
         }
       `}</style>
 
-      {/* ---------- TOP BAR ---------- */}
-      <nav
-        className="nb-drop fixed top-0 left-0 right-0 z-[120] pointer-events-none transition-all duration-500"
-        style={{ color: text, padding: isScrolled ? "0.75rem 0.75rem 0" : "0" }}
-        aria-label="Main"
+      {/* ============================================================
+          TOP BAR (desktop only — hidden on mobile)
+          ============================================================ */}
+      <header
+        className="hidden lg:block fixed top-0 left-0 right-0 z-[120] border-b"
+        style={{
+          backgroundColor: base,
+          borderColor: borderSoft,
+          color: text,
+        }}
       >
-        <div
-          className={`pointer-events-auto relative mx-auto w-full flex items-center justify-between transition-all duration-500 ease-[cubic-bezier(.3,.8,.3,1)] ${
-            isScrolled
-              ? "max-w-5xl h-16 px-4 sm:px-6 rounded-full border shadow-2xl backdrop-blur-xl"
-              : "max-w-7xl h-20 px-6 rounded-none border border-transparent"
-          }`}
-          style={{
-            backgroundColor: isScrolled ? `${base}e6` : "transparent",
-            borderColor: isScrolled ? `${primary}30` : "transparent",
-            boxShadow: isScrolled ? `0 20px 50px -20px ${primary}55` : "none",
-          }}
-        >
-          {/* Logo and name */}
-          <Link to="/" className="flex items-center gap-3 group min-w-0" aria-label="Go to home page">
+        <div className="mx-auto max-w-7xl h-16 px-6 flex items-center justify-between gap-6">
+          {/* Logo */}
+          <Link
+            to="/"
+            className="flex items-center gap-2.5 shrink-0 group"
+            aria-label="Home"
+          >
             <img
               src={logo}
               alt=""
-              className="nb-logo w-9 h-9 md:w-10 md:h-10 object-contain shrink-0 transition-transform duration-500 group-hover:rotate-[20deg] group-hover:scale-110"
+              className="nb-logo nb-logo-in w-8 h-8 object-contain"
             />
-            <span className="text-base sm:text-lg md:text-xl font-bold tracking-tight truncate">
-              Gakenye <span style={{ color: primary }}>Ndiritu</span>
+            <span className="text-base font-bold tracking-tight">
+              Gakenye{" "}
+              <span className="inline-block" style={{ color: primary }}>
+                Ndiritu
+              </span>
+              <span
+                className="nb-brand-dot inline-block ml-1 w-1.5 h-1.5 rounded-full align-middle"
+                style={{ backgroundColor: primary }}
+              />
             </span>
           </Link>
 
-          {/* Links (big screens) */}
-          <div className="hidden lg:flex items-center gap-3">
-            <div
-              className="relative flex items-center gap-1"
-              onMouseLeave={() => setHovered(null)}
-            >
-              {/* The highlight that slides behind the links */}
-              <span
-                className="absolute top-1/2 -translate-y-1/2 h-10 rounded-full pointer-events-none transition-all duration-300 ease-[cubic-bezier(.3,.8,.3,1)]"
-                style={{
-                  left: pill.left,
-                  width: pill.width,
-                  opacity: pill.visible ? 1 : 0,
-                  backgroundColor: hovered !== null && hovered !== activeIndex ? `${text}12` : `${primary}1f`,
-                }}
-              />
-
-              {menuItems.map((item, i) => {
-                const active = i === activeIndex;
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.name}
-                    to={item.path}
-                    ref={(el) => {
-                      linkRefs.current[i] = el;
-                    }}
-                    onMouseEnter={() => setHovered(i)}
-                    onFocus={() => setHovered(i)}
-                    onBlur={() => setHovered(null)}
-                    aria-current={active ? "page" : undefined}
-                    className="nb-item group relative z-10 flex items-center gap-2 px-4 h-10 rounded-full text-sm font-semibold transition-colors duration-300"
-                    style={{
-                      animationDelay: `${0.25 + i * 0.07}s`,
-                      color: active ? primary : text,
-                    }}
-                  >
-                    <Icon
-                      size={16}
-                      className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:rotate-[-8deg]"
-                      style={{ opacity: active ? 1 : 0.6 }}
-                    />
-                    <span style={{ opacity: active ? 1 : 0.75 }}>{item.name}</span>
-                  </Link>
-                );
-              })}
-            </div>
-
-            <div className="h-6 w-px mx-1" style={{ backgroundColor: borderSoft }} />
-            <ThemeToggle />
-
-            {/* User menu (big screens) */}
-            {isAuthenticated && (
-              <div className="relative ml-1" ref={dropdownRef}>
-                <button
-                  onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  aria-haspopup="menu"
-                  aria-expanded={userMenuOpen}
-                  className="flex items-center gap-2 pl-4 pr-1.5 py-1.5 rounded-full border transition-all duration-300 hover:-translate-y-0.5 active:scale-95"
+          {/* Center nav */}
+          <nav className="flex items-center gap-1" aria-label="Page navigation">
+            {allItems.map((item) => {
+              const active = isPageActive(item.path, location.pathname);
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.name}
+                  to={item.path}
+                  aria-current={active ? "page" : undefined}
+                  data-active={active}
+                  className="nb-link flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium"
                   style={{
-                    borderColor: userMenuOpen ? primary : borderSoft,
-                    backgroundColor: `${text}08`,
+                    color: active ? primary : `${text}cc`,
+                    backgroundColor: active ? `${primary}10` : "transparent",
                   }}
                 >
-                  <span className="text-sm font-semibold hidden xl:block opacity-80">
+                  <Icon
+                    size={14}
+                    className="nb-link-icon"
+                    style={{ opacity: active ? 1 : 0.6 }}
+                  />
+                  <span>{item.name}</span>
+                  <span className="nb-underline" />
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Right actions */}
+          <div className="flex items-center gap-2 shrink-0">
+            <ThemeToggle />
+
+            {isAuthenticated ? (
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setUserMenuOpen((v) => !v)}
+                  aria-haspopup="menu"
+                  aria-expanded={userMenuOpen}
+                  className="nb-avatar flex items-center gap-2 pl-2.5 pr-1 py-1 rounded-full border"
+                  style={{
+                    borderColor: userMenuOpen ? primary : borderSoft,
+                    backgroundColor: `${text}06`,
+                  }}
+                >
+                  <span className="text-xs font-semibold opacity-80 hidden xl:block">
                     {user?.fullName?.split(" ")[0] || "Admin"}
                   </span>
                   <span
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2"
+                    className="w-7 h-7 rounded-full grid place-items-center text-[10px] font-bold border-2"
                     style={{
                       backgroundColor: `${primary}20`,
                       borderColor: primary,
@@ -279,173 +300,302 @@ export const Navbar: React.FC = () => {
                   >
                     {getInitials(user?.fullName)}
                   </span>
-                  <ChevronDown
-                    size={14}
-                    className={`mr-1 transition-transform duration-300 ${userMenuOpen ? "rotate-180" : ""}`}
-                  />
                 </button>
 
-                {/* Drop-down box */}
-                <div
-                  role="menu"
-                  className={`absolute right-0 mt-4 w-72 rounded-3xl border p-2 shadow-2xl backdrop-blur-2xl origin-top-right transition-all duration-300 ease-[cubic-bezier(.3,.8,.3,1)] ${
-                    userMenuOpen
-                      ? "opacity-100 scale-100 translate-y-0"
-                      : "opacity-0 scale-90 -translate-y-3 pointer-events-none"
-                  }`}
-                  style={{ backgroundColor: `${base}f5`, borderColor: borderSoft }}
-                >
-                  <div className="flex items-center gap-3 px-3 py-3 mb-2 border-b" style={{ borderColor: borderSoft }}>
-                    <span
-                      className="w-11 h-11 shrink-0 rounded-full flex items-center justify-center text-sm font-bold border-2"
-                      style={{ backgroundColor: `${primary}20`, borderColor: primary, color: primary }}
+                {userMenuOpen && (
+                  <div
+                    role="menu"
+                    className="nb-slide-down absolute right-0 mt-2 w-64 rounded-2xl border p-1.5 shadow-2xl origin-top-right"
+                    style={{ backgroundColor: base, borderColor: borderSoft }}
+                  >
+                    <div
+                      className="flex items-center gap-3 px-3 py-2.5 mb-1 border-b"
+                      style={{ borderColor: borderSoft }}
                     >
-                      {getInitials(user?.fullName)}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="text-sm font-bold truncate">{user?.fullName || "Admin"}</p>
-                      <p className="text-xs truncate opacity-60">{user?.email}</p>
+                      <span
+                        className="w-9 h-9 rounded-full grid place-items-center text-[11px] font-bold border-2 shrink-0"
+                        style={{
+                          backgroundColor: `${primary}20`,
+                          borderColor: primary,
+                          color: primary,
+                        }}
+                      >
+                        {getInitials(user?.fullName)}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold truncate">
+                          {user?.fullName || "Admin"}
+                        </p>
+                        <p className="text-[11px] truncate opacity-60">
+                          {user?.email}
+                        </p>
+                      </div>
                     </div>
-                  </div>
 
-                  <Link
-                    to="/admin-dashboard"
-                    role="menuitem"
-                    onClick={() => setUserMenuOpen(false)}
-                    className="group flex items-center gap-3 w-full p-3 rounded-2xl transition-all duration-300 hover:bg-[color:var(--hov)]"
-                    style={
-                      {
-                        "--hov": `${text}0d`,
-                        transitionDelay: userMenuOpen ? "80ms" : "0ms",
-                        transform: userMenuOpen ? "translateX(0)" : "translateX(12px)",
-                        opacity: userMenuOpen ? 1 : 0,
-                      } as React.CSSProperties
-                    }
-                  >
-                    <span
-                      className="p-2 rounded-xl transition-transform duration-300 group-hover:scale-110"
-                      style={{ backgroundColor: `${primary}1a` }}
+                    <Link
+                      to="/admin-dashboard"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="flex items-center gap-2.5 w-full p-2.5 rounded-xl hover:bg-[color:var(--hov)] transition-colors"
+                      style={{ ["--hov" as any]: `${text}0d` }}
                     >
-                      <LayoutDashboard size={16} style={{ color: primary }} />
-                    </span>
-                    <span className="text-sm font-semibold">Dashboard</span>
-                  </Link>
+                      <LayoutDashboard size={15} style={{ color: primary }} />
+                      <span className="text-sm font-semibold">Dashboard</span>
+                    </Link>
 
-                  <button
-                    role="menuitem"
-                    onClick={handleLogout}
-                    className="group flex items-center gap-3 w-full p-3 rounded-2xl text-red-500 transition-all duration-300 hover:bg-red-500/10"
-                    style={{
-                      transitionDelay: userMenuOpen ? "140ms" : "0ms",
-                      transform: userMenuOpen ? "translateX(0)" : "translateX(12px)",
-                      opacity: userMenuOpen ? 1 : 0,
-                    }}
-                  >
-                    <span className="p-2 rounded-xl bg-red-500/10 transition-transform duration-300 group-hover:scale-110">
-                      <LogOut size={16} />
-                    </span>
-                    <span className="text-sm font-semibold">Log out</span>
-                  </button>
-                </div>
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center gap-2.5 w-full p-2.5 rounded-xl text-red-500 hover:bg-red-500/10 transition-colors"
+                    >
+                      <LogOut size={15} />
+                      <span className="text-sm font-semibold">Log out</span>
+                    </button>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-
-          {/* Buttons on the top bar (phones) */}
-          <div className="lg:hidden flex items-center gap-3 shrink-0">
-            <ThemeToggle />
-            {isAuthenticated && (
+            ) : (
               <Link
-                to="/admin-dashboard"
-                aria-label="Open dashboard"
-                className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-transform active:scale-90"
-                style={{ backgroundColor: `${primary}20`, borderColor: primary, color: primary }}
+                to="/contact"
+                className="nb-hire inline-flex items-center rounded-full px-4 py-2 text-xs font-bold"
+                style={{ backgroundColor: primary, color: base }}
               >
-                {getInitials(user?.fullName)}
+                <span className="relative z-10">Hire me</span>
               </Link>
             )}
           </div>
-
-          {/* Thin line that fills as you scroll down the page */}
-          <span
-            className="absolute left-6 right-6 -bottom-px h-[2px] rounded-full overflow-hidden pointer-events-none transition-opacity duration-500"
-            style={{ opacity: isScrolled ? 1 : 0 }}
-          >
-            <span
-              className="block h-full origin-left"
-              style={{
-                width: "100%",
-                transform: `scaleX(${scrollPercent / 100})`,
-                backgroundColor: primary,
-                transition: "transform 0.15s linear",
-              }}
-            />
-          </span>
         </div>
-      </nav>
+      </header>
 
-      {/* ---------- BOTTOM BAR (phones) ---------- */}
-      <div
-        className="nb-up lg:hidden fixed inset-x-3 z-[120] h-[4.5rem] rounded-3xl border backdrop-blur-xl shadow-2xl"
+      {/* ============================================================
+          MOBILE TOP BAR — full name shown
+          ============================================================ */}
+      <header
+        className="lg:hidden fixed top-0 left-0 right-0 z-[120] h-14 border-b backdrop-blur-xl flex items-center justify-between px-4"
         style={{
-          bottom: "calc(0.75rem + env(safe-area-inset-bottom))",
-          backgroundColor: `${base}ee`,
-          borderColor: `${primary}30`,
-          boxShadow: `0 20px 40px -20px ${primary}66`,
+          backgroundColor: `${base}e6`,
+          borderColor: borderSoft,
           color: text,
         }}
-        aria-label="Main"
       >
-        <div className="relative grid grid-cols-5 h-full items-center px-1.5">
-          {/* The round highlight that slides to the page you are on */}
-          {activeIndex >= 0 && (
-            <span
-              className="absolute top-2 bottom-2 left-1.5 w-[calc((100%-0.75rem)/5)] px-1 pointer-events-none transition-transform duration-500 ease-[cubic-bezier(.3,.8,.3,1)]"
-              style={{ transform: `translateX(${activeIndex * 100}%)` }}
-            >
-              <span
-                className="block w-full h-full rounded-2xl"
-                style={{ backgroundColor: `${primary}1f` }}
-              />
+        <Link to="/" className="flex items-center gap-2 min-w-0" aria-label="Home">
+          <img
+            src={logo}
+            alt=""
+            className="nb-logo nb-logo-in w-7 h-7 object-contain shrink-0"
+          />
+          <span className="text-sm font-bold tracking-tight truncate">
+            Gakenye{" "}
+            <span className="inline-block" style={{ color: primary }}>
+              Ndiritu
             </span>
-          )}
+            <span
+              className="nb-brand-dot inline-block ml-1 w-1 h-1 rounded-full align-middle"
+              style={{ backgroundColor: primary }}
+            />
+          </span>
+        </Link>
 
-          {menuItems.map((item, i) => {
-            const active = i === activeIndex;
+        <div className="flex items-center gap-2 shrink-0">
+          <ThemeToggle />
+          {isAuthenticated && (
+            <Link
+              to="/admin-dashboard"
+              className="nb-avatar w-7 h-7 rounded-full grid place-items-center text-[10px] font-bold border-2"
+              style={{
+                backgroundColor: `${primary}20`,
+                borderColor: primary,
+                color: primary,
+              }}
+              aria-label="Dashboard"
+            >
+              {getInitials(user?.fullName)}
+            </Link>
+          )}
+        </div>
+      </header>
+
+      {/* ============================================================
+          MOBILE BOTTOM NAV
+          ============================================================ */}
+      <nav
+        className="lg:hidden fixed inset-x-0 bottom-0 z-[120] border-t backdrop-blur-xl"
+        style={{
+          backgroundColor: `${base}f0`,
+          borderColor: borderSoft,
+          paddingBottom: "env(safe-area-inset-bottom)",
+          color: text,
+        }}
+        aria-label="Page navigation"
+      >
+        <div className="grid grid-cols-6 h-16">
+          {primaryItems.map((item) => {
+            const active = isPageActive(item.path, location.pathname);
             const Icon = item.icon;
             return (
               <Link
                 key={item.name}
                 to={item.path}
                 aria-current={active ? "page" : undefined}
-                className="relative flex flex-col items-center justify-center gap-1 h-full transition-transform duration-200 active:scale-90"
+                aria-label={item.name}
+                className="nb-bottom-link relative flex flex-col items-center justify-center gap-0.5"
               >
-                {/* The key makes the icon jump again each time the page changes */}
-                <span
+                <Icon
                   key={active ? "on" : "off"}
                   className={active ? "nb-pop" : ""}
-                  style={{
-                    color: active ? primary : text,
-                    opacity: active ? 1 : 0.5,
-                  }}
-                >
-                  <Icon size={22} strokeWidth={active ? 2.5 : 2} />
-                </span>
+                  size={20}
+                  strokeWidth={active ? 2.5 : 1.8}
+                  style={{ color: active ? primary : `${text}88` }}
+                />
                 <span
-                  className="text-[11px] leading-none truncate max-w-full px-1 transition-all duration-300"
+                  className="text-[10px] leading-none"
                   style={{
-                    color: active ? primary : text,
-                    opacity: active ? 1 : 0.5,
+                    color: active ? primary : `${text}88`,
                     fontWeight: active ? 700 : 500,
                   }}
                 >
                   {item.name}
                 </span>
+                {active && (
+                  <span
+                    className="nb-slide-down absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[3px] rounded-b-full"
+                    style={{ backgroundColor: primary }}
+                  />
+                )}
               </Link>
             );
           })}
+
+          {/* More button */}
+          <button
+            onClick={() => setMoreOpen(true)}
+            aria-label="More"
+            className="nb-bottom-link relative flex flex-col items-center justify-center gap-0.5"
+          >
+            <MoreHorizontal
+              size={20}
+              strokeWidth={2}
+              style={{ color: `${text}88` }}
+            />
+            <span
+              className="text-[10px] leading-none"
+              style={{ color: `${text}88` }}
+            >
+              More
+            </span>
+          </button>
         </div>
-      </div>
+      </nav>
+
+      {/* ============================================================
+          MORE SHEET (mobile)
+          ============================================================ */}
+      {moreOpen && (
+        <div
+          className="lg:hidden fixed inset-0 z-[130]"
+          role="dialog"
+          aria-modal="true"
+          aria-label="More options"
+        >
+          <div
+            className="nb-fade-in absolute inset-0 bg-black/50"
+            onClick={() => setMoreOpen(false)}
+          />
+          <div
+            className="nb-slide-up absolute bottom-0 left-0 right-0 rounded-t-3xl border-t border-x shadow-2xl"
+            style={{
+              backgroundColor: base,
+              borderColor: borderSoft,
+              paddingBottom: "calc(1rem + env(safe-area-inset-bottom))",
+              color: text,
+            }}
+          >
+            {/* Drag handle */}
+            <div className="nb-sheet-handle" aria-hidden="true" />
+
+            {/* Header */}
+            <div
+              className="flex items-center justify-between px-5 py-3 border-b"
+              style={{ borderColor: borderSoft }}
+            >
+              <p className="text-sm font-bold">More</p>
+              <button
+                onClick={() => setMoreOpen(false)}
+                aria-label="Close"
+                className="grid place-items-center w-8 h-8 rounded-full transition-transform hover:rotate-90"
+                style={{ backgroundColor: `${text}08` }}
+              >
+                <X size={15} />
+              </button>
+            </div>
+
+            {/* Items */}
+            <div className="p-3 space-y-1">
+              {moreItems.map((item) => {
+                const active = isPageActive(item.path, location.pathname);
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.path}
+                    onClick={() => setMoreOpen(false)}
+                    className="flex items-center gap-3 p-3 rounded-xl transition-colors"
+                    style={{
+                      backgroundColor: active ? `${primary}12` : "transparent",
+                      color: active ? primary : text,
+                    }}
+                  >
+                    <span
+                      className="grid place-items-center w-9 h-9 rounded-lg shrink-0"
+                      style={{
+                        backgroundColor: active ? `${primary}1f` : `${text}08`,
+                        color: active ? primary : text,
+                      }}
+                    >
+                      <Icon size={16} />
+                    </span>
+                    <span className="text-sm font-semibold flex-1">{item.name}</span>
+                    <ChevronRight size={14} className="opacity-40" />
+                  </Link>
+                );
+              })}
+
+              {isAuthenticated && (
+                <>
+                  <div
+                    className="my-2 h-px"
+                    style={{ backgroundColor: borderSoft }}
+                  />
+                  <Link
+                    to="/admin-dashboard"
+                    onClick={() => setMoreOpen(false)}
+                    className="flex items-center gap-3 p-3 rounded-xl"
+                    style={{ color: text }}
+                  >
+                    <span
+                      className="grid place-items-center w-9 h-9 rounded-lg shrink-0"
+                      style={{ backgroundColor: `${primary}1f`, color: primary }}
+                    >
+                      <LayoutDashboard size={16} />
+                    </span>
+                    <span className="text-sm font-semibold flex-1">Dashboard</span>
+                    <ChevronRight size={14} className="opacity-40" />
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-3 w-full p-3 rounded-xl text-red-500 hover:bg-red-500/10 transition-colors"
+                  >
+                    <span className="grid place-items-center w-9 h-9 rounded-lg shrink-0 bg-red-500/10">
+                      <LogOut size={16} />
+                    </span>
+                    <span className="text-sm font-semibold flex-1 text-left">
+                      Log out
+                    </span>
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
