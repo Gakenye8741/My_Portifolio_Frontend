@@ -15,7 +15,15 @@ export default defineConfig({
         '/tech',
         '/services',
         '/contact',
+        '/blog',
+        '/faqs'
       ],
     }),
   ],
+  build: {
+    outDir: 'dist',
+    emptyOutDir: true,
+    sourcemap: false,
+    assetsDir: 'assets',
+  },
 })

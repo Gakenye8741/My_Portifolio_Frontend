@@ -8,11 +8,9 @@ import ProtectedRoutes from "./Components/ProtectedRoutes";
 import { AdminDashBoard } from "./Pages/AdminDashBoard";
 import ProjectManager from "./DashBoard/AdminDashBoard/ProjectManager";
 import MediaManager from "./DashBoard/AdminDashBoard/MediaManager";
-import ProjectLinksManager from "./DashBoard/AdminDashBoard/ProjectLinks";
-import ProjectSectionManager from "./DashBoard/AdminDashBoard/ProjectSection";
+
 import SkillsManager from "./DashBoard/AdminDashBoard/SkillsManager";
-import ProjectTechManager from "./DashBoard/AdminDashBoard/ProjectTechManager";
-import TimelineManager from "./DashBoard/AdminDashBoard/TimeLineManager";
+
 import StackPage from "./Pages/StackPAge";
 import ContactPage from "./Pages/Contatc";
 import ServicesPage from "./Pages/Services";
@@ -99,8 +97,6 @@ const App = () => {
         { path: "blog-manager", element: <BlogManager /> },
         { path: "skills-manager", element: <SkillsManager /> },
         { path: "Testimony-managers", element: <TestimonialsManager /> },
-        { path: "Section-manager", element: <ProjectSectionManager /> },
-        { path: "Project-timeline", element: <TimelineManager /> },
         { path: "FAQ-manager", element: <FAQsManager /> },
       ],
     },

@@ -18,7 +18,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "../ThemeContext";
 import { useDispatch } from "react-redux";
 
-import { projectsApi, type Project } from "../Features/Apis/Projects.Api";
+import { projectsApi, type TProject  } from "../Features/Apis/Projects.Api";
 import {
   skillsApi,
   useGetSkillsQuery,
@@ -49,7 +49,7 @@ type Message = {
   sender: "bot" | "user";
   text: string;
   actions?: Action[];
-  projects?: Project[];
+  projects?: TProject[];
   moreProjects?: number;
   skills?: TechSkill[];
   contact?: boolean;
@@ -185,7 +185,7 @@ const APP_TYPES: AppCategory[] = [
 /*  Static responses                                                          */
 /* -------------------------------------------------------------------------- */
 
-const RESPONSES: Record<Exclude<Intent, "projects" | "skills" | "app_types">, string> = {
+const RESPONSES: Record<Exclude<Intent, "projects" | "skills" | "app_types" | "fallback">, string> = {
   greeting:
     "Hi there! 👋 I'm Gakenye's portfolio assistant.\n\nI can tell you about his projects, services, skills, certificates, pricing or availability — and help you book a discovery call.",
 
@@ -307,10 +307,10 @@ function detectIntent(question: string, previousBotText = ""): Intent {
   return "fallback";
 }
 
-const isPublished = (p: Project) => !p.status || p.status === "published";
-const getTechNames = (p: Project): string[] =>
+const isPublished = (p: TProject) => !p.status || p.status === "published";
+const getTechNames = (p: TProject): string[] =>
   (p.techs ?? []).map((t) => t.technology?.name).filter((n): n is string => Boolean(n));
-const projectHaystack = (p: Project) =>
+const projectHaystack = (p: TProject) =>
   normalize([p.title, p.mainDescription, ...getTechNames(p)].filter(Boolean).join(" "));
 
 const TOPIC_KEYWORDS: Partial<Record<Intent, string[]>> = {
@@ -321,7 +321,7 @@ const TOPIC_KEYWORDS: Partial<Record<Intent, string[]>> = {
   blockchain: ["blockchain", "ethereum", "smart contract", "voting"],
 };
 
-function findSpecificProject(projects: Project[], question: string) {
+function findSpecificProject(projects: TProject[], question: string) {
   const q = normalize(question);
   return projects.find((p) => {
     const title = normalize(p.title ?? "");
@@ -504,7 +504,7 @@ const TiltCard: React.FC<{ c: Palette; delay: number; children: React.ReactNode 
   );
 };
 
-const ProjectCard: React.FC<{ project: Project; c: Palette; index: number; onOpen: (project: Project) => Promise<void> }> = ({ project, c, index, onOpen }) => {
+const ProjectCard: React.FC<{ project: TProject; c: Palette; index: number; onOpen: (project: TProject) => Promise<void> }> = ({ project, c, index, onOpen }) => {
   const [isOpening, setIsOpening] = useState(false);
   const techs = getTechNames(project);
   const handleOpen = async (e: React.MouseEvent) => {
@@ -840,17 +840,17 @@ const VirtualAssistant: React.FC = () => {
   const openWhatsApp = () => window.open(WHATSAPP_URL, "_blank", "noopener,noreferrer");
   const lastBotText = () => [...messages].reverse().find((m) => m.sender === "bot")?.text ?? "";
 
-  const loadPublishedProjects = async (): Promise<Project[]> => {
+  const loadPublishedProjects = async (): Promise<TProject[]> => {
     const request = dispatch(projectsApi.endpoints.getProjects.initiate({ status: "published", limit: 100 }));
     try {
       const res = await request.unwrap();
-      const all: Project[] = Array.isArray(res) ? res : (res as any)?.data ?? [];
+      const all: TProject[] = Array.isArray(res) ? res : (res as any)?.data ?? [];
       return all.filter(isPublished);
     } finally { request.unsubscribe(); }
   };
 
-  const openProject = async (project: Project) => {
-    let target: Project = project;
+  const openProject = async (project: TProject) => {
+    let target: TProject = project;
     try {
       const request = dispatch(projectsApi.endpoints.getProjectDetails.initiate(project.id));
       try {
@@ -939,7 +939,7 @@ const VirtualAssistant: React.FC = () => {
       } else if (intent === "appointment") {
         addMessage(buildAppointmentMessage());
       } else if (TOPIC_KEYWORDS[intent]) {
-        let matches: Project[] = [];
+        let matches: TProject[] = [];
         try {
           const keywords = TOPIC_KEYWORDS[intent]!.map(normalize);
           matches = (await loadPublishedProjects()).filter((p) => keywords.some((k) => projectHaystack(p).includes(k))).slice(0, 2);
