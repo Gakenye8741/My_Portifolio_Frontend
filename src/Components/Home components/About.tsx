@@ -68,11 +68,11 @@ const Card = ({ children, className = "" }: CardProps) => {
 const story = [
   {
     icon: <GraduationCap size={18} />,
-    text: "I am a final-year Computer Science student at Laikipia University. I want to build apps that are easy to use, work well, and solve real problems.",
+    text: "I recently graduated in Computer Science from Laikipia University. I build apps that are easy to use, work well, and solve real problems.",
   },
   {
     icon: <MapPin size={18} />,
-    text: "I work from Nyahururu, Kenya. I mix what I learn in class with real projects, so what I build is safe, fast and ready to grow.",
+    text: "I work from Nyahururu, Kenya. I mix what I learned in school with real projects, so what I build is safe, fast and ready to grow.",
   },
   {
     icon: <Briefcase size={18} />,
@@ -106,10 +106,10 @@ const skills = [
 ];
 
 const facts = [
-  { label: "Job", val: "Software Engineer" },
-  { label: "School", val: "Laikipia University" },
-  { label: "Place", val: "Nyahururu, Kenya" },
-  { label: "Skills", val: "AI, Cloud, Blockchain" },
+  { label: "Role", val: "Software Engineer" },
+  { label: "Education", val: "BSc. Computer Science" },
+  { label: "Graduated", val: "Laikipia University" },
+  { label: "Location", val: "Nyahururu, Kenya" },
   { label: "How I work", val: "Clear code, steady effort" },
 ];
 
