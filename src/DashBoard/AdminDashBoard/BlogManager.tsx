@@ -27,11 +27,12 @@ import {
   ChevronLeft, Eye, Heart, Flame, Star, Clock, Calendar,
   Sparkles, Send, ArrowUpDown, ChevronDown,
   SlidersHorizontal, Undo2, History, Save, Lock, Unlock,
-  Newspaper, Layers, Link2, Hash, Wand2, FileCode2,
+  Newspaper, Link2, Hash, Wand2, FileCode2,
   Filter, RotateCcw, Tag as TagIcon,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useTheme } from '../../ThemeContext';
+import DOMPurify from 'dompurify';
 
 /* ---------- Helpers ---------- */
 const PAGE_SIZE_OPTIONS = [5, 10, 20, 50] as const;
@@ -418,11 +419,6 @@ const BlogManager = () => {
             {post.ratings?.avg != null && post.ratings.count > 0 && (
               <span className="inline-flex items-center gap-1 text-amber-500">
                 <Star size={10} /> {post.ratings.avg.toFixed(1)} ({post.ratings.count})
-              </span>
-            )}
-            {post.tags && post.tags.length > 0 && (
-              <span className="inline-flex items-center gap-1">
-                <Layers size={10} /> {post.tags.length} tags
               </span>
             )}
           </div>
@@ -1036,29 +1032,12 @@ const BlogManager = () => {
                       </div>
                     )}
 
-                    {selected.tags && selected.tags.length > 0 && (
-                      <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wider opacity-50 mb-1.5">Tags</p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {selected.tags.map((t) => (
-                            <span
-                              key={t.id}
-                              className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold"
-                              style={{ backgroundColor: `${theme.primary}14`, color: theme.primary }}
-                            >
-                              #{t.name}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-wider opacity-50 mb-1">Content</p>
                       <div
                         className="rounded-xl p-4 text-sm leading-relaxed prose prose-sm max-w-none"
                         style={{ backgroundColor: `${theme['base-content']}04`, border: `1px solid ${theme['base-content']}10` }}
-                        dangerouslySetInnerHTML={{ __html: selected.content }}
+                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(selected.content) }}
                       />
                     </div>
 
@@ -1281,10 +1260,71 @@ function PostEditor({
     readingTime: initial?.readingTime != null ? String(initial.readingTime) : '',
     isPublished: initial?.isPublished ?? false,
     isFeatured: initial?.isFeatured ?? false,
-    tagSlugs: initial?.tags?.map((t) => t.slug).join(', ') ?? '',
   });
 
   const [slugTouched, setSlugTouched] = useState<boolean>(!!initial?.slug);
+  const [contentMode, setContentMode] = useState<'visual' | 'html' | 'preview'>('visual');
+  const editorRef = useRef<HTMLDivElement>(null);
+  const savedSelection = useRef<Range | null>(null);
+
+  useEffect(() => {
+    if (contentMode === 'visual' && editorRef.current) {
+      const safeContent = DOMPurify.sanitize(form.content);
+      if (editorRef.current.innerHTML !== safeContent) {
+        editorRef.current.innerHTML = safeContent;
+      }
+    }
+  }, [contentMode]);
+
+  const saveEditorSelection = () => {
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0 && editorRef.current?.contains(selection.anchorNode)) {
+      savedSelection.current = selection.getRangeAt(0).cloneRange();
+    }
+  };
+
+  const restoreEditorSelection = () => {
+    const selection = window.getSelection();
+    if (selection && savedSelection.current && editorRef.current?.contains(savedSelection.current.commonAncestorContainer)) {
+      selection.removeAllRanges();
+      selection.addRange(savedSelection.current);
+    }
+    editorRef.current?.focus();
+  };
+
+  const runEditorCommand = (command: string, value?: string) => {
+    restoreEditorSelection();
+    document.execCommand('styleWithCSS', false, 'true');
+    document.execCommand(command, false, value);
+    if (editorRef.current) setForm((f) => ({ ...f, content: editorRef.current!.innerHTML }));
+    saveEditorSelection();
+  };
+
+  const applyFontSize = (size: string) => {
+    restoreEditorSelection();
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return;
+    const range = selection.getRangeAt(0);
+    const span = document.createElement('span');
+    span.style.fontSize = size;
+    span.appendChild(range.extractContents());
+    range.insertNode(span);
+    selection.removeAllRanges();
+    const nextRange = document.createRange();
+    nextRange.selectNodeContents(span);
+    selection.addRange(nextRange);
+    if (editorRef.current) setForm((f) => ({ ...f, content: editorRef.current!.innerHTML }));
+    saveEditorSelection();
+  };
+
+  const insertEditorLink = () => {
+    const url = window.prompt('Enter the link URL:');
+    if (url) runEditorCommand('createLink', url);
+  };
+
+  const editorButtonClass = 'rounded-lg border px-2.5 py-2 text-xs font-semibold transition hover:opacity-75';
+  const editorButtonStyle = { borderColor: `${theme['base-content']}20`, backgroundColor: `${theme['base-content']}08`, color: theme['base-content'] };
+
 
   useEffect(() => {
     if (slugTouched) return;
@@ -1306,10 +1346,6 @@ function PostEditor({
       excerpt: form.excerpt.trim() || undefined,
       isPublished: form.isPublished,
       isFeatured: form.isFeatured,
-      tagSlugs: form.tagSlugs
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean),
     };
     const rt = parseInt(form.readingTime, 10);
     if (!isNaN(rt) && rt > 0) payload.readingTime = rt;
@@ -1473,21 +1509,100 @@ function PostEditor({
           </div>
 
           <div>
-            <div className="flex items-center justify-between gap-2 mb-1.5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
               <label className="text-xs font-semibold uppercase tracking-wider opacity-60 inline-flex items-center gap-1.5">
                 <FileCode2 size={11} /> Content <span style={{ color: theme.primary }}>*</span>
               </label>
-              <span className="text-[10px] opacity-40 font-mono">{form.content.length} chars</span>
+              <div className="flex items-center justify-between sm:justify-end gap-3">
+                <span className="text-[10px] opacity-40 font-mono">{form.content.length} chars</span>
+                <div className="inline-flex flex-wrap items-center rounded-lg border p-1 gap-1" style={{ borderColor: `${theme['base-content']}18`, backgroundColor: `${theme['base-content']}05` }}>
+                  {([['visual', 'Visual editor'], ['html', 'HTML editor'], ['preview', 'Preview']] as const).map(([mode, label]) => (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => { saveEditorSelection(); setContentMode(mode); }}
+                      aria-pressed={contentMode === mode}
+                      className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors"
+                      style={{ backgroundColor: contentMode === mode ? theme.primary : 'transparent', color: contentMode === mode ? theme['base-100'] : theme['base-content'] }}
+                    >
+                      {mode === 'visual' ? <Edit3 size={13} /> : mode === 'html' ? <FileCode2 size={13} /> : <Eye size={13} />}
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
-            <textarea
-              required
-              value={form.content}
-              onChange={(e) => setForm({ ...form, content: e.target.value })}
-              placeholder="Write your post content (HTML allowed)…"
-              rows={10}
-              className="w-full rounded-xl py-3 px-4 text-sm font-mono outline-none focus:ring-2 transition"
-              style={inputStyle}
-            />
+
+            {contentMode === 'visual' ? (
+              <div className="overflow-hidden rounded-xl border" style={{ borderColor: `${theme['base-content']}20` }}>
+                <div className="flex flex-wrap items-center gap-2 border-b p-2" style={{ borderColor: `${theme['base-content']}18`, backgroundColor: `${theme['base-content']}06` }}>
+                  <select aria-label="Font family" defaultValue="Arial" onMouseDown={saveEditorSelection} onChange={(e) => runEditorCommand('fontName', e.target.value)} className="max-w-[145px] rounded-lg border px-2 py-2 text-xs" style={editorButtonStyle}>
+                    {['Arial', 'Inter', 'Roboto', 'Poppins', 'Georgia', 'Times New Roman', 'Verdana', 'Tahoma', 'Courier New'].map((font) => <option key={font} value={font}>{font}</option>)}
+                  </select>
+                  <select aria-label="Font size" defaultValue="16px" onMouseDown={saveEditorSelection} onChange={(e) => applyFontSize(e.target.value)} className="rounded-lg border px-2 py-2 text-xs" style={editorButtonStyle}>
+                    {['12px', '14px', '16px', '18px', '20px', '24px', '28px', '32px', '40px'].map((size) => <option key={size} value={size}>{size}</option>)}
+                  </select>
+                  <button type="button" title="Bold" onMouseDown={(e) => e.preventDefault()} onClick={() => runEditorCommand('bold')} className={editorButtonClass} style={editorButtonStyle}><strong>B</strong></button>
+                  <button type="button" title="Italic" onMouseDown={(e) => e.preventDefault()} onClick={() => runEditorCommand('italic')} className={editorButtonClass} style={editorButtonStyle}><em>I</em></button>
+                  <button type="button" title="Underline" onMouseDown={(e) => e.preventDefault()} onClick={() => runEditorCommand('underline')} className={editorButtonClass} style={editorButtonStyle}><u>U</u></button>
+                  <button type="button" title="Strikethrough" onMouseDown={(e) => e.preventDefault()} onClick={() => runEditorCommand('strikeThrough')} className={editorButtonClass} style={editorButtonStyle}><s>S</s></button>
+                  <label title="Text color" className="inline-flex items-center gap-1 rounded-lg border px-2 py-1.5 text-xs" style={editorButtonStyle}>A <input type="color" aria-label="Text color" defaultValue="#222222" onMouseDown={saveEditorSelection} onChange={(e) => runEditorCommand('foreColor', e.target.value)} className="h-5 w-5 cursor-pointer border-0 bg-transparent p-0" /></label>
+                  <label title="Highlight color" className="inline-flex items-center gap-1 rounded-lg border px-2 py-1.5 text-xs" style={editorButtonStyle}>Highlight <input type="color" aria-label="Highlight color" defaultValue="#fff59d" onMouseDown={saveEditorSelection} onChange={(e) => runEditorCommand('hiliteColor', e.target.value)} className="h-5 w-5 cursor-pointer border-0 bg-transparent p-0" /></label>
+                  <select aria-label="Paragraph style" defaultValue="p" onMouseDown={saveEditorSelection} onChange={(e) => runEditorCommand('formatBlock', e.target.value)} className="rounded-lg border px-2 py-2 text-xs" style={editorButtonStyle}>
+                    <option value="p">Paragraph</option><option value="h1">Heading 1</option><option value="h2">Heading 2</option><option value="h3">Heading 3</option><option value="blockquote">Quote</option><option value="pre">Code block</option>
+                  </select>
+                  <button type="button" title="Align left" onMouseDown={(e) => e.preventDefault()} onClick={() => runEditorCommand('justifyLeft')} className={editorButtonClass} style={editorButtonStyle}>Left</button>
+                  <button type="button" title="Align center" onMouseDown={(e) => e.preventDefault()} onClick={() => runEditorCommand('justifyCenter')} className={editorButtonClass} style={editorButtonStyle}>Center</button>
+                  <button type="button" title="Align right" onMouseDown={(e) => e.preventDefault()} onClick={() => runEditorCommand('justifyRight')} className={editorButtonClass} style={editorButtonStyle}>Right</button>
+                  <button type="button" title="Bullet list" onMouseDown={(e) => e.preventDefault()} onClick={() => runEditorCommand('insertUnorderedList')} className={editorButtonClass} style={editorButtonStyle}>• List</button>
+                  <button type="button" title="Numbered list" onMouseDown={(e) => e.preventDefault()} onClick={() => runEditorCommand('insertOrderedList')} className={editorButtonClass} style={editorButtonStyle}>1. List</button>
+                  <button type="button" title="Add link" onMouseDown={(e) => e.preventDefault()} onClick={insertEditorLink} className={editorButtonClass} style={editorButtonStyle}>Link</button>
+                  <button type="button" title="Undo" onMouseDown={(e) => e.preventDefault()} onClick={() => runEditorCommand('undo')} className={editorButtonClass} style={editorButtonStyle}>Undo</button>
+                  <button type="button" title="Redo" onMouseDown={(e) => e.preventDefault()} onClick={() => runEditorCommand('redo')} className={editorButtonClass} style={editorButtonStyle}>Redo</button>
+                </div>
+                <div
+                  ref={editorRef}
+                  contentEditable
+                  suppressContentEditableWarning
+                  role="textbox"
+                  aria-label="Visual blog content editor"
+                  aria-multiline="true"
+                  onInput={() => { if (editorRef.current) setForm((f) => ({ ...f, content: editorRef.current!.innerHTML })); }}
+                  onKeyUp={saveEditorSelection}
+                  onMouseUp={saveEditorSelection}
+                  onBlur={saveEditorSelection}
+                  className="min-h-[18rem] max-h-[32rem] overflow-y-auto p-4 sm:p-6 text-sm leading-relaxed outline-none prose prose-sm sm:prose-base max-w-none dark:prose-invert"
+                  style={{ color: theme['base-content'] }}
+                />
+                <p className="border-t px-3 py-2 text-[11px] opacity-50" style={{ borderColor: `${theme['base-content']}15` }}>Select text and use the toolbar to format it. Your formatting is stored as HTML.</p>
+              </div>
+            ) : contentMode === 'html' ? (
+              <>
+                <textarea
+                  required
+                  value={form.content}
+                  onChange={(e) => setForm({ ...form, content: e.target.value })}
+                  placeholder={`Paste or write your blog content here. HTML is supported, for example:
+
+<h2>My heading</h2>
+<p>Your paragraph goes here.</p>
+<ul><li>First point</li><li>Second point</li></ul>`}
+                  rows={14}
+                  spellCheck={false}
+                  className="w-full rounded-xl py-3 px-4 text-sm font-mono leading-relaxed outline-none focus:ring-2 transition resize-y"
+                  style={inputStyle}
+                />
+                <p className="text-[11px] mt-1.5 opacity-50">
+                  Paste HTML directly. Your original HTML is saved as the post content; switch to Preview to check its appearance.
+                </p>
+              </>
+            ) : (
+              <article
+                className="min-h-[18rem] max-h-[32rem] overflow-y-auto rounded-xl border p-4 sm:p-6 text-sm leading-relaxed prose prose-sm sm:prose-base max-w-none dark:prose-invert prose-headings:font-bold prose-a:text-blue-500 prose-img:rounded-xl prose-pre:rounded-xl prose-table:block prose-table:overflow-x-auto"
+                style={{ backgroundColor: `${theme['base-content']}04`, borderColor: `${theme['base-content']}15`, color: theme['base-content'] }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(form.content) }}
+              />
+            )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1501,18 +1616,6 @@ function PostEditor({
                 value={form.readingTime}
                 onChange={(e) => setForm({ ...form, readingTime: e.target.value })}
                 placeholder="e.g. 8"
-                className="w-full rounded-xl py-3 px-4 text-sm outline-none focus:ring-2 transition"
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider opacity-60 mb-1.5">
-                Tags (comma separated)
-              </label>
-              <input
-                value={form.tagSlugs}
-                onChange={(e) => setForm({ ...form, tagSlugs: e.target.value })}
-                placeholder="react, nodejs, drizzle"
                 className="w-full rounded-xl py-3 px-4 text-sm outline-none focus:ring-2 transition"
                 style={inputStyle}
               />
