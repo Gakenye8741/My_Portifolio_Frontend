@@ -1,55 +1,84 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef } from 'react';
+import { motion, useScroll, useTransform, useReducedMotion } from 'framer-motion';
 import { useTheme } from '../../ThemeContext';
 import {
-  Target, Award, ShieldCheck, Cpu, Cloud,
-  GraduationCap, MapPin, Briefcase, BookOpen,
+  Target, ShieldCheck, Cpu, Cloud,
+  GraduationCap, MapPin, Briefcase,
   User2Icon, Sparkles,
 } from 'lucide-react';
 
-/* ---------- Small helper: plays an animation when scrolled into view ---------- */
-type RevealProps = {
+/* ---------- Types ---------- */
+interface StoryItem {
+  icon: React.ReactNode;
+  text: string;
+  n: string;
+}
+
+interface SkillItem {
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+}
+
+type TimelineItem =
+  | { kind: 'story'; side: 'left' | 'right'; data: StoryItem }
+  | { kind: 'skill'; side: 'left' | 'right'; data: SkillItem };
+
+interface CardProps {
   children: React.ReactNode;
-  from?: "up" | "left" | "right" | "zoom";
-  delay?: number;
-  className?: string;
-};
+}
 
-const Reveal = ({ children, from = "up", delay = 0, className = "" }: RevealProps) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const [show, setShow] = useState(false);
+interface NodeProps {
+  item: TimelineItem;
+}
 
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setShow(true);
-          io.disconnect();
-        }
-      },
-      { threshold: 0.12 }
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
+/* ---------- Content ---------- */
+const story: StoryItem[] = [
+  {
+    icon: <GraduationCap size={16} />,
+    text: "A recent Computer Science graduate of Laikipia University, I channel that foundation into applications that feel intuitive, perform reliably, and address problems that genuinely matter.",
+    n: "01",
+  },
+  {
+    icon: <MapPin size={16} />,
+    text: "Based in Nyahururu, Kenya, I bridge academic insight with hands-on craftsmanship — ensuring every product I deliver is secure by design, swift in execution, and poised to scale.",
+    n: "02",
+  },
+  {
+    icon: <Briefcase size={16} />,
+    text: "My current focus converges on three pillars: blockchain for tamper-proof integrity, artificial intelligence for systems that reason and adapt, and cloud architecture that sustains performance under real-world demand.",
+    n: "03",
+  },
+];
 
-  return (
-    <div
-      ref={ref}
-      className={`ab-reveal ab-${from} ${show ? "ab-show" : ""} ${className}`}
-      style={{ transitionDelay: `${delay}ms` }}
-    >
-      {children}
-    </div>
-  );
-};
+const chips: string[] = ["Blockchain", "AI", "Cloud", "Web apps", "Mobile apps"];
 
-/* ---------- Card with a soft light that follows the mouse ---------- */
-type CardProps = { children: React.ReactNode; className?: string };
+const skills: SkillItem[] = [
+  {
+    icon: <Target size={20} />,
+    title: "People first",
+    desc: "Interfaces thoughtfully composed — every interaction feels inevitable, every click carries purpose.",
+  },
+  {
+    icon: <ShieldCheck size={20} />,
+    title: "Safe with blockchain",
+    desc: "Smart contracts and immutable ledgers preserve data integrity with cryptographic certainty.",
+  },
+  {
+    icon: <Cpu size={20} />,
+    title: "Smart with AI",
+    desc: "Intelligent features that observe patterns, learn from behavior, and quietly automate the mundane.",
+  },
+  {
+    icon: <Cloud size={20} />,
+    title: "Ready to grow",
+    desc: "Cloud foundations engineered for resilience — steady under load, graceful as demand multiplies.",
+  },
+];
 
-const Card = ({ children, className = "" }: CardProps) => {
-  const onMove = (e: React.MouseEvent<HTMLDivElement>) => {
+/* ---------- Card ---------- */
+const Card: React.FC<CardProps> = ({ children }) => {
+  const onMove = (e: React.MouseEvent<HTMLDivElement>): void => {
     const r = e.currentTarget.getBoundingClientRect();
     e.currentTarget.style.setProperty("--mx", `${e.clientX - r.left}px`);
     e.currentTarget.style.setProperty("--my", `${e.clientY - r.top}px`);
@@ -57,177 +86,202 @@ const Card = ({ children, className = "" }: CardProps) => {
   return (
     <div
       onMouseMove={onMove}
-      className={`ab-card group relative h-full overflow-hidden rounded-[1.75rem] border p-7 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-2xl backdrop-blur-sm ${className}`}
+      className="ab-card group relative h-full w-full overflow-hidden rounded-2xl border p-5 transition-all duration-500 hover:-translate-y-1 hover:shadow-xl"
     >
       <div className="relative z-10 h-full">{children}</div>
     </div>
   );
 };
 
-/* ---------- Content (simple English) ---------- */
-const story = [
-  {
-    icon: <GraduationCap size={18} />,
-    text: "I recently graduated in Computer Science from Laikipia University. I build apps that are easy to use, work well, and solve real problems.",
-  },
-  {
-    icon: <MapPin size={18} />,
-    text: "I work from Nyahururu, Kenya. I mix what I learned in school with real projects, so what I build is safe, fast and ready to grow.",
-  },
-  {
-    icon: <Briefcase size={18} />,
-    text: "Right now I focus on three things: blockchain to keep data safe, AI to help systems make smart choices, and cloud tools so apps stay fast when many people use them.",
-  },
-];
+/* ---------- Content renderers ---------- */
+const StoryContent: React.FC<{ item: StoryItem }> = ({ item }) => (
+  <div>
+    <div className="mb-2 flex items-center justify-between gap-3">
+      <span
+        className="text-[10px] font-bold uppercase tracking-[0.22em]"
+        style={{ color: 'var(--accent)' }}
+      >
+        Chapter {item.n}
+      </span>
+      <span className="text-3xl font-black leading-none opacity-[0.08]">{item.n}</span>
+    </div>
+    <p className="text-sm leading-relaxed opacity-85">{item.text}</p>
+    {item.n === "03" && (
+      <div className="mt-4">
+        <p className="mb-2 inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.18em] opacity-55">
+          <Sparkles size={11} style={{ color: 'var(--accent)' }} />
+          Focus areas
+        </p>
+        <div className="flex flex-wrap gap-1.5">
+          {chips.map((c) => (
+            <span
+              key={c}
+              className="cursor-default rounded-full border px-2.5 py-1 text-xs font-medium transition-transform duration-300 hover:-translate-y-0.5"
+              style={{ borderColor: 'var(--accent-line)' }}
+            >
+              {c}
+            </span>
+          ))}
+        </div>
+      </div>
+    )}
+  </div>
+);
 
-const chips = ["Blockchain", "AI", "Cloud", "Web apps", "Mobile apps"];
+const SkillContent: React.FC<{ item: SkillItem }> = ({ item }) => (
+  <div>
+    <div
+      className="ab-icon mb-3 inline-grid h-9 w-9 place-items-center rounded-xl"
+      style={{ backgroundColor: 'var(--accent-soft)', color: 'var(--accent)' }}
+    >
+      {item.icon}
+    </div>
+    <p className="text-sm font-bold">{item.title}</p>
+    <p className="mt-1 text-xs leading-relaxed opacity-65">{item.desc}</p>
+  </div>
+);
 
-const skills = [
-  {
-    icon: <Target size={26} />,
-    title: "People first",
-    desc: "I make screens that are clear and simple, so every click makes sense.",
-  },
-  {
-    icon: <ShieldCheck size={26} />,
-    title: "Safe with blockchain",
-    desc: "Smart contracts and secure records keep data honest and hard to change.",
-  },
-  {
-    icon: <Cpu size={26} />,
-    title: "Smart with AI",
-    desc: "AI features that learn from users and do slow, boring tasks for you.",
-  },
-  {
-    icon: <Cloud size={26} />,
-    title: "Ready to grow",
-    desc: "Cloud setups that stay online and stay fast as more people join.",
-  },
-];
+/* ---------- Node ---------- */
+const Node: React.FC<NodeProps> = ({ item }) => {
+  if (item.kind === 'story') {
+    return (
+      <span
+        className="ab-pulse grid h-10 w-10 place-items-center rounded-full"
+        style={{
+          backgroundColor: 'var(--accent)',
+          color: 'var(--bg)',
+          boxShadow: `0 0 0 5px var(--accent-soft), 0 0 20px var(--accent-line)`,
+        }}
+      >
+        {item.data.icon}
+      </span>
+    );
+  }
+  return (
+    <span
+      className="block h-2.5 w-2.5 rounded-full"
+      style={{
+        backgroundColor: 'var(--accent)',
+        boxShadow: `0 0 0 3px var(--accent-soft)`,
+      }}
+    />
+  );
+};
 
-const facts = [
-  { label: "Role", val: "Software Engineer" },
-  { label: "Education", val: "BSc. Computer Science" },
-  { label: "Graduated", val: "Laikipia University" },
-  { label: "Location", val: "Nyahururu, Kenya" },
-  { label: "How I work", val: "Clear code, steady effort" },
-];
-
-const certs = [
-  { title: "Teach2Give", sub: "Software Development Program" },
-  { title: "SoloLearn", sub: "Web Development Basics" },
-];
-
-/* ---------- Main section ---------- */
-const About = () => {
+/* ---------- Main ---------- */
+const About: React.FC = () => {
   const { theme } = useTheme();
+  const reduce = useReducedMotion();
+  const timelineRef = useRef<HTMLDivElement>(null);
 
-  const rootStyle = {
-    backgroundColor: theme["base-100"],
-    color: theme["base-content"],
-    "--accent": theme.primary,
-    "--accent-soft": `${theme.primary}1f`,
-    "--accent-line": `${theme.primary}33`,
-    "--text-line": `${theme["base-content"]}14`,
-  } as React.CSSProperties;
+  const { scrollYProgress } = useScroll({
+    target: timelineRef,
+    offset: ['start 0.85', 'end 0.15'],
+  });
+  const lineHeight = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
+  const headTop = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
+  const headOpacity = useTransform(scrollYProgress, [0, 0.05, 0.95, 1], [0, 1, 1, 0]);
+
+  const rootStyle: React.CSSProperties & Record<string, string> = {
+    backgroundColor: theme['base-100'],
+    color: theme['base-content'],
+    '--accent': theme.primary,
+    '--accent-soft': `${theme.primary}1a`,
+    '--accent-line': `${theme.primary}33`,
+    '--bg': theme['base-100'],
+  };
+
+  const items: TimelineItem[] = [
+    { kind: 'story', side: 'left', data: story[0] },
+    { kind: 'story', side: 'right', data: story[1] },
+    { kind: 'story', side: 'left', data: story[2] },
+    ...skills.map((s, i): TimelineItem => ({
+      kind: 'skill',
+      side: i % 2 === 0 ? 'right' : 'left',
+      data: s,
+    })),
+  ];
+
+  const renderCard = (item: TimelineItem): React.ReactNode => {
+    switch (item.kind) {
+      case 'story':
+        return <StoryContent item={item.data} />;
+      case 'skill':
+        return <SkillContent item={item.data} />;
+    }
+  };
+
+  const cardMotion = (enterFrom: 'left' | 'right') => {
+    if (reduce) return {};
+    return {
+      initial: { opacity: 0, x: enterFrom === 'left' ? 24 : -24 },
+      whileInView: { opacity: 1, x: 0 },
+      viewport: { once: true, amount: 0.15 },
+      transition: { duration: 0.6, ease: [0.2, 0.7, 0.2, 1] as [number, number, number, number] },
+    };
+  };
 
   return (
     <section
       id="about"
-      className="relative overflow-hidden py-24 transition-colors duration-500"
+      className="relative overflow-hidden py-20 transition-colors duration-500"
       style={rootStyle}
     >
       <style>{`
-        /* Scroll reveal */
-        .ab-reveal { opacity: 0; transition: opacity .9s cubic-bezier(.2,.7,.2,1), transform .9s cubic-bezier(.2,.7,.2,1); will-change: transform, opacity; }
-        .ab-up    { transform: translateY(44px); }
-        .ab-left  { transform: translateX(-56px); }
-        .ab-right { transform: translateX(56px); }
-        .ab-zoom  { transform: scale(.92) translateY(24px); }
-        .ab-show  { opacity: 1; transform: none; }
-
-        /* Headline words rise one after another on page load */
-        @keyframes abWord {
-          from { opacity: 0; transform: translateY(70%) rotate(3deg); }
-          to   { opacity: 1; transform: none; }
-        }
-        .ab-mask { display: inline-block; overflow: hidden; vertical-align: bottom; padding-bottom: .08em; }
-        .ab-word { display: inline-block; opacity: 0; animation: abWord .9s cubic-bezier(.2,.7,.2,1) forwards; }
-
-        /* Underline under the headline draws itself */
-        @keyframes abDraw { to { stroke-dashoffset: 0; } }
-        .ab-underline path { stroke-dasharray: 400; stroke-dashoffset: 400; animation: abDraw 1.2s ease-out 1.1s forwards; }
-
-        /* Cards */
-        .ab-card { border-color: var(--accent-line); background-color: var(--accent-soft); background-blend-mode: normal; }
+        .ab-card { border-color: var(--accent-line); background-color: var(--accent-soft); }
         .ab-card::before {
           content: ""; position: absolute; inset: 0; opacity: 0; transition: opacity .4s;
-          background: radial-gradient(280px circle at var(--mx, 50%) var(--my, 50%), var(--accent-soft), transparent 70%);
+          background: radial-gradient(240px circle at var(--mx, 50%) var(--my, 50%), var(--accent-soft), transparent 70%);
         }
         .ab-card:hover::before { opacity: 1; }
         .ab-card::after {
-          content: ""; position: absolute; left: 0; bottom: 0; height: 3px; width: 0;
+          content: ""; position: absolute; left: 0; bottom: 0; height: 2px; width: 0;
           background: var(--accent); transition: width .6s ease;
         }
         .ab-card:hover::after { width: 100%; }
-
-        /* Icons wiggle on card hover */
-        @keyframes abBob { 0%,100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-5px) rotate(-6deg); } }
+        @keyframes abBob { 0%,100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-4px) rotate(-6deg); } }
         .ab-card:hover .ab-icon { animation: abBob 1.1s ease-in-out infinite; }
-
-        /* Chips pop in */
-        @keyframes abPop { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: scale(1); } }
-        .ab-chip { opacity: 0; animation: abPop .5s cubic-bezier(.3,1.5,.5,1) forwards; }
-        .ab-chip:hover { transform: translateY(-3px); }
-
-        /* Fact rows */
         .ab-row { transition: background-color .3s, transform .3s; }
-        .ab-row:hover { background-color: var(--accent-soft); transform: translateX(4px); }
-
-        /* Story guide line */
-        .ab-story { position: relative; }
-        .ab-story::before {
-          content: ""; position: absolute; left: 15px; top: 6px; bottom: 6px;
-          width: 2px; background: linear-gradient(to bottom, var(--accent-soft), transparent);
-          border-radius: 2px;
-        }
-
-        /* Background */
+        .ab-row:hover { background-color: var(--accent-soft); transform: translateX(3px); }
         @keyframes abOrbit { to { transform: rotate(360deg); } }
         .ab-orbit { animation: abOrbit 40s linear infinite; }
-        @keyframes abDrift { 0%,100% { transform: translate(0,0); } 50% { transform: translate(30px,-30px); } }
-        .ab-drift { animation: abDrift 12s ease-in-out infinite; }
-
-        /* Live dot */
-        @keyframes abPulse { 0%,100% { box-shadow: 0 0 0 0 var(--accent-line); } 50% { box-shadow: 0 0 0 8px transparent; } }
-        .ab-pulse { animation: abPulse 2.2s ease-out infinite; }
-
+        @keyframes abBlob { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(30px,-30px) scale(1.15); } }
+        .ab-blob { animation: abBlob 12s ease-in-out infinite; }
+        @keyframes abPulse {
+          0%,100% { box-shadow: 0 0 0 0 var(--accent-line), 0 0 20px var(--accent-line); }
+          50% { box-shadow: 0 0 0 8px transparent, 0 0 24px var(--accent-line); }
+        }
+        .ab-pulse { animation: abPulse 2.4s ease-out infinite; }
         @media (prefers-reduced-motion: reduce) {
-          .ab-reveal { opacity: 1; transform: none; transition: none; }
-          .ab-word, .ab-chip { opacity: 1; animation: none; }
-          .ab-underline path { stroke-dashoffset: 0; animation: none; }
-          .ab-orbit, .ab-drift, .ab-pulse, .ab-card:hover .ab-icon { animation: none; }
+          .ab-blob, .ab-orbit, .ab-pulse, .ab-card:hover .ab-icon { animation: none; }
         }
       `}</style>
 
-      {/* Background shapes */}
+      {/* Background */}
+      <div
+        className="ab-blob pointer-events-none absolute -top-32 -right-24 h-[26rem] w-[26rem] rounded-full opacity-20 blur-[130px]"
+        style={{ backgroundColor: theme.primary }}
+      />
+      <div
+        className="ab-blob pointer-events-none absolute -bottom-40 -left-24 h-[22rem] w-[22rem] rounded-full opacity-10 blur-[120px]"
+        style={{ backgroundColor: theme.secondary || theme.primary, animationDelay: '-5s' }}
+      />
       <div
         className="ab-orbit pointer-events-none absolute -right-48 -top-20 h-[36rem] w-[36rem] rounded-full border-2 border-dashed opacity-[0.12]"
         style={{ borderColor: theme.primary }}
       />
-      <div
-        className="ab-drift pointer-events-none absolute -left-32 bottom-10 h-80 w-80 rounded-full opacity-10 blur-[120px]"
-        style={{ backgroundColor: theme.primary }}
-      />
 
-      <div className="relative z-10 mx-auto max-w-[1300px] px-6 lg:px-16">
-        {/* ---------- HEADER ---------- */}
-        <div className="mb-14 text-center lg:text-left">
-          {/* Status chip */}
+      <div className="relative z-10 mx-auto max-w-[1200px] px-6 lg:px-16">
+        {/* HEADER */}
+        <div className="mb-12 text-center lg:text-left">
           <div className="mb-5 inline-flex flex-wrap items-center gap-2">
             <span
               className="inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-semibold"
-              style={{ borderColor: `${theme.primary}44`, backgroundColor: `${theme.primary}12`, color: theme.primary }}
+              style={{
+                borderColor: `${theme.primary}44`,
+                backgroundColor: `${theme.primary}12`,
+                color: theme.primary,
+              }}
             >
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-500 opacity-60" />
@@ -235,160 +289,165 @@ const About = () => {
               </span>
               Available for work
             </span>
-            <p className="inline-flex items-center gap-2 text-sm font-semibold" style={{ color: theme.primary }}>
+            <p
+              className="inline-flex items-center gap-2 text-sm font-semibold"
+              style={{ color: theme.primary }}
+            >
               <User2Icon size={16} /> About me
             </p>
           </div>
 
           <h2 className="text-4xl font-extrabold leading-[1.08] tracking-tight md:text-6xl xl:text-7xl">
-            {["I", "build", "software"].map((w, i) => (
-              <span key={w} className="ab-mask mr-[0.25em]">
-                <span className="ab-word" style={{ animationDelay: `${0.1 + i * 0.12}s` }}>{w}</span>
-              </span>
-            ))}
+            <motion.span
+              className="inline-block mr-[0.25em]"
+              initial={reduce ? false : { opacity: 0, y: 24 }}
+              animate={reduce ? undefined : { opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.05 }}
+            >
+              I
+            </motion.span>
+            <motion.span
+              className="inline-block mr-[0.25em]"
+              initial={reduce ? false : { opacity: 0, y: 24 }}
+              animate={reduce ? undefined : { opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.17 }}
+            >
+              build
+            </motion.span>
+            <motion.span
+              className="inline-block"
+              initial={reduce ? false : { opacity: 0, y: 24 }}
+              animate={reduce ? undefined : { opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.29 }}
+            >
+              software
+            </motion.span>
             <br />
-            {["people", "can"].map((w, i) => (
-              <span key={w} className="ab-mask mr-[0.25em]">
-                <span className="ab-word" style={{ animationDelay: `${0.5 + i * 0.12}s` }}>{w}</span>
-              </span>
-            ))}
+            <motion.span
+              className="inline-block mr-[0.25em]"
+              initial={reduce ? false : { opacity: 0, y: 24 }}
+              animate={reduce ? undefined : { opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.41 }}
+            >
+              people
+            </motion.span>
+            <motion.span
+              className="inline-block mr-[0.25em]"
+              initial={reduce ? false : { opacity: 0, y: 24 }}
+              animate={reduce ? undefined : { opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.53 }}
+            >
+              can
+            </motion.span>
             <span className="relative inline-block">
-              <span className="ab-mask">
-                <span className="ab-word" style={{ animationDelay: "0.75s", color: theme.primary }}>trust.</span>
-              </span>
+              <motion.span
+                className="inline-block"
+                style={{ color: theme.primary }}
+                initial={reduce ? false : { opacity: 0, y: 24 }}
+                animate={reduce ? undefined : { opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.65 }}
+              >
+                trust.
+              </motion.span>
               <svg
-                className="ab-underline absolute -bottom-1 left-0 w-full"
+                className="absolute -bottom-1 left-0 w-full"
                 viewBox="0 0 200 12"
                 fill="none"
                 preserveAspectRatio="none"
                 aria-hidden="true"
               >
-                <path d="M2 8 C 50 2, 100 12, 198 4" stroke={theme.primary} strokeWidth="3" strokeLinecap="round" />
+                <motion.path
+                  d="M2 8 C 50 2, 100 12, 198 4"
+                  stroke={theme.primary}
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  initial={reduce ? false : { pathLength: 0 }}
+                  animate={reduce ? undefined : { pathLength: 1 }}
+                  transition={{ duration: 1.2, delay: 1.0, ease: 'easeOut' }}
+                />
               </svg>
             </span>
           </h2>
 
-          <Reveal delay={600}>
-            <p className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed opacity-65 md:text-xl lg:mx-0">
-              I use blockchain, AI and the cloud to build apps that are safe, smart and fast.
-            </p>
-          </Reveal>
+          <motion.p
+            className="mx-auto mt-6 max-w-2xl text-base leading-relaxed opacity-65 md:text-lg lg:mx-0"
+            initial={reduce ? false : { opacity: 0, y: 16 }}
+            whileInView={reduce ? undefined : { opacity: 0.65, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.7, delay: 0.8 }}
+          >
+            I orchestrate blockchain, AI, and cloud technologies to craft applications
+            that are secure, intelligent, and built to endure.
+          </motion.p>
         </div>
 
-        {/* ---------- BENTO GRID ---------- */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-12">
-          {/* My story */}
-          <Reveal from="left" className="md:col-span-2 lg:col-span-8 lg:row-span-2">
-            <Card>
-              <div className="mb-8 flex items-center gap-3">
-                <span
-                  className="ab-icon grid h-11 w-11 place-items-center rounded-2xl"
-                  style={{ backgroundColor: "var(--accent-soft)", color: theme.primary }}
-                >
-                  <BookOpen size={22} />
-                </span>
-                <h3 className="text-2xl font-bold">My story</h3>
-              </div>
+        {/* TIMELINE */}
+        <div ref={timelineRef} className="relative mt-10">
+          {/* Track + progress line */}
+          <div
+            className="pointer-events-none absolute top-0 bottom-0 left-5 z-0 w-[2px] -translate-x-1/2 rounded-full lg:left-1/2"
+            style={{ backgroundColor: 'var(--accent-line)' }}
+          >
+            <motion.div
+              className="absolute top-0 left-0 w-full rounded-full"
+              style={{
+                height: lineHeight,
+                backgroundColor: theme.primary,
+                boxShadow: `0 0 10px ${theme.primary}88`,
+              }}
+            />
+            <motion.div
+              className="absolute left-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full"
+              style={{
+                top: headTop,
+                opacity: headOpacity,
+                backgroundColor: theme.primary,
+                boxShadow: `0 0 0 5px ${theme.primary}33, 0 0 16px ${theme.primary}`,
+              }}
+            />
+          </div>
 
-              <div className="ab-story space-y-6 pl-10">
-                {story.map((s, i) => (
-                  <div key={i} className="relative flex gap-4">
-                    <span
-                      className="ab-pulse absolute -left-10 top-0 grid h-8 w-8 shrink-0 place-items-center rounded-full"
-                      style={{
-                        backgroundColor: theme.primary,
-                        color: theme["base-100"],
-                        animationDelay: `${i * 0.6}s`,
-                      }}
-                    >
-                      {s.icon}
-                    </span>
-                    <p className="max-w-2xl text-base leading-relaxed opacity-80 md:text-lg">
-                      {s.text}
-                    </p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Focus chips */}
-              <div className="mt-10">
-                <p
-                  className="mb-3 inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.18em] opacity-55"
-                >
-                  <Sparkles size={12} style={{ color: theme.primary }} />
-                  Focus areas
-                </p>
-                <div className="flex flex-wrap gap-2.5">
-                  {chips.map((c, i) => (
-                    <span
-                      key={c}
-                      className="ab-chip cursor-default rounded-full border px-4 py-1.5 text-sm font-medium transition-transform duration-300"
-                      style={{ borderColor: "var(--accent-line)", animationDelay: `${0.4 + i * 0.1}s` }}
-                    >
-                      {c}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </Card>
-          </Reveal>
-
-          {/* Quick facts */}
-          <Reveal from="right" className="lg:col-span-4">
-            <Card>
-              <h3 className="mb-5 text-xl font-bold">Quick facts</h3>
-              <dl className="space-y-1">
-                {facts.map((f) => (
-                  <div
-                    key={f.label}
-                    className="ab-row flex items-center justify-between gap-4 rounded-xl px-3 py-2.5"
-                  >
-                    <dt className="text-sm opacity-55">{f.label}</dt>
-                    <dd className="text-right text-sm font-semibold">{f.val}</dd>
-                  </div>
-                ))}
-              </dl>
-            </Card>
-          </Reveal>
-
-          {/* Certificates */}
-          <Reveal from="right" delay={120} className="lg:col-span-4">
-            <Card>
-              <h3 className="mb-5 text-xl font-bold">Certificates</h3>
-              <div className="space-y-4">
-                {certs.map((c) => (
-                  <div key={c.title} className="group/cert flex items-center gap-4">
-                    <div
-                      className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl transition-transform duration-700 group-hover/cert:rotate-[360deg]"
-                      style={{ backgroundColor: "var(--accent-soft)", color: theme.primary }}
-                    >
-                      <Award size={22} />
-                    </div>
-                    <div>
-                      <p className="font-bold">{c.title}</p>
-                      <p className="text-sm opacity-60">{c.sub}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </Reveal>
-
-          {/* Four skill cards */}
-          {skills.map((s, i) => (
-            <Reveal key={s.title} from="zoom" delay={i * 120} className="lg:col-span-3">
-              <Card>
+          {/* Rows */}
+          <div className="relative z-10 space-y-6 lg:space-y-8">
+            {items.map((item, i) => {
+              const isLeft = item.side === 'left';
+              return (
                 <div
-                  className="ab-icon mb-4 inline-grid h-12 w-12 place-items-center rounded-2xl"
-                  style={{ backgroundColor: "var(--accent-soft)", color: theme.primary }}
+                  key={i}
+                  className="grid grid-cols-[40px_1fr] items-start gap-x-4 lg:grid-cols-[1fr_40px_1fr] lg:gap-x-6"
                 >
-                  {s.icon}
+                  {/* LEFT slot (desktop only) */}
+                  {isLeft ? (
+                    <motion.div
+                      className="hidden lg:flex lg:justify-end"
+                      {...cardMotion('right')}
+                    >
+                      <div className="w-full max-w-[400px]">
+                        <Card>{renderCard(item)}</Card>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <div className="hidden lg:block" />
+                  )}
+
+                  {/* NODE column */}
+                  <div className="flex justify-center pt-3">
+                    <Node item={item} />
+                  </div>
+
+                  {/* RIGHT slot (mobile always, desktop only when isRight) */}
+                  <motion.div
+                    className={`min-w-0 ${isLeft ? 'lg:hidden' : ''}`}
+                    {...cardMotion('left')}
+                  >
+                    <div className="w-full max-w-[400px] lg:max-w-none">
+                      <Card>{renderCard(item)}</Card>
+                    </div>
+                  </motion.div>
                 </div>
-                <p className="text-lg font-bold">{s.title}</p>
-                <p className="mt-2 text-sm leading-relaxed opacity-65">{s.desc}</p>
-              </Card>
-            </Reveal>
-          ))}
+              );
+            })}
+          </div>
         </div>
       </div>
     </section>

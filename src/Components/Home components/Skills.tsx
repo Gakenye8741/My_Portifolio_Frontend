@@ -94,10 +94,10 @@ const Skills = () => {
     backgroundColor: theme["base-100"],
     color: theme["base-content"],
     "--accent": theme.primary,
-    "--accent-soft": `${theme.primary}1f`,
+    "--accent-soft": `${theme.primary}1a`,
     "--accent-line": `${theme.primary}33`,
-    "--text-soft": `${theme["base-content"]}0d`,
-    "--text-line": `${theme["base-content"]}1a`,
+    "--bg": theme["base-100"],
+    "--track": `${theme["base-content"]}14`,
   } as React.CSSProperties;
 
   /* ---------- Loading ---------- */
@@ -186,7 +186,7 @@ const Skills = () => {
   return (
     <section
       id="skills"
-      className="relative overflow-hidden py-24 transition-colors duration-500"
+      className="relative overflow-hidden py-20 transition-colors duration-500"
       style={rootStyle}
     >
       <style>{`
@@ -199,12 +199,10 @@ const Skills = () => {
         .sk-blur  { transform: translateY(20px); filter: blur(8px); }
         .sk-show  { opacity: 1; transform: none; filter: none; }
 
-        /* ============ Headline flip ============ */
+        /* ============ Headline ============ */
         @keyframes skWord { from { opacity: 0; transform: translateY(70%) rotate(3deg); } to { opacity: 1; transform: none; } }
-        @keyframes skFlip { 0% { opacity: 0; transform: rotateX(-80deg) translateY(30%); } 100% { opacity: 1; transform: rotateX(0) translateY(0); } }
-        .sk-mask { display: inline-block; overflow: hidden; vertical-align: bottom; padding-bottom: .08em; perspective: 800px; }
+        .sk-mask { display: inline-block; overflow: hidden; vertical-align: bottom; padding-bottom: .08em; }
         .sk-word { display: inline-block; opacity: 0; animation: skWord .9s cubic-bezier(.2,.7,.2,1) forwards; }
-        .sk-word-flip { display: inline-block; opacity: 0; transform-origin: 50% 100%; animation: skFlip .95s cubic-bezier(.2,.7,.2,1) forwards; }
 
         /* ============ Progress bar ============ */
         @keyframes skBarShine {
@@ -215,7 +213,7 @@ const Skills = () => {
           0%,100% { transform: translate(50%, -50%) scale(1); box-shadow: 0 0 0 0 var(--accent-soft); }
           50% { transform: translate(50%, -50%) scale(1.25); box-shadow: 0 0 0 6px var(--accent-soft); }
         }
-        .sk-bar { width: 0; transition: width 1.4s cubic-bezier(.2,.7,.2,1) .3s; position: relative; overflow: hidden; background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 70%, white)); }
+        .sk-bar { width: 0; transition: width 1.4s cubic-bezier(.2,.7,.2,1) .3s; position: relative; overflow: hidden; background-color: var(--accent); }
         .sk-show .sk-bar { width: var(--w); }
         .sk-bar::before {
           content: ""; position: absolute; inset: 0;
@@ -233,10 +231,10 @@ const Skills = () => {
         .sk-show .sk-bar-tip { opacity: 1; }
 
         /* ============ Card ============ */
-        .sk-card { border-color: var(--text-line); background-color: var(--text-soft); position: relative; overflow: hidden; transition: transform .5s cubic-bezier(.2,.7,.2,1), box-shadow .5s, border-color .3s; }
-        .sk-card:hover { border-color: var(--accent); transform: translateY(-6px); box-shadow: 0 24px 48px -22px var(--accent-soft), 0 10px 20px -12px rgba(0,0,0,.15); }
+        .sk-card { border-color: var(--accent-line); background-color: var(--accent-soft); position: relative; overflow: hidden; transition: transform .5s cubic-bezier(.2,.7,.2,1), box-shadow .5s, border-color .3s; }
+        .sk-card:hover { border-color: var(--accent); transform: translateY(-5px); box-shadow: 0 20px 40px -22px var(--accent-soft), 0 8px 16px -12px rgba(0,0,0,.15); }
         .sk-card::after {
-          content: ""; position: absolute; inset: auto 0 0 0; height: 3px;
+          content: ""; position: absolute; inset: auto 0 0 0; height: 2px;
           background: var(--accent); transform: scaleX(0); transform-origin: left; transition: transform .5s ease;
         }
         .sk-card:hover::after { transform: scaleX(1); }
@@ -261,7 +259,7 @@ const Skills = () => {
         .sk-card:hover .sk-icon-wrap::after { opacity: 1; transform: scale(1.05); }
 
         .sk-card .sk-logo { transition: transform .5s cubic-bezier(.3,1.6,.5,1), filter .4s; filter: grayscale(1); }
-        .sk-card:hover .sk-logo { transform: scale(1.25) rotate(-8deg); filter: grayscale(0); }
+        .sk-card:hover .sk-logo { transform: scale(1.2) rotate(-8deg); filter: grayscale(0); }
 
         /* ============ Pills ============ */
         @keyframes skPillShine {
@@ -299,7 +297,7 @@ const Skills = () => {
         @keyframes skPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(34,197,94,.6); } 50% { box-shadow: 0 0 0 8px rgba(34,197,94,0); } }
         .sk-pulse { animation: skPulse 2.2s ease-out infinite; }
 
-        /* ============ Bottom info strip icons ============ */
+        /* ============ Bottom strip ============ */
         @keyframes skBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
         .sk-bob-hover { transition: transform .4s cubic-bezier(.3,1.6,.5,1); }
         .sk-info-item:hover .sk-bob-hover { animation: skBob 1.4s ease-in-out infinite; }
@@ -307,17 +305,17 @@ const Skills = () => {
         /* ============ Reduce motion ============ */
         @media (prefers-reduced-motion: reduce) {
           .sk-reveal { opacity: 1; transform: none; filter: none; transition: none; }
-          .sk-word, .sk-word-flip { opacity: 1; animation: none; transform: none; }
+          .sk-word { opacity: 1; animation: none; transform: none; }
           .sk-bar { width: var(--w); transition: none; }
           .sk-bar::before, .sk-bar-tip { animation: none; opacity: 1; }
-          .sk-orbit, .sk-orbit-dot, .sk-drift, .sk-pulse, .sk-pill-active,
+          .sk-orbit, .sk-orbit-dot, .sk-drift, .sk-pulse,
           .sk-float-1, .sk-float-2, .sk-float-3, .sk-bob-hover { animation: none; }
           .sk-card, .sk-card:hover, .sk-card::before, .sk-card::after { transition: none; transform: none; }
           .sk-card .sk-logo, .sk-card:hover .sk-logo, .sk-icon-wrap { transition: none; transform: none; }
         }
       `}</style>
 
-      {/* Ambient background — original orbit + drift */}
+      {/* Ambient background */}
       <div
         className="sk-orbit pointer-events-none absolute -left-52 top-0 h-[34rem] w-[34rem] rounded-full border-2 border-dashed opacity-[0.1]"
         style={{ borderColor: theme.primary }}
@@ -332,7 +330,6 @@ const Skills = () => {
         style={{ backgroundColor: theme.primary }}
       />
 
-      {/* Floating ambient dots */}
       <div
         className="sk-float-1 pointer-events-none absolute left-[8%] top-[30%] h-2 w-2 rounded-full opacity-40"
         style={{ backgroundColor: theme.primary }}
@@ -346,9 +343,9 @@ const Skills = () => {
         style={{ backgroundColor: theme.primary }}
       />
 
-      <div className="relative z-10 mx-auto max-w-[1300px] px-6 lg:px-16">
+      <div className="relative z-10 mx-auto max-w-[1200px] px-6 lg:px-16">
         {/* HEADER */}
-        <div className="mb-12 text-center lg:text-left">
+        <div className="mb-10 text-center lg:text-left">
           <h2 className="text-4xl font-extrabold leading-[1.08] tracking-tight md:text-6xl xl:text-7xl">
             {["The", "tools", "I"].map((w, i) => (
               <span key={w} className="sk-mask mr-[0.25em]">
@@ -360,16 +357,15 @@ const Skills = () => {
             </span>
           </h2>
           <Reveal delay={500}>
-            <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed opacity-65 lg:mx-0">
-              These are the languages and tools I use to build apps. The bar shows how
-              strong I am in each one.
+            <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed opacity-65 md:text-lg lg:mx-0">
+              The languages and tools I reach for most, and an honest read on how well I know each one.
             </p>
           </Reveal>
         </div>
 
         {/* FILTER PILLS */}
         <Reveal delay={200}>
-          <div className="mb-10 flex flex-wrap justify-center gap-3 lg:justify-start">
+          <div className="mb-8 flex flex-wrap justify-center gap-3 lg:justify-start">
             {categories.map((cat) => {
               const active = activeCat === cat.id;
               return (
@@ -380,7 +376,7 @@ const Skills = () => {
                   style={{
                     backgroundColor: active ? theme.primary : "transparent",
                     color: active ? theme["base-100"] : theme["base-content"],
-                    borderColor: active ? theme.primary : `${theme["base-content"]}26`,
+                    borderColor: active ? theme.primary : "var(--accent-line)",
                   }}
                 >
                   {cat.icon}
@@ -406,7 +402,7 @@ const Skills = () => {
         ) : (
           <div
             key={`${activeCat}-${showAll}`}
-            className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4"
+            className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
           >
             {visible.map((item, i) => {
               const level = Number(item.proficiency) || 0;
@@ -414,26 +410,29 @@ const Skills = () => {
               const iconName = item.technology?.iconName;
               return (
                 <Reveal key={item.id} from={i === 0 ? "zoom" : "blur"} delay={(i % 8) * 70}>
-                  <div className="sk-card relative h-full overflow-hidden rounded-3xl border p-6">
-                    <div className="mb-5 flex items-center gap-4">
+                  <div className="sk-card relative h-full overflow-hidden rounded-2xl border p-5">
+                    <div className="mb-4 flex items-center gap-3">
                       <div
-                        className="sk-icon-wrap grid h-12 w-12 shrink-0 place-items-center rounded-2xl"
+                        className="sk-icon-wrap grid h-10 w-10 shrink-0 place-items-center rounded-xl"
                         style={{ backgroundColor: "var(--accent-soft)", color: theme.primary }}
                       >
                         {iconName ? (
-                          <DynamicIcon name={iconName} size={24} className="sk-logo" />
+                          <DynamicIcon name={iconName} size={20} className="sk-logo" />
                         ) : (
-                          <Cpu size={22} />
+                          <Cpu size={18} />
                         )}
                       </div>
                       <div className="min-w-0">
-                        <p className="truncate text-base font-bold">{techName}</p>
+                        <p className="truncate text-sm font-bold">{techName}</p>
                         <p className="text-xs opacity-55">{levelLabel(level)}</p>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-3">
-                      <div className="relative h-2 flex-1 rounded-full" style={{ backgroundColor: "var(--text-line)" }}>
+                      <div
+                        className="relative h-1.5 flex-1 rounded-full"
+                        style={{ backgroundColor: "var(--track)" }}
+                      >
                         <div
                           className="sk-bar h-full rounded-full"
                           style={{ "--w": `${level}%` } as React.CSSProperties}
@@ -441,7 +440,10 @@ const Skills = () => {
                           <span className="sk-bar-tip" />
                         </div>
                       </div>
-                      <span className="w-10 text-right text-sm font-semibold tabular-nums" style={{ color: theme.primary }}>
+                      <span
+                        className="w-10 text-right text-xs font-semibold tabular-nums"
+                        style={{ color: theme.primary }}
+                      >
                         {level}%
                       </span>
                     </div>
@@ -454,10 +456,10 @@ const Skills = () => {
 
         {/* SHOW MORE */}
         {hasMore && (
-          <div className="mt-10 flex justify-center">
+          <div className="mt-8 flex justify-center">
             <button
               onClick={() => setShowAll((s) => !s)}
-              className="group inline-flex items-center gap-2 rounded-full border px-7 py-3 text-sm font-semibold transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg active:scale-95"
+              className="group inline-flex items-center gap-2 rounded-full border px-6 py-2.5 text-sm font-semibold transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg active:scale-95"
               style={{ borderColor: theme.primary, color: theme.primary }}
             >
               {showAll ? (
@@ -478,24 +480,24 @@ const Skills = () => {
         {/* BOTTOM INFO */}
         <Reveal delay={100}>
           <div
-            className="mt-20 flex flex-wrap items-center justify-between gap-6 rounded-3xl border border-dashed px-8 py-6"
+            className="mt-16 flex flex-wrap items-center justify-between gap-6 rounded-2xl border border-dashed px-6 py-5"
             style={{ borderColor: "var(--accent-line)" }}
           >
             <div className="flex flex-wrap items-center gap-8">
               {[
-                { icon: <GraduationCap size={18} />, label: "School", val: "Laikipia University" },
-                { icon: <MapPin size={18} />, label: "Place", val: "Nyahururu, Kenya" },
-                { icon: <Briefcase size={18} />, label: "Job", val: "Full-Stack Software Engineer" },
+                { icon: <GraduationCap size={16} />, label: "Education", val: "Laikipia University" },
+                { icon: <MapPin size={16} />, label: "Based in", val: "Nyahururu, Kenya" },
+                { icon: <Briefcase size={16} />, label: "Role", val: "Full-Stack Software Engineer" },
               ].map((x) => (
                 <div key={x.label} className="sk-info-item flex items-center gap-3">
                   <span
-                    className="sk-bob-hover grid h-10 w-10 place-items-center rounded-xl"
+                    className="sk-bob-hover grid h-9 w-9 place-items-center rounded-xl"
                     style={{ backgroundColor: "var(--accent-soft)", color: theme.primary }}
                   >
                     {x.icon}
                   </span>
                   <div>
-                    <p className="text-xs opacity-50">{x.label}</p>
+                    <p className="text-[11px] opacity-50">{x.label}</p>
                     <p className="text-sm font-semibold">{x.val}</p>
                   </div>
                 </div>
@@ -504,7 +506,7 @@ const Skills = () => {
 
             <div className="flex items-center gap-3 text-sm font-medium">
               <span className="sk-pulse h-2.5 w-2.5 rounded-full bg-green-500" />
-              Ready to work
+              Available for work
             </div>
           </div>
         </Reveal>

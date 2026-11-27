@@ -3,13 +3,13 @@ import { motion, AnimatePresence, useSpring, useMotionValue, useTransform, useRe
 import { useTheme } from '../../ThemeContext';
 import {
   ArrowRight, Github, Linkedin, Instagram,
-  Activity, ShieldCheck, Zap, ChevronLeft, ChevronRight,
+  ChevronLeft, ChevronRight,
   Layers, Cpu, Terminal, Database
 } from 'lucide-react';
 import { RiWhatsappFill } from 'react-icons/ri';
 
 // Your images
-import logoMain from "../../../public/LOGO.png";
+import logoMain from "../../../public/main.jpg";
 import logo1 from "../../../public/logo1.jpg";
 import logo2 from "../../../public/logo2.jpg";
 import logo3 from "../../../public/logo3.jpg";
@@ -24,20 +24,14 @@ const socials = [
   { icon: <Instagram size={20} />, link: "https://www.instagram.com/_code.d_by_gakenye_/", label: "Instagram" },
 ];
 
-const stats = [
-  { label: "Uptime", value: "99.9%", icon: <Activity size={14} /> },
-  { label: "Data", value: "Encrypted", icon: <ShieldCheck size={14} /> },
-  { label: "Response", value: "< 100ms", icon: <Zap size={14} /> },
-];
-
 const skills = [
-  { title: "Web & Mobile Apps", text: "Built start to finish", icon: <Layers size={18} /> },
-  { title: "Blockchain", text: "Safe, decentralized systems", icon: <Cpu size={18} /> },
-  { title: "AI Tools", text: "Automate slow, boring work", icon: <Terminal size={18} /> },
-  { title: "PostgreSQL", text: "Databases that keep data safe", icon: <Database size={18} /> },
+  { title: "Web & Mobile Apps", text: "Full stack apps, from start to finish", icon: <Layers size={18} /> },
+  { title: "Blockchain", text: "Secure ledgers and verification", icon: <Cpu size={18} /> },
+  { title: "AI Tools", text: "Smart automation and AI features", icon: <Terminal size={18} /> },
+  { title: "Backend & Data", text: "APIs and databases built to last", icon: <Database size={18} /> },
 ];
 
-const roles = ["websites", "mobile apps", "smart systems", "AI tools"];
+const roles = ["web platforms", "mobile apps", "backend systems", "AI tools"];
 
 const marqueeItems = [
   "React", "Node.js", "TypeScript", "PostgreSQL", "React Native",
@@ -344,6 +338,7 @@ const Hero = () => {
         }
         @keyframes blink { 50% { opacity: 0; } }
         @keyframes hero-spin { to { transform: rotate(360deg); } }
+        @keyframes hero-orbit { to { transform: rotate(360deg); } }
         .hero-rise { opacity: 0; animation: rise 0.8s cubic-bezier(.2,.7,.2,1) forwards; }
         .hero-float { animation: floaty 6s ease-in-out infinite; }
         .hero-marquee { animation: marquee 28s linear infinite; }
@@ -351,15 +346,22 @@ const Hero = () => {
         .hero-caret { animation: blink 1s step-end infinite; }
         .hero-spin { animation: hero-spin 26s linear infinite; }
         .hero-spin-rev { animation: hero-spin 34s linear infinite reverse; }
+        .hero-orbit { animation: hero-orbit 40s linear infinite; }
         .hero-marquee-wrap:hover .hero-marquee { animation-play-state: paused; }
+
+        /* Reserve enough height that a short typed word cannot collapse
+           the headline below two lines. The carousel is protected
+           separately by items-start on the grid, so it never moves. */
+        .hero-headline { min-height: 2.2em; }
+
         @media (prefers-reduced-motion: reduce) {
-          .hero-rise, .hero-float, .hero-marquee, .hero-blob, .hero-caret, .hero-spin, .hero-spin-rev {
+          .hero-rise, .hero-float, .hero-marquee, .hero-blob, .hero-caret, .hero-spin, .hero-spin-rev, .hero-orbit {
             animation: none !important; opacity: 1 !important;
           }
         }
       `}</style>
 
-      {/* Background glow */}
+      {/* Background — Hero blobs + About-style orbit ring */}
       <div
         className="hero-blob absolute -top-32 -right-24 w-[26rem] h-[26rem] rounded-full blur-[130px] opacity-20 pointer-events-none"
         style={{ backgroundColor: theme.primary }}
@@ -368,13 +370,16 @@ const Hero = () => {
         className="hero-blob absolute -bottom-40 -left-24 w-[22rem] h-[22rem] rounded-full blur-[120px] opacity-10 pointer-events-none"
         style={{ backgroundColor: theme.secondary || theme.primary, animationDelay: "-5s" }}
       />
+      <div
+        className="hero-orbit absolute -right-48 -top-20 w-[36rem] h-[36rem] rounded-full border-2 border-dashed opacity-[0.12] pointer-events-none"
+        style={{ borderColor: theme.primary }}
+      />
 
-      <main className="relative z-10 w-full max-w-[1300px] mx-auto px-6 lg:px-16 grid grid-cols-1 lg:grid-cols-12 gap-14 items-center">
+      <main className="relative z-10 w-full max-w-[1300px] mx-auto px-6 lg:px-16 grid grid-cols-1 lg:grid-cols-12 gap-14 items-start">
         {/* TEXT */}
         <div className="lg:col-span-7 order-2 lg:order-1 text-center lg:text-left">
-        
           <h1
-            className="hero-rise mt-6 text-4xl md:text-6xl xl:text-7xl font-extrabold tracking-tight leading-[1.05]"
+            className="hero-rise hero-headline mt-6 text-4xl md:text-6xl xl:text-7xl font-extrabold tracking-tight leading-[1.05]"
             style={{ animationDelay: "0.15s" }}
           >
             I build{" "}
@@ -383,17 +388,19 @@ const Hero = () => {
               <span className="hero-caret font-light">|</span>
             </span>
             <br />
-            that work well.
+            that work at scale.
           </h1>
 
           <p
             className="hero-rise mt-6 max-w-xl mx-auto lg:mx-0 text-base md:text-lg leading-relaxed opacity-75"
             style={{ animationDelay: "0.3s" }}
           >
-            Hi, I'm Gakenye, a certified software engineer in Kenya. I build web and mobile
-            apps from start to finish: the screens people see, and the servers and databases
-            that keep their data safe. I also add blockchain and AI tools to make your
-            system secure, fast and easy to use on any device.
+            I'm Gakenye, a Kenya based software engineer who focuses on delivering products
+            from start to finish. I build reliable frontends, strong backend services, and
+            the data pipelines that connect them. I also work with blockchain
+            infrastructure for security and AI systems for smart automation. This lets me
+            create apps that are secure, perform well under load, and scale smoothly
+            across devices and platforms.
           </p>
 
           <div
@@ -405,7 +412,7 @@ const Hero = () => {
               className="group inline-flex items-center gap-3 rounded-full px-8 py-4 font-bold shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-0.5 active:scale-95"
               style={{ backgroundColor: theme.primary, color: theme["base-100"] }}
             >
-              See my projects
+              See my work
               <ArrowRight size={18} className="transition-transform duration-300 group-hover:translate-x-1.5" />
             </a>
 
@@ -446,7 +453,7 @@ const Hero = () => {
         </div>
 
         {/* PICTURES */}
-        <div className="lg:col-span-5 order-1 lg:order-2 flex justify-center">
+        <div className="lg:col-span-5 order-1 lg:order-2 flex flex-col items-center gap-6 lg:mt-6">
           <div className="hero-rise w-full flex justify-center" style={{ animationDelay: "0.3s" }}>
             <PictureCarousel
               slides={images}

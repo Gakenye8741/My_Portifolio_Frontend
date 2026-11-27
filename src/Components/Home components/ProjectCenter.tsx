@@ -62,7 +62,7 @@ const Reveal = ({ children, from = 'up', delay = 0, className = '' }: RevealProp
   );
 };
 
-/* ---------- One project card (compact) ---------- */
+/* ---------- One project card ---------- */
 type CardProps = {
   project: Project;
   featured?: boolean;
@@ -216,7 +216,13 @@ const ProjectCenter = () => {
     reduce.current = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }, []);
 
-  const allProjects: Project[] = projectsResponse?.data ?? [];
+  /* Sorted newest-first so the display always shows the latest three */
+  const allProjects: Project[] = useMemo(() => {
+    const list = projectsResponse?.data ?? [];
+    return [...list].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }, [projectsResponse]);
 
   const rootStyle = {
     backgroundColor: theme['base-100'],
@@ -347,7 +353,6 @@ const ProjectCenter = () => {
     .pc-dot { transition: width .3s, background-color .3s, opacity .3s; }
     .pc-dot:hover { opacity: 1 !important; }
 
-    /* Fade edges — now visible on mobile too */
     .pc-fade-left,
     .pc-fade-right {
       position: absolute;
@@ -432,7 +437,7 @@ const ProjectCenter = () => {
 
   return (
     <section
-      className="relative overflow-hidden py-16 transition-colors duration-500 md:py-24"
+      className="relative overflow-hidden py-12 transition-colors duration-500 md:py-16"
       style={rootStyle}
     >
       <style>{sharedStyles}</style>
@@ -447,7 +452,7 @@ const ProjectCenter = () => {
       />
 
       <div className="relative z-10 mx-auto max-w-[960px] px-4 sm:px-6 lg:px-10">
-        {/* HEADER — smaller on mobile */}
+        {/* HEADER */}
         <div className="mb-8 flex flex-col justify-between gap-6 sm:mb-10 lg:flex-row lg:items-end">
           <div className="text-center lg:text-left">
             <h2 className="text-2xl font-extrabold leading-[1.08] tracking-tight sm:text-3xl md:text-4xl lg:text-5xl">
@@ -473,7 +478,7 @@ const ProjectCenter = () => {
             </h2>
             <Reveal delay={500}>
               <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed opacity-65 lg:mx-0">
-                Here are some of my best projects. Click any one to see more.
+                The latest three things I have shipped. Click any one to see more.
               </p>
             </Reveal>
           </div>
@@ -529,8 +534,7 @@ const ProjectCenter = () => {
 
             {/* ---------- CAROUSEL OF SMALL CARDS ---------- */}
             {others.length > 0 && (
-              <div className="relative pt-2">
-                {/* Mobile hint */}
+              <div className="relative">
                 {others.length > 1 && (
                   <div className="mb-3 flex items-center justify-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest opacity-40 sm:hidden">
                     <ChevronLeft size={11} />
@@ -539,7 +543,6 @@ const ProjectCenter = () => {
                   </div>
                 )}
 
-                {/* Edge fades — now on mobile too */}
                 <div className="pc-fade-left" />
                 <div className="pc-fade-right" />
 
@@ -569,7 +572,6 @@ const ProjectCenter = () => {
                   ))}
                 </div>
 
-                {/* Prev / Next — now ALWAYS visible, both mobile & desktop */}
                 {others.length > 1 && (
                   <>
                     <button
@@ -599,7 +601,6 @@ const ProjectCenter = () => {
                   </>
                 )}
 
-                {/* Dots — bigger, both mobile & desktop */}
                 {others.length > 1 && (
                   <div className="mt-4 flex items-center justify-center gap-1.5">
                     {others.map((_, i) => {

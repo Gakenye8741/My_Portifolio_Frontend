@@ -1,5 +1,137 @@
+/* src/index.css */
 @import "tailwindcss";
+
 @plugin "daisyui" {
-  themes: light --default, dark --prefersdark, garden;
+  themes: weetixdark --default, weetixlight;
 }
 
+/* =====================================================================
+   PALETTE C++: "NIGHT OUT — DUAL-MODE"
+   Same hue family in both themes; only lightness changes.
+   Light  → 600/700 tones (readable on white)
+   Dark   → 300/400 tones (readable on #0F0B1E)
+   ===================================================================== */
+
+/* ---------- DARK ---------- */
+@plugin "daisyui/theme" {
+  name: "weetixdark";
+  color-scheme: dark;
+
+  --color-primary: #A78BFA;
+  --color-primary-content: #0F0B1E;
+
+  --color-secondary: #22D3EE;
+  --color-secondary-content: #0F0B1E;
+
+  --color-accent: #F472B6;
+  --color-accent-content: #0F0B1E;
+
+  --color-neutral: #2A2347;
+  --color-neutral-content: #EDE9FE;
+
+  --color-base-100: #0F0B1E;
+  --color-base-200: #171229;
+  --color-base-300: #261F3F;
+  --color-base-content: #EDE9FE;
+
+  --color-info: #38BDF8;
+  --color-info-content: #0F0B1E;
+
+  --color-success: #34D399;
+  --color-success-content: #0F0B1E;
+
+  --color-warning: #FBBF24;
+  --color-warning-content: #0F0B1E;
+
+  --color-error: #F87171;
+  --color-error-content: #0F0B1E;
+
+  --radius-selector: 1rem;
+  --radius-field: 0.5rem;
+  --radius-box: 1rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 1;
+  --noise: 0;
+}
+
+/* ---------- LIGHT ---------- */
+@plugin "daisyui/theme" {
+  name: "weetixlight";
+  color-scheme: light;
+
+  --color-primary: #7C3AED;
+  --color-primary-content: #FFFFFF;
+
+  --color-secondary: #0891B2;
+  --color-secondary-content: #FFFFFF;
+
+  --color-accent: #DB2777;
+  --color-accent-content: #FFFFFF;
+
+  --color-neutral: #18181B;                 /* ← was #1E1B3A (purple-navy) */
+  --color-neutral-content: #FAFAFA;         /* ← was #F7F5FF (lavender) */
+
+  --color-base-100: #FFFFFF;
+  --color-base-200: #F4F4F5;                /* ← was #F7F5FF (lavender) */
+  --color-base-300: #E4E4E7;                /* ← was #E4DFF5 (lavender) */
+  --color-base-content: #18181B;            /* ← was #1E1B3A (purple-navy) */
+
+  --color-info: #0284C7;
+  --color-info-content: #FFFFFF;
+
+  --color-success: #059669;
+  --color-success-content: #FFFFFF;
+
+  --color-warning: #D97706;
+  --color-warning-content: #FFFFFF;
+
+  --color-error: #DC2626;
+  --color-error-content: #FFFFFF;
+
+  --radius-selector: 1rem;
+  --radius-field: 0.5rem;
+  --radius-box: 1rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 1;
+  --noise: 0;
+}
+
+/* =====================================================================
+   Global base styles
+   ===================================================================== */
+@layer base {
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--color-base-100);
+    color: var(--color-base-content);
+    transition: background-color 300ms ease, color 300ms ease;
+  }
+
+  ::selection {
+    background-color: color-mix(in oklab, var(--color-primary) 30%, transparent);
+    color: var(--color-base-content);
+  }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--color-base-200); }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-base-300);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--color-primary); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
